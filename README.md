@@ -1,5 +1,22 @@
 # dotfiles
 
+## Bootstrap
+
+```bash
+# Install Homebrew
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install git-lfs
+brew install git-lfs && git lfs install
+
+# Clone the repo
+git clone --depth=1 git@github.com:Delnegend/dotfiles.git
+cd dotfiles
+
+# Pull LFS objects (needed for fonts and archives)
+git lfs pull
+```
+
 ## Setup
 
 Clone the repo, `cd` into it, then run `just all` to symlink everything, or `just --list` to see individual recipes.
