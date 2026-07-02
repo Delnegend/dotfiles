@@ -10,7 +10,7 @@ This installs Homebrew, clones the repo to `~/dotfiles`, and adds a `source ~/do
 
 Then run `just all` from `~/dotfiles` to symlink everything else, or `just --list` to see individual recipes.
 
-After setting up shell config, add a machine-specific file if one doesn't exist:
+After the shell config is set up, add a machine-specific file if one doesn't exist:
 
 ```bash
 # ~/dotfiles/.bashrc.d/machines/$(hostname -s).sh
