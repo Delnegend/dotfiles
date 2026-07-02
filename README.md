@@ -3,23 +3,12 @@
 ## Bootstrap
 
 ```bash
-# Install Homebrew
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-# Install git-lfs
-brew install git-lfs just -y && git lfs install
-
-# Clone the repo
-git clone --depth=1 git@github.com:Delnegend/dotfiles.git
-cd dotfiles
-
-# Pull LFS objects (needed for fonts and archives)
-git lfs pull
+bash <(curl -fsSL https://raw.githubusercontent.com/Delnegend/dotfiles/main/scripts/bootstrap.sh)
 ```
 
-## Setup
+This installs Homebrew, clones the repo to `~/dotfiles`, and symlinks bash config.
 
-Clone the repo, `cd` into it, then run `just all` to symlink everything, or `just --list` to see individual recipes.
+Then run `just all` from `~/dotfiles` to symlink everything else, or `just --list` to see individual recipes.
 
 After setting up shell config, add a machine-specific file if one doesn't exist:
 

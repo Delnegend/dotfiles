@@ -4,7 +4,7 @@ _default:
 	@just --list
 
 # Symlink all configs
-all: gitconfig bashrc opencode zed vscode mpv easyeffects font justfile
+all: gitconfig opencode zed vscode mpv easyeffects font justfile
 
 # Agent skills
 agents:
@@ -13,12 +13,6 @@ agents:
 # Git config
 gitconfig:
 	ln -sf {{REPO}}/.gitconfig ~/.gitconfig
-
-# Shell config
-bashrc:
-	ln -sf {{REPO}}/.bashrc_custom ~/.bashrc
-	[ -L ~/.bashrc.d ] || rm -rf ~/.bashrc.d
-	ln -sfn {{REPO}}/.bashrc.d ~/.bashrc.d
 
 # opencode
 opencode:
