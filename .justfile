@@ -8,7 +8,7 @@ all: gitconfig opencode zed vscode mpv easyeffects font justfile
 
 # Agent skills
 agents:
-    ln -sfn {{REPO}}/.config/agents ~/.config/agents
+    ln -sfn {{REPO}}/.agents ~/.agents
 
 # Git config
 gitconfig:
