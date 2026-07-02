@@ -16,7 +16,7 @@ gitconfig:
 
 # Shell config
 bashrc:
-	ln -sf {{REPO}}/.bashrc_custom ~/.bashrc_custom
+	ln -sf {{REPO}}/.bashrc_custom ~/.bashrc
 	[ -L ~/.bashrc.d ] || rm -rf ~/.bashrc.d
 	ln -sfn {{REPO}}/.bashrc.d ~/.bashrc.d
 
