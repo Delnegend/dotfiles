@@ -31,7 +31,7 @@ for pkg in git-lfs just zoxide starship; do
 done
 
 eval "$("$BREW" shellenv)"
-git lfs install
+git lfs install --skip-repo
 
 if [ ! -d "$HOME/dotfiles" ]; then
     echo "Cloning dotfiles..."
