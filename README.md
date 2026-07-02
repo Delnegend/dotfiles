@@ -7,7 +7,7 @@
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 # Install git-lfs
-brew install git-lfs && git lfs install
+brew install git-lfs just -y && git lfs install
 
 # Clone the repo
 git clone --depth=1 git@github.com:Delnegend/dotfiles.git
