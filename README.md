@@ -47,6 +47,6 @@ After setting up shell config, add a machine-specific file if one doesn't exist:
   easyeffects/                # Easy Effects audio presets (Flatpak)
   fontconfig/                 # Font rendering settings
 
-.justfile                     # setup recipes (symlinks)
-.justfile_custom              # general-purpose recipe collection
+.justfile                     # setup recipes for this dotfiles repo (symlinks, fonts)
+.justfile_custom              # general-purpose recipes for the host OS (backups, transcoding, system utils)
 ```
