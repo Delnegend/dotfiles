@@ -60,8 +60,8 @@ font:
 	ln -sf "$REPO/.config/fontconfig/fonts.conf" ~/.config/fontconfig/fonts.conf
 
 	if [ ! -f ~/.local/share/fonts/IosevkaNerdFont-Regular.ttf ]; then
-		curl -fsSLo /tmp/Iosevka.tar.xz https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/Iosevka.tar.xz
-		echo "213ee24cda99ca84d0a8326de133e7e8b2baf9ba23659ce829f589f771d357d2  /tmp/Iosevka.tar.xz" | sha256sum -c
+		cp "$REPO/fonts/iosevka.tar.xz" /tmp/Iosevka.tar.xz
+		echo "7b8aae4d5a73de9ea9bb9c85bfaeb6b800455d0cbf85656e1c31c57a94d9c752  /tmp/Iosevka.tar.xz" | sha256sum -c
 		tar -xJf /tmp/Iosevka.tar.xz -C /tmp/iosevka \
 			IosevkaNerdFont-ExtraLight.ttf \
 			IosevkaNerdFont-ExtraLightItalic.ttf \
