@@ -1,0 +1,17 @@
+[filter "lfs"]
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+	clean = git-lfs clean -- %f
+[user]
+	name = Delnegend
+	email = kiennguyen19323@gmail.com
+	signingkey = ~/.ssh/github.pub
+[commit]
+	gpgsign = true
+[gpg]
+	format = ssh
+[pull]
+	rebase = true
+[init]
+	defaultBranch = main

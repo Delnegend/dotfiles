@@ -1,0 +1,275 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run `zed: open default settings` from the
+// command palette (cmd-shift-p / ctrl-shift-p)
+{
+  "language_models": {
+    "openai_compatible": {
+
+    }
+  },
+  "context_servers": {
+    "grafana": {
+      "enabled": true,
+      "remote": false,
+      "command": "uvx",
+      "args": [
+        "mcp-grafana"
+      ],
+      "env": {
+        "GRAFANA_URL": "https://grafana.delnegend.com",
+        "GRAFANA_SERVICE_ACCOUNT_TOKEN": ""
+      }
+    },
+    "browser": {
+      "enabled": true,
+      "remote": false,
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp",
+        "--cdp-endpoint",
+        "ws://localhost:9222"
+      ],
+      "env": {}
+    }
+  },
+  "agent_servers": {
+
+  },
+  "diff_view_style": "split",
+  "soft_wrap": "editor_width",
+  "buffer_font_weight": 200.0,
+  "ssh_connections": [
+    {
+      "host": "core",
+      "args": [],
+      "projects": [
+        {
+          "paths": ["/var/home/core/homelab"],
+        },
+      ],
+    },
+  ],
+  "proxy": "",
+  "cli_default_open_behavior": "new_window",
+  "format_on_save": "off",
+  "indent_guides": {
+    "coloring": "indent_aware",
+    "background_coloring": "disabled",
+  },
+  "hard_tabs": false,
+  "ui_font_family": ".ZedSans",
+  "buffer_line_height": "standard",
+  "icon_theme": {
+    "mode": "light",
+    "light": "Zed (Default)",
+    "dark": "Zed (Default)",
+  },
+  "project_panel": {
+    "dock": "left",
+  },
+  "outline_panel": {
+    "dock": "left",
+  },
+  "collaboration_panel": {
+    "dock": "left",
+  },
+  "git_panel": {
+    "tree_view": true,
+    "dock": "left",
+  },
+  "autosave": "on_focus_change",
+  "terminal": {
+    "font_size": 18.0,
+    "font_weight": 300.0,
+    "shell": {
+      "program": "bash",
+    },
+    "env": {
+      "EDITOR": "zed --wait",
+      "VISUAL": "zed --wait",
+    },
+  },
+  "edit_predictions": {
+    "open_ai_compatible_api": {
+      "max_output_tokens": 128,
+      "model": "zeta2.1",
+      "api_url": "http://localhost:8080/v1/completions",
+      "prompt_format": "zeta2_1",
+    },
+    "allow_data_collection": "yes",
+    "mode": "eager",
+    "ollama": {
+      "prompt_format": "infer",
+    },
+    "provider": "copilot",
+  },
+  "agent": {
+    "tool_permissions": {
+      "tools": {
+        "mcp:browser:browser_snapshot": {
+          "default": "allow"
+        },
+        "mcp:browser:browser_click": {
+          "default": "allow"
+        },
+        "mcp:browser:browser_navigate": {
+          "default": "allow"
+        },
+        "terminal": {
+          "always_allow": [
+            {
+              "pattern": "^kubectl\\s+get(\\s|$)"
+            }
+          ]
+        }
+      }
+    },
+    "inline_assistant_model": {
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "enable_thinking": false,
+    },
+    "dock": "right",
+    "default_profile": "ask",
+    "profiles": {
+      "ask": {
+        "name": "Ask",
+        "tools": {
+          "create_thread": true,
+          "diagnostics": true,
+          "fetch": true,
+          "list_agents_and_models": true,
+          "list_directory": true,
+          "find_path": true,
+          "find_references": true,
+          "get_code_actions": true,
+          "go_to_definition": true,
+          "read_file": true,
+          "grep": true,
+          "skill": true,
+          "spawn_agent": true,
+          "search_web": true
+        },
+        "enable_all_context_servers": false,
+        "context_servers": {
+          "grafana": {
+            "tools": {
+              "update_annotation": false,
+              "suggest_loki_alloy_label_config": true,
+              "search_plugin_information": true,
+              "search_folders": true,
+              "search_dashboards": true,
+              "query_pyroscope": true,
+              "query_prometheus_histogram": true,
+              "query_prometheus": true,
+              "query_loki_stats": true,
+              "query_loki_patterns": true,
+              "query_loki_logs": true,
+              "list_sift_investigations": true,
+              "list_snapshots": true,
+              "list_pyroscope_profile_types": true,
+              "list_pyroscope_label_values": true,
+              "list_pyroscope_label_names": true,
+              "list_provisioning_repositories": true,
+              "list_prometheus_metric_names": true,
+              "list_prometheus_metric_metadata": true,
+              "list_prometheus_label_values": true,
+              "list_prometheus_label_names": true,
+              "list_oncall_users": true,
+              "list_oncall_teams": true,
+              "list_oncall_schedules": true,
+              "list_loki_label_values": true,
+              "list_loki_label_names": true,
+              "list_incidents": true,
+              "list_datasources": true,
+              "list_alert_groups": true,
+              "grafana_api_request": true,
+              "get_snapshot": true,
+              "get_sift_investigation": true,
+              "get_sift_analysis": true,
+              "get_plugin": true,
+              "get_panel_image": true,
+              "get_oncall_shift": true,
+              "get_incident": true,
+              "get_datasource": true,
+              "get_dashboard_summary": true,
+              "get_dashboard_property": true,
+              "get_dashboard_panel_queries": true,
+              "get_current_oncall_users": true,
+              "get_dashboard_by_uid": true,
+              "get_assertions": true,
+              "get_annotations": true,
+              "get_annotation_tags": true,
+              "get_alert_group": true,
+              "find_slow_requests": true,
+              "find_error_pattern_logs": true,
+              "check_datasources_health": true,
+              "analyze_loki_labels": true
+            }
+          },
+          "browser": {
+            "tools": {
+              "browser_network_request": true,
+              "browser_network_requests": true,
+              "browser_press_key": true,
+              "browser_resize": true,
+              "browser_run_code_unsafe": true,
+              "browser_select_option": true,
+              "browser_snapshot": true,
+              "browser_tabs": true,
+              "browser_take_screenshot": true,
+              "browser_type": true,
+              "browser_wait_for": true,
+              "browser_navigate_back": true,
+              "browser_navigate": true,
+              "browser_hover": true,
+              "browser_handle_dialog": true,
+              "browser_fill_form": true,
+              "browser_file_upload": true,
+              "browser_evaluate": true,
+              "browser_drop": true,
+              "browser_drag": true,
+              "browser_console_messages": true,
+              "browser_close": true,
+              "browser_click": true
+            }
+          }
+        }
+      }
+    },
+    "default_model": {
+      "provider": "Bifrost",
+      "model": "gpt-5",
+      "enable_thinking": false,
+    },
+    "favorite_models": [
+      {
+        "provider": "copilot_chat",
+        "model": "",
+        "enable_thinking": false,
+      },
+    ],
+    "model_parameters": [],
+  },
+  "buffer_font_family": "Iosevka Nerd Font",
+  "buffer_font_fallbacks": ["Noto Color Emoji"],
+  "theme": {
+    "mode": "dark",
+    "light": "Ayu Light",
+    "dark": "VSCode Dark Modern",
+  },
+  "diagnostics": {
+    "inline": {
+      "enabled": true,
+    },
+  },
+  "use_podman": true,
+  "show_whitespaces": "selection",
+  "wrap_guides": [80, 120],
+}

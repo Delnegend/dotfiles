@@ -1,0 +1,258 @@
+_default:
+	just --choose
+
+backup-home:
+	#!/bin/bash
+	OUT_FILE="home.$(date +%Y-%m-%d).7z"
+	7zz a "$OUT_FILE" \
+		-x!Apps/ffmpeg \
+		-x!.var/app/com.valvesoftware.Steam \
+		-x!.var/app/com.heroicgameslauncher.hgl \
+		-x!.config/Code \
+		-x!*cache* \
+		-x!*Cache* \
+		Apps .config .var .zshrc
+
+backup-balatro:
+	#!/bin/bash
+	OUT_FILE="balatro.$(date +%Y-%m-%d).7z"
+	7zz a -mx=9 "$OUT_FILE" "/home/lava/Games/Heroic/Prefixes/default/Balatro/drive_c/users/lava/AppData/Roaming/Balatro"
+	if [ ! -f "$OUT_FILE" ]; then
+		echo "❌ Backup file '$OUT_FILE' not found."
+		exit 1
+	fi
+	just _upload_to_google_drive "$OUT_FILE"
+	rm -f "$OUT_FILE"
+
+ensure-ssh-permissions:
+	sudo chmod 700 ~/.ssh
+	sudo chmod 600 ~/.ssh/*
+	sudo chmod 644 ~/.ssh/*.pub
+	sudo chmod 644 ~/.ssh/known_hosts
+	sudo chmod 644 ~/.ssh/config
+
+transcode codec input:
+	#!/bin/bash
+	codec="{{ codec }}"
+	input="{{ input }}"
+
+	echo "Transcoding file '$input' to codec '$codec'..."
+	if [[ $codec == "avif" ]]; then
+		ffmpeg -i "$input" -c:v libaom-av1 -crf 24 -cpu-used 5 "${input%.*}.avif"
+	elif [[ $codec == "vp9" ]]; then
+		ffmpeg -i "$input" -c:v libvpx-vp9 -crf 26 -b:v 0 "${input%.*}.webm"
+	elif [[ $codec == "av1" ]]; then
+		ffmpeg -i "$input" -c:v libsvtav1 -crf 26 -b:v 0 "${input%.*}.mp4"
+	else
+		echo "Unsupported codec. Please use 'avif', 'vp9', or 'av1'."
+		exit 1
+	fi
+
+thumb file:
+	#!/bin/bash
+	FILE="$1"
+
+	ffmpeg -i "$FILE" -map 0 -map 0 -filter:0 "scale=300:200:force_original_aspect_ratio=decrease,pad=300:200:(ow-iw)/2:(oh-ih)/2:color=0x00000000,format=yuv420p" -filter:1 "scale=300:200:force_original_aspect_ratio=decrease,pad=300:200:(ow-iw)/2:(oh-ih)/2:color=0x00000000,format=yuva444p,alphaextract" -crf 22 -cpu-used 5 "${FILE%.*}.avif"
+
+update-static:
+	#!/bin/bash
+
+	get_latest_github_ver() {
+		curl -sL -w "%{url_effective}" "https://github.com/$1/releases/latest" -o /dev/null | grep -o '[^/]*$' | sed 's/^v//' | head -n 1
+	}
+
+	SEVEN_ZIP_CURR_VER=$(7zz | grep -oP '\d{2}\.\d{2}' | head -n 1)
+	SEVEN_ZIP_LATEST_VER=$(curl -s https://www.7-zip.org | grep -oP 'Download 7-Zip \K[0-9]+\.[0-9]+' | head -n1)
+	if [ "$SEVEN_ZIP_CURR_VER" != "$SEVEN_ZIP_LATEST_VER" ]; then
+		echo "Updating 7-Zip from $SEVEN_ZIP_CURR_VER to $SEVEN_ZIP_LATEST_VER"
+		wget -qO- "https://www.7-zip.org/a/7z${SEVEN_ZIP_LATEST_VER//.}-linux-x64.tar.xz" | tar -xJf - -C /home/$(whoami)/Apps 7zz
+	else
+		echo "7-Zip is already up to date ($SEVEN_ZIP_CURR_VER)"
+	fi
+
+	LIBJXL_CURR_VER=$(cjxl --version | grep -oP '\d+\.\d+\.\d+' | head -n 1)
+	LIBJXL_LATEST_VER=$(get_latest_github_ver libjxl/libjxl)
+	if [ "$LIBJXL_CURR_VER" != "$LIBJXL_LATEST_VER" ]; then
+		echo "Updating libjxl from $LIBJXL_CURR_VER to $LIBJXL_LATEST_VER"
+		wget -q -P /tmp "https://github.com/libjxl/libjxl/releases/download/v$LIBJXL_LATEST_VER/libjxl-$LIBJXL_LATEST_VER-linux-x86_64.tar.gz"
+		tar -xzf /tmp/libjxl-$LIBJXL_LATEST_VER-linux-x86_64.tar.gz -C /home/$(whoami)/Apps cjxl cjxl
+		tar -xzf /tmp/libjxl-$LIBJXL_LATEST_VER-linux-x86_64.tar.gz -C /home/$(whoami)/Apps djxl djxl
+		rm -f /tmp/libjxl-$LIBJXL_LATEST_VER-linux-x86_64.tar.gz
+	else
+		echo "libjxl is already up to date ($LIBJXL_CURR_VER)"
+	fi
+
+	EZA_CURR_VER=$(eza --version | grep -oP '\d+\.\d+\.\d+' | head -n 1)
+	EZA_LATEST_VER=$(get_latest_github_ver eza-community/eza)
+	if [ "$EZA_CURR_VER" != "$EZA_LATEST_VER" ]; then
+		echo "Updating Eza from $EZA_CURR_VER to $EZA_LATEST_VER"
+		wget -qO- "https://github.com/eza-community/eza/releases/download/v$EZA_LATEST_VER/eza_x86_64-unknown-linux-musl.tar.gz" | tar -xzO > /home/$(whoami)/Apps/eza
+		sudo chmod +x /home/$(whoami)/Apps/eza
+	else
+		echo "Eza is already up to date ($EZA_CURR_VER)"
+	fi
+
+	# FASTFETCH_CURR_VER=$(fastfetch --version | grep -oP '\d+\.\d+\.\d+' | head -n 1)
+	# FASTFETCH_LATEST_VER=$(get_latest_github_ver fastfetch-cli/fastfetch)
+	# if [ "$FASTFETCH_CURR_VER" != "$FASTFETCH_LATEST_VER" ];
+	# then
+	# 	echo "Updating FastFetch from $FASTFETCH_CURR_VER to $FASTFETCH_LATEST_VER"
+	# 	wget -qO- "https://github.com/fastfetch-cli/fastfetch/releases/download/$FASTFETCH_LATEST_VER/fastfetch-linux-amd64.tar.gz" | tar -xzO > /home/$(whoami)/Apps/fastfetch
+	# 	sudo chmod +x /home/$(whoami)/Apps/fastfetch
+	# else
+	# 	echo "FastFetch is already up to date ($FASTFETCH_CURR_VER)"
+	# fi
+
+	FZF_CURR_VER=$(fzf --version | grep -oP '\d+\.\d+\.\d+' | head -n 1)
+	FZF_LATEST_VER=$(get_latest_github_ver junegunn/fzf)
+	if [ "$FZF_CURR_VER" != "$FZF_LATEST_VER" ]; then
+		echo "Updating FZF from $FZF_CURR_VER to $FZF_LATEST_VER"
+		wget -qO- "https://github.com/junegunn/fzf/releases/download/v$FZF_LATEST_VER/fzf-$FZF_LATEST_VER-linux_amd64.tar.gz" | tar -xzO fzf > /home/$(whoami)/Apps/fzf
+		sudo chmod +x /home/$(whoami)/Apps/fzf
+	else
+		echo "FZF is already up to date ($FZF_CURR_VER)"
+	fi
+
+	JUST_CURR_VER=$(just --version | grep -oP '(?<=just )\d+\.\d+\.\d+' | head -n 1)
+	JUST_LATEST_VER=$(get_latest_github_ver casey/just)
+	if [ "$JUST_CURR_VER" != "$JUST_LATEST_VER" ]; then
+		echo "Just is outdated ($JUST_CURR_VER -> $JUST_LATEST_VER), please update manually using the following command:"
+		echo "wget -qO- 'https://github.com/casey/just/releases/download/$JUST_LATEST_VER/just-$JUST_LATEST_VER-x86_64-unknown-linux-musl.tar.gz' | tar -xzO just > /home/$(whoami)/Apps/just"
+	else
+		echo "Just is already up to date ($JUST_CURR_VER)"
+	fi
+
+	LAZYDOCKER_CURR_VER=$(lazydocker --version | grep -oP '\d+\.\d+\.\d+' | head -n 1)
+	LAZYDOCKER_LATEST_VER=$(get_latest_github_ver jesseduffield/lazydocker)
+	if [ "$LAZYDOCKER_CURR_VER" != "$LAZYDOCKER_LATEST_VER" ]; then
+		echo "Updating LazyDocker from $LAZYDOCKER_CURR_VER to $LAZYDOCKER_LATEST_VER"
+		wget -qO- "https://github.com/jesseduffield/lazydocker/releases/download/v${LAZYDOCKER_LATEST_VER}/lazydocker_${LAZYDOCKER_LATEST_VER}_Linux_x86_64.tar.gz" | tar -xzO lazydocker > /home/$(whoami)/Apps/lazydocker
+		sudo chmod +x /home/$(whoami)/Apps/lazydocker
+	else
+		echo "Lazydocker is already up to date ($LAZYDOCKER_CURR_VER)"
+	fi
+
+	LAZYGIT_CURR_VER=$(lazygit --version | grep -oP '\d+\.\d+\.\d+' | head -n 1)
+	LAZYGIT_LATEST_VER=$(get_latest_github_ver jesseduffield/lazygit)
+	if [ "$LAZYGIT_CURR_VER" != "$LAZYGIT_LATEST_VER" ]; then
+		wget -qO- "https://github.com/jesseduffield/lazygit/releases/download/v$LAZYGIT_LATEST_VER/lazygit_${LAZYGIT_LATEST_VER}_linux_x86_64.tar.gz" | tar -xzO lazygit > /home/$(whoami)/Apps/lazygit
+		sudo chmod +x /home/$(whoami)/Apps/lazygit
+	else
+		echo "LazyGit is already up to date ($LAZYGIT_CURR_VER)"
+	fi
+
+	NCDU_CURR_VER=$(ncdu --version | grep -oP '\d+\.\d+\.\d+' | head -n 1)
+	NCDU_LATEST_VER=$(curl -s https://dev.yorhel.nl/ncdu | grep -oP '/download#ncdu-\K[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
+	if [ "$NCDU_CURR_VER" != "$NCDU_LATEST_VER" ]; then
+		echo "Updating NCDU from $NCDU_CURR_VER to $NCDU_LATEST_VER"
+		wget -qO- "https://dev.yorhel.nl/download/ncdu-$NCDU_LATEST_VER-linux-x86_64.tar.gz" | tar -xzO ncdu > /home/$(whoami)/Apps/ncdu
+		sudo chmod +x /home/$(whoami)/Apps/ncdu
+	else
+		echo "NCDU is already up to date ($NCDU_CURR_VER)"
+	fi
+
+	ONEFETCH_CURR_VER=$(onefetch --version | grep -oP '\d+\.\d+\.\d+' | head -n 1)
+	ONEFETCH_LATEST_VER=$(get_latest_github_ver o2sh/onefetch)
+	if [ "$ONEFETCH_CURR_VER" != "$ONEFETCH_LATEST_VER" ]; then
+		echo "Updating OneFetch from $ONEFETCH_CURR_VER to $ONEFETCH_LATEST_VER"
+		echo "https://github.com/o2sh/onefetch/releases/download/$ONEFETCH_LATEST_VER/onefetch-linux.tar.gz"
+		wget -qO- "https://github.com/o2sh/onefetch/releases/download/$ONEFETCH_LATEST_VER/onefetch-linux.tar.gz" | tar -xzO > /home/$(whoami)/Apps/onefetch
+		sudo chmod +x /home/$(whoami)/Apps/onefetch
+	else
+		echo "OneFetch is already up to date ($ONEFETCH_CURR_VER)"
+	fi
+
+sunshine state='start':
+	#!/usr/bin/bash
+
+	SUNSHINE_BIN=$(readlink -f "$(which sunshine 2>/dev/null)" 2>/dev/null || echo "")
+
+	if [[ -n "$SUNSHINE_BIN" ]] && ! getcap "$SUNSHINE_BIN" 2>/dev/null | grep -q cap_sys_admin; then
+		echo "Missing CAP_SYS_ADMIN on sunshine binary, granting..."
+		sudo setcap cap_sys_admin+ep "$SUNSHINE_BIN"
+	fi
+
+	START_KEYWORDS=(start restart enable 1 on)
+	STOP_KEYWORDS=(stop disable 0 off)
+
+	if [[ " ${START_KEYWORDS[*]} " == *" {{state}} "* ]]; then
+		systemctl --user start sunshine
+		echo "Sunshine is now STARTED"
+	elif [[ " ${STOP_KEYWORDS[*]} " == *" {{state}} "* ]]; then
+		systemctl --user stop sunshine
+		echo "Sunshine is now STOPPED"
+	else
+		echo "Invalid state. Use 'start' or 'stop'."
+		exit 1
+	fi
+
+rdp state='start':
+	#!/usr/bin/bash
+
+	START_KEYWORDS=(start restart enable 1 on)
+	STOP_KEYWORDS=(stop disable 0 off)
+
+	systemctl --user daemon-reload
+	if [[ " ${START_KEYWORDS[*]} " == *" {{state}} "* ]]; then
+		systemctl --user start app-org.kde.krdpserver.service
+		echo "app-org.kde.krdpserver.service is now STARTED"
+	elif [[ " ${STOP_KEYWORDS[*]} " == *" {{state}} "* ]]; then
+		systemctl --user stop app-org.kde.krdpserver.service
+		echo "app-org.kde.krdpserver.service is now STOPPED"
+	else
+		echo "Invalid state. Use 'start' or 'stop'."
+		exit 1
+	fi
+
+unlock:
+	#!/usr/bin/bash
+	set -euo pipefail
+
+	CONF_DIR="/etc/plasmalogin.conf.d"
+	PAM_DIR="/etc/pam.d"
+
+	sudo bash -c "
+		rm -f '$CONF_DIR/99-plasma-setup.conf'
+		printf '[Autologin]\nUser=lava\nSession=plasma\n' > '$CONF_DIR/99-autologin.conf'
+		printf '#%%PAM-1.0\nauth        sufficient   pam_permit.so\naccount     sufficient   pam_permit.so\npassword    sufficient   pam_permit.so\nsession     include      password-auth\n' > '$PAM_DIR/plasmalogin'
+		printf '#%%PAM-1.0\nauth        sufficient   pam_permit.so\naccount     sufficient   pam_permit.so\npassword    sufficient   pam_permit.so\nsession     include      password-auth\n' > '$PAM_DIR/plasmalogin-autologin'
+		printf '#%%PAM-1.0\nauth        include      password-auth\naccount     include      password-auth\npassword    include      password-auth\nsession     include      password-auth\n' > '$PAM_DIR/plasmalogin-greeter'
+		systemctl restart plasmalogin
+	"
+
+	echo "Waiting for session..."
+	for i in {1..30}; do
+		if loginctl list-sessions 2>/dev/null | grep -q 'lava.*seat0'; then
+			echo "Session found, waiting 10s for services to settle..."
+			sleep 10
+			sudo bash -c "
+				rm -f '$CONF_DIR/99-autologin.conf' \
+				      '$PAM_DIR/plasmalogin' \
+				      '$PAM_DIR/plasmalogin-autologin' \
+				      '$PAM_DIR/plasmalogin-greeter'
+			"
+			echo "Session started. Cleaned up."
+			exit 0
+		fi
+		sleep 1
+	done
+	sudo bash -c "
+		rm -f '$CONF_DIR/99-autologin.conf' \
+		      '$PAM_DIR/plasmalogin' \
+		      '$PAM_DIR/plasmalogin-autologin' \
+		      '$PAM_DIR/plasmalogin-greeter'
+	"
+	echo "Timed out waiting for session. Cleaned up." >&2
+	exit 1
+
+fix-local-dimming:
+	#!/bin/bash
+	kscreen-doctor --dpms off && sleep 1 && kscreen-doctor --dpms on
+
+dp:
+	QT_QPA_PLATFORM=wayland WAYLAND_DISPLAY=wayland-0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus kscreen-doctor output.DP-2.enable output.HDMI-A-1.disable 2>&1 || true
+
+dummy:
+	QT_QPA_PLATFORM=wayland WAYLAND_DISPLAY=wayland-0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus kscreen-doctor output.HDMI-A-1.enable output.DP-2.disable 2>&1 || true
+
+

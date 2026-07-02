@@ -1,0 +1,6 @@
+for f in ~/.bashrc.d/[0-9]*.sh; do
+    [ -f "$f" ] && source "$f"
+done
+
+MACHINE_FILE="$HOME/.bashrc.d/machines/$(hostname -s).sh"
+[ -f "$MACHINE_FILE" ] && source "$MACHINE_FILE"
