@@ -40,9 +40,10 @@ fi
 
 cd "$HOME/dotfiles"
 
-echo "Symlinking bash config..."
-ln -sf "$HOME/dotfiles/.bashrc_custom" "$HOME/.bashrc"
-[ -L "$HOME/.bashrc.d" ] || rm -rf "$HOME/.bashrc.d"
-ln -sfn "$HOME/dotfiles/.bashrc.d" "$HOME/.bashrc.d"
+echo "Configuring bash..."
+if ! grep -q 'source ~/dotfiles/.bashrc_custom' "$HOME/.bashrc" 2>/dev/null; then
+    echo >> "$HOME/.bashrc"
+    echo 'source ~/dotfiles/.bashrc_custom' >> "$HOME/.bashrc"
+fi
 
 echo "Done! Restart your shell or run: source ~/.bashrc"

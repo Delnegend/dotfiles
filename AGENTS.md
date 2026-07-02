@@ -27,10 +27,10 @@ When adding a new JSON-with-comments config file, follow this pattern.
 
 ## Shell config
 
-- `.bashrc_custom` is the shell entry point — it sources all `[0-9]*.sh` files in `.bashrc.d/` in order
+- `.bashrc_custom` is the shell entry point — it sources all `[0-9]*.sh` files in `~/dotfiles/.bashrc.d/` in order
 - Files in `.bashrc.d/` are sourced alphabetically → use numeric prefixes for ordering: `00-env.sh`, `10-aliases.sh`, etc.
-- Per-machine config lives in `.bashrc.d/machines/<hostname>.sh` (sourced by hostname, not numeric prefix)
-- Both `.bashrc_custom` and `.bashrc.d/` are symlinked from the repo
+- Per-machine config lives in `~/dotfiles/.bashrc.d/machines/<hostname>.sh` (sourced by hostname, not numeric prefix)
+- `.bashrc_custom` is sourced from `~/dotfiles/.bashrc_custom` via a one-liner appended to `~/.bashrc`; no symlinks needed
 
 ## Flatpak config paths
 

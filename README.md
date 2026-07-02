@@ -6,14 +6,14 @@
 bash <(curl -fsSL https://raw.githubusercontent.com/Delnegend/dotfiles/main/scripts/bootstrap.sh)
 ```
 
-This installs Homebrew, clones the repo to `~/dotfiles`, and symlinks bash config.
+This installs Homebrew, clones the repo to `~/dotfiles`, and adds a `source ~/dotfiles/.bashrc_custom` line to `~/.bashrc` to load custom shell config.
 
 Then run `just all` from `~/dotfiles` to symlink everything else, or `just --list` to see individual recipes.
 
 After setting up shell config, add a machine-specific file if one doesn't exist:
 
 ```bash
-# .bashrc.d/machines/$(hostname -s).sh
+# ~/dotfiles/.bashrc.d/machines/$(hostname -s).sh
 ```
 
 ## Layout
