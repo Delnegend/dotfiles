@@ -31,6 +31,8 @@ brew "ffmpeg"
 brew "fresh-editor"
 # Quickly rewrite git repository history
 brew "git-filter-repo"
+# Git extension for versioning large files
+brew "git-lfs"
 # Lazier way to manage everything docker
 brew "lazydocker"
 # Simple terminal UI for git commands
