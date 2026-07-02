@@ -40,5 +40,4 @@ Flatpak apps store config in `~/.var/app/<app-id>/config/<app-name>/`. When syml
 
 ## Brewfile
 
-- Managed by a pre-commit hook at `.git/hooks/pre-commit` — it auto-dumps `brew bundle dump` and stages `Brewfile` before each commit
 - Do not edit `Brewfile` by hand; run `just brew-dump` to update it
