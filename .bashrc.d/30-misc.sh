@@ -9,7 +9,7 @@ _dotfiles_pull() {
     fi
     (
         local out rc
-        out=$(cd "$repo" && git pull --ff-only 2>&1); rc=$?
+        out=$(cd "$repo" && git pull --rebase --autostash --ff-only 2>&1); rc=$?
         if [ $rc -eq 0 ]; then
             date +%s > "$stamp"
         else
