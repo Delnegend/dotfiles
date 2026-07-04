@@ -25,8 +25,7 @@ After the shell config is set up, add a machine-specific file if one doesn't exi
   00-env.sh                   # universal environment variables
   10-aliases.sh               # universal aliases
   *.sh                        # more universal files, sourced in order
-  machines/
-    bazzite.sh                # per-machine config, sourced by hostname
+  machines/                   # per-machine config, sourced by hostname
 
 .config/
   opencode.jsonc              # opencode config
@@ -35,6 +34,8 @@ After the shell config is set up, add a machine-specific file if one doesn't exi
   mpv/                        # mpv config (Flatpak)
   easyeffects/                # Easy Effects audio presets (Flatpak)
   fontconfig/                 # Font rendering settings
+
+.ssh/                         # SSH public keys
 
 .justfile                     # setup recipes for this dotfiles repo (symlinks, fonts)
 .justfile_custom              # general-purpose recipes for the host OS (backups, transcoding, system utils)

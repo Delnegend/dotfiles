@@ -4,7 +4,7 @@ _default:
 	@just --list
 
 # Symlink all configs
-all: gitconfig opencode zed vscode mpv easyeffects font justfile
+all: gitconfig ssh opencode zed vscode mpv easyeffects font justfile
 
 # Agent skills
 agents:
@@ -13,6 +13,10 @@ agents:
 # Git config
 gitconfig:
 	ln -sf {{REPO}}/.gitconfig ~/.gitconfig
+
+# SSH public keys
+ssh:
+	ln -sf {{REPO}}/.ssh/github.pub ~/.ssh/github.pub
 
 # opencode
 opencode:
