@@ -42,11 +42,10 @@ mpv:
 	[ -L ~/.var/app/io.mpv.Mpv/config/mpv ] || rm -rf ~/.var/app/io.mpv.Mpv/config/mpv
 	ln -sfn {{REPO}}/.config/mpv ~/.var/app/io.mpv.Mpv/config/mpv
 
-# Easy Effects (Flatpak)
+# Easy Effects (Flatpak) — app tolerates no symlinks; copy files instead
 easyeffects:
-	mkdir -p ~/.var/app/com.github.wwmm.easyeffects/config
-	[ -L ~/.var/app/com.github.wwmm.easyeffects/config/easyeffects ] || rm -rf ~/.var/app/com.github.wwmm.easyeffects/config/easyeffects
-	ln -sfn {{REPO}}/.config/easyeffects ~/.var/app/com.github.wwmm.easyeffects/config/easyeffects
+	mkdir -p ~/.var/app/com.github.wwmm.easyeffects/config/easyeffects
+	rsync -a --delete {{REPO}}/.config/easyeffects/ ~/.var/app/com.github.wwmm.easyeffects/config/easyeffects/
 
 # Font config + fonts (idempotent)
 font:

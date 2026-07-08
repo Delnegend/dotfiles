@@ -1,5 +1,10 @@
+REPO := justfile_directory()
+
 _default:
 	just --choose
+
+easyeffects-save:
+	rsync -a --delete ~/.var/app/com.github.wwmm.easyeffects/config/easyeffects/ {{REPO}}/.config/easyeffects/
 
 backup-home:
 	#!/bin/bash
