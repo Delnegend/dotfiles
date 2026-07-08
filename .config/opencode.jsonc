@@ -1,15 +1,5 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["opencode-autodiscover"],
-  "provider": {
-    "openai": {
-      "name": "Bifrost",
-      "options": {
-        "baseURL": "https://ai.delnegend.com",
-        "apiKey": "{env:BIFROST_API_KEY}"
-      }
-    }
-  },
   "mcp": {
     "browser": {
       "type": "local",
