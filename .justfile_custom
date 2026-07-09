@@ -238,7 +238,8 @@ unlock:
 			"
 			echo "Session started. Cleaned up."
 			exit 0
-		fi
+	fi
+
 		sleep 1
 	done
 	sudo bash -c "
