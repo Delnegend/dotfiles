@@ -260,4 +260,15 @@ dp:
 dummy:
 	QT_QPA_PLATFORM=wayland WAYLAND_DISPLAY=wayland-0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus kscreen-doctor output.HDMI-A-1.enable output.DP-2.disable 2>&1 || true
 
+toggle-hdmi-res:
+	#!/bin/bash
+	just sunshine stop
+	CURRENT=$(kscreen-doctor --outputs 2>/dev/null | grep -oP '\d+x\d+(?=@\d+\.\d+\*)' | tail -1)
+	if [[ "$CURRENT" == "1920x1200" ]]; then
+		kscreen-doctor output.HDMI-A-1.mode.1920x1080@60.00
+	else
+		kscreen-doctor output.HDMI-A-1.mode.1920x1200@59.88
+	fi
+	just sunshine start
+
 
