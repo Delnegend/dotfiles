@@ -3,21 +3,6 @@ REPO := justfile_directory()
 _default:
 	just --choose
 
-easyeffects-save:
-	rsync -a --delete ~/.var/app/com.github.wwmm.easyeffects/config/easyeffects/ {{REPO}}/.config/easyeffects/
-
-backup-home:
-	#!/bin/bash
-	OUT_FILE="home.$(date +%Y-%m-%d).7z"
-	7zz a "$OUT_FILE" \
-		-x!Apps/ffmpeg \
-		-x!.var/app/com.valvesoftware.Steam \
-		-x!.var/app/com.heroicgameslauncher.hgl \
-		-x!.config/Code \
-		-x!*cache* \
-		-x!*Cache* \
-		Apps .config .var .zshrc
-
 backup-balatro:
 	#!/bin/bash
 	OUT_FILE="balatro.$(date +%Y-%m-%d).7z"
