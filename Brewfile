@@ -29,6 +29,8 @@ brew "fd"
 brew "ffmpeg"
 # Text editor for your terminal: easy, powerful and fast
 brew "fresh-editor"
+# Command-line fuzzy finder written in Go
+brew "fzf"
 # Quickly rewrite git repository history
 brew "git-filter-repo"
 # Git extension for versioning large files
@@ -47,6 +49,8 @@ brew "onefetch"
 brew "ripgrep"
 # AI coding agent, built for the terminal
 brew "opencode"
+# 7-Zip (high compression file archiver) implementation
+brew "p7zip"
 # Display and control your Android device
 brew "scrcpy"
 # Static analysis and lint tool, for (ba)sh scripts
