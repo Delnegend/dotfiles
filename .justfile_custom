@@ -51,14 +51,6 @@ update-static:
 		curl -sL -w "%{url_effective}" "https://github.com/$1/releases/latest" -o /dev/null | grep -o '[^/]*$' | sed 's/^v//' | head -n 1
 	}
 
-	SEVEN_ZIP_CURR_VER=$(7zz | grep -oP '\d{2}\.\d{2}' | head -n 1)
-	SEVEN_ZIP_LATEST_VER=$(curl -s https://www.7-zip.org | grep -oP 'Download 7-Zip \K[0-9]+\.[0-9]+' | head -n1)
-	if [ "$SEVEN_ZIP_CURR_VER" != "$SEVEN_ZIP_LATEST_VER" ]; then
-		echo "Updating 7-Zip from $SEVEN_ZIP_CURR_VER to $SEVEN_ZIP_LATEST_VER"
-		wget -qO- "https://www.7-zip.org/a/7z${SEVEN_ZIP_LATEST_VER//.}-linux-x64.tar.xz" | tar -xJf - -C /home/$(whoami)/Apps 7zz
-	else
-		echo "7-Zip is already up to date ($SEVEN_ZIP_CURR_VER)"
-	fi
 
 	LIBJXL_CURR_VER=$(cjxl --version | grep -oP '\d+\.\d+\.\d+' | head -n 1)
 	LIBJXL_LATEST_VER=$(get_latest_github_ver libjxl/libjxl)
@@ -70,86 +62,6 @@ update-static:
 		rm -f /tmp/libjxl-$LIBJXL_LATEST_VER-linux-x86_64.tar.gz
 	else
 		echo "libjxl is already up to date ($LIBJXL_CURR_VER)"
-	fi
-
-	EZA_CURR_VER=$(eza --version | grep -oP '\d+\.\d+\.\d+' | head -n 1)
-	EZA_LATEST_VER=$(get_latest_github_ver eza-community/eza)
-	if [ "$EZA_CURR_VER" != "$EZA_LATEST_VER" ]; then
-		echo "Updating Eza from $EZA_CURR_VER to $EZA_LATEST_VER"
-		wget -qO- "https://github.com/eza-community/eza/releases/download/v$EZA_LATEST_VER/eza_x86_64-unknown-linux-musl.tar.gz" | tar -xzO > /home/$(whoami)/Apps/eza
-		sudo chmod +x /home/$(whoami)/Apps/eza
-	else
-		echo "Eza is already up to date ($EZA_CURR_VER)"
-	fi
-
-	# FASTFETCH_CURR_VER=$(fastfetch --version | grep -oP '\d+\.\d+\.\d+' | head -n 1)
-	# FASTFETCH_LATEST_VER=$(get_latest_github_ver fastfetch-cli/fastfetch)
-	# if [ "$FASTFETCH_CURR_VER" != "$FASTFETCH_LATEST_VER" ];
-	# then
-	# 	echo "Updating FastFetch from $FASTFETCH_CURR_VER to $FASTFETCH_LATEST_VER"
-	# 	wget -qO- "https://github.com/fastfetch-cli/fastfetch/releases/download/$FASTFETCH_LATEST_VER/fastfetch-linux-amd64.tar.gz" | tar -xzO > /home/$(whoami)/Apps/fastfetch
-	# 	sudo chmod +x /home/$(whoami)/Apps/fastfetch
-	# else
-	# 	echo "FastFetch is already up to date ($FASTFETCH_CURR_VER)"
-	# fi
-
-	FZF_CURR_VER=$(fzf --version | grep -oP '\d+\.\d+\.\d+' | head -n 1)
-	FZF_LATEST_VER=$(get_latest_github_ver junegunn/fzf)
-	if [ "$FZF_CURR_VER" != "$FZF_LATEST_VER" ]; then
-		echo "Updating FZF from $FZF_CURR_VER to $FZF_LATEST_VER"
-		wget -qO- "https://github.com/junegunn/fzf/releases/download/v$FZF_LATEST_VER/fzf-$FZF_LATEST_VER-linux_amd64.tar.gz" | tar -xzO fzf > /home/$(whoami)/Apps/fzf
-		sudo chmod +x /home/$(whoami)/Apps/fzf
-	else
-		echo "FZF is already up to date ($FZF_CURR_VER)"
-	fi
-
-	JUST_CURR_VER=$(just --version | grep -oP '(?<=just )\d+\.\d+\.\d+' | head -n 1)
-	JUST_LATEST_VER=$(get_latest_github_ver casey/just)
-	if [ "$JUST_CURR_VER" != "$JUST_LATEST_VER" ]; then
-		echo "Just is outdated ($JUST_CURR_VER -> $JUST_LATEST_VER), please update manually using the following command:"
-		echo "wget -qO- 'https://github.com/casey/just/releases/download/$JUST_LATEST_VER/just-$JUST_LATEST_VER-x86_64-unknown-linux-musl.tar.gz' | tar -xzO just > /home/$(whoami)/Apps/just"
-	else
-		echo "Just is already up to date ($JUST_CURR_VER)"
-	fi
-
-	LAZYDOCKER_CURR_VER=$(lazydocker --version | grep -oP '\d+\.\d+\.\d+' | head -n 1)
-	LAZYDOCKER_LATEST_VER=$(get_latest_github_ver jesseduffield/lazydocker)
-	if [ "$LAZYDOCKER_CURR_VER" != "$LAZYDOCKER_LATEST_VER" ]; then
-		echo "Updating LazyDocker from $LAZYDOCKER_CURR_VER to $LAZYDOCKER_LATEST_VER"
-		wget -qO- "https://github.com/jesseduffield/lazydocker/releases/download/v${LAZYDOCKER_LATEST_VER}/lazydocker_${LAZYDOCKER_LATEST_VER}_Linux_x86_64.tar.gz" | tar -xzO lazydocker > /home/$(whoami)/Apps/lazydocker
-		sudo chmod +x /home/$(whoami)/Apps/lazydocker
-	else
-		echo "Lazydocker is already up to date ($LAZYDOCKER_CURR_VER)"
-	fi
-
-	LAZYGIT_CURR_VER=$(lazygit --version | grep -oP '\d+\.\d+\.\d+' | head -n 1)
-	LAZYGIT_LATEST_VER=$(get_latest_github_ver jesseduffield/lazygit)
-	if [ "$LAZYGIT_CURR_VER" != "$LAZYGIT_LATEST_VER" ]; then
-		wget -qO- "https://github.com/jesseduffield/lazygit/releases/download/v$LAZYGIT_LATEST_VER/lazygit_${LAZYGIT_LATEST_VER}_linux_x86_64.tar.gz" | tar -xzO lazygit > /home/$(whoami)/Apps/lazygit
-		sudo chmod +x /home/$(whoami)/Apps/lazygit
-	else
-		echo "LazyGit is already up to date ($LAZYGIT_CURR_VER)"
-	fi
-
-	NCDU_CURR_VER=$(ncdu --version | grep -oP '\d+\.\d+\.\d+' | head -n 1)
-	NCDU_LATEST_VER=$(curl -s https://dev.yorhel.nl/ncdu | grep -oP '/download#ncdu-\K[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
-	if [ "$NCDU_CURR_VER" != "$NCDU_LATEST_VER" ]; then
-		echo "Updating NCDU from $NCDU_CURR_VER to $NCDU_LATEST_VER"
-		wget -qO- "https://dev.yorhel.nl/download/ncdu-$NCDU_LATEST_VER-linux-x86_64.tar.gz" | tar -xzO ncdu > /home/$(whoami)/Apps/ncdu
-		sudo chmod +x /home/$(whoami)/Apps/ncdu
-	else
-		echo "NCDU is already up to date ($NCDU_CURR_VER)"
-	fi
-
-	ONEFETCH_CURR_VER=$(onefetch --version | grep -oP '\d+\.\d+\.\d+' | head -n 1)
-	ONEFETCH_LATEST_VER=$(get_latest_github_ver o2sh/onefetch)
-	if [ "$ONEFETCH_CURR_VER" != "$ONEFETCH_LATEST_VER" ]; then
-		echo "Updating OneFetch from $ONEFETCH_CURR_VER to $ONEFETCH_LATEST_VER"
-		echo "https://github.com/o2sh/onefetch/releases/download/$ONEFETCH_LATEST_VER/onefetch-linux.tar.gz"
-		wget -qO- "https://github.com/o2sh/onefetch/releases/download/$ONEFETCH_LATEST_VER/onefetch-linux.tar.gz" | tar -xzO > /home/$(whoami)/Apps/onefetch
-		sudo chmod +x /home/$(whoami)/Apps/onefetch
-	else
-		echo "OneFetch is already up to date ($ONEFETCH_CURR_VER)"
 	fi
 
 sunshine state='start':
@@ -248,6 +160,10 @@ dummy:
 
 toggle-hdmi-res:
 	#!/bin/bash
+    export QT_QPA_PLATFORM=wayland
+    export WAYLAND_DISPLAY=wayland-0
+    export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+
 	just sunshine stop
 	CURRENT=$(kscreen-doctor --outputs 2>/dev/null | grep -oP '\d+x\d+(?=@\d+\.\d+\*)' | tail -1)
 	if [[ "$CURRENT" == "1920x1200" ]]; then
@@ -257,4 +173,5 @@ toggle-hdmi-res:
 	fi
 	just sunshine start
 
-
+restart_plasma_shell:
+    systemctl --user restart plasma-plasmashell.service
