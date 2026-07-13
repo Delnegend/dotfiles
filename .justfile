@@ -1,7 +1,7 @@
 REPO := justfile_directory()
 
 _default:
-	@just --list
+	@just --choose
 
 # Symlink all configs
 all: gitconfig ssh opencode zed vscode mpv easyeffects font justfile
@@ -85,10 +85,6 @@ font:
 	fi
 
 	fc-cache -f
-
-# Dump current brew state to Brewfile
-brew-dump:
-	brew bundle dump --force --file={{REPO}}/Brewfile
 
 # justfile itself
 justfile:
