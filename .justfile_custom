@@ -160,9 +160,9 @@ dummy:
 
 toggle-hdmi-res:
 	#!/bin/bash
-    export QT_QPA_PLATFORM=wayland
-    export WAYLAND_DISPLAY=wayland-0
-    export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+	export QT_QPA_PLATFORM=wayland
+	export WAYLAND_DISPLAY=wayland-0
+	export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
 
 	just sunshine stop
 	CURRENT=$(kscreen-doctor --outputs 2>/dev/null | grep -oP '\d+x\d+(?=@\d+\.\d+\*)' | tail -1)
@@ -174,4 +174,4 @@ toggle-hdmi-res:
 	just sunshine start
 
 restart_plasma_shell:
-    systemctl --user restart plasma-plasmashell.service
+	systemctl --user restart plasma-plasmashell.service
