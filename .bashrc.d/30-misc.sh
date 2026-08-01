@@ -1,2 +1,4 @@
 eval "$(starship init bash)"
 eval "$(zoxide init bash --cmd cd)"
+
+[ -f /usr/share/bash-completion/bash_completion ] && source /usr/share/bash-completion/bash_completion
