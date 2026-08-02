@@ -3,7 +3,7 @@ REPO := justfile_directory()
 _default:
 	just --choose
 
-backup-balatro:
+_backup-balatro:
 	#!/bin/bash
 	OUT_FILE="balatro.$(date +%Y-%m-%d).7z"
 	7zz a -mx=9 "$OUT_FILE" "/home/lava/Games/Heroic/Prefixes/default/Balatro/drive_c/users/lava/AppData/Roaming/Balatro"
@@ -14,14 +14,14 @@ backup-balatro:
 	just _upload_to_google_drive "$OUT_FILE"
 	rm -f "$OUT_FILE"
 
-ensure-ssh-permissions:
+_ensure-ssh-permissions:
 	sudo chmod 700 ~/.ssh
 	sudo chmod 600 ~/.ssh/*
 	sudo chmod 644 ~/.ssh/*.pub
 	sudo chmod 644 ~/.ssh/known_hosts
 	sudo chmod 644 ~/.ssh/config
 
-transcode codec input:
+_transcode codec input:
 	#!/bin/bash
 	codec="{{ codec }}"
 	input="{{ input }}"
@@ -38,13 +38,13 @@ transcode codec input:
 		exit 1
 	fi
 
-thumb file:
+_thumb file:
 	#!/bin/bash
 	FILE="$1"
 
 	ffmpeg -i "$FILE" -map 0 -map 0 -filter:0 "scale=300:200:force_original_aspect_ratio=decrease,pad=300:200:(ow-iw)/2:(oh-ih)/2:color=0x00000000,format=yuv420p" -filter:1 "scale=300:200:force_original_aspect_ratio=decrease,pad=300:200:(ow-iw)/2:(oh-ih)/2:color=0x00000000,format=yuva444p,alphaextract" -crf 22 -cpu-used 5 "${FILE%.*}.avif"
 
-update-static:
+_update-static:
 	#!/bin/bash
 
 	get_latest_github_ver() {
@@ -88,7 +88,7 @@ sunshine state='start':
 		exit 1
 	fi
 
-rdp state='start':
+_rdp_kde state='start':
 	#!/usr/bin/bash
 
 	START_KEYWORDS=(start restart enable 1 on)
@@ -106,7 +106,24 @@ rdp state='start':
 		exit 1
 	fi
 
-unlock:
+rdp state='start':
+	#!/usr/bin/bash
+
+	START_KEYWORDS=(start restart enable 1 on)
+	STOP_KEYWORDS=(stop disable 0 off)
+
+	if [[ " ${START_KEYWORDS[*]} " == *" {{state}} "* ]]; then
+		sudo grdctl --system rdp enable 2>/dev/null
+		echo "GNOME Remote Login is now ENABLED"
+	elif [[ " ${STOP_KEYWORDS[*]} " == *" {{state}} "* ]]; then
+		sudo grdctl --system rdp disable 2>/dev/null
+		echo "GNOME Remote Login is now DISABLED"
+	else
+		echo "Invalid state. Use 'start' or 'stop'."
+		exit 1
+	fi
+
+_unlock_kde:
 	#!/usr/bin/bash
 	set -euo pipefail
 
@@ -148,17 +165,36 @@ unlock:
 	echo "Timed out waiting for session. Cleaned up." >&2
 	exit 1
 
-fix-local-dimming:
+_fix-local-dimming_kde:
 	#!/bin/bash
 	kscreen-doctor --dpms off && sleep 1 && kscreen-doctor --dpms on
 
-dp:
+fix-local-dimming:
+	busctl --user set-property org.gnome.Mutter.DisplayConfig /org/gnome/Mutter/DisplayConfig org.gnome.Mutter.DisplayConfig PowerSaveMode i 1
+	sleep 1
+	busctl --user set-property org.gnome.Mutter.DisplayConfig /org/gnome/Mutter/DisplayConfig org.gnome.Mutter.DisplayConfig PowerSaveMode i 0
+
+_dp_kde:
 	QT_QPA_PLATFORM=wayland WAYLAND_DISPLAY=wayland-0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus kscreen-doctor output.DP-2.enable output.HDMI-A-1.disable 2>&1 || true
 
-dummy:
+_dummy_kde:
 	QT_QPA_PLATFORM=wayland WAYLAND_DISPLAY=wayland-0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus kscreen-doctor output.HDMI-A-1.enable output.DP-2.disable 2>&1 || true
 
-toggle-hdmi-res:
+dp:
+	#!/usr/bin/bash
+	BUS="org.gnome.Mutter.DisplayConfig"
+	OBJ="/org/gnome/Mutter/DisplayConfig"
+	SERIAL=$(gdbus call --session --dest "$BUS" --object-path "$OBJ" --method "$BUS.GetCurrentState" | grep -oP '^\(uint32 \K\d+')
+	gdbus call --session --dest "$BUS" --object-path "$OBJ" --method "$BUS.ApplyMonitorsConfig" "$SERIAL" 2 "[(0, 0, 1.0, uint32 0, true, [('DP-2', '2560x1440@199.999', {})])]" "{}"
+
+dummy:
+	#!/usr/bin/bash
+	BUS="org.gnome.Mutter.DisplayConfig"
+	OBJ="/org/gnome/Mutter/DisplayConfig"
+	SERIAL=$(gdbus call --session --dest "$BUS" --object-path "$OBJ" --method "$BUS.GetCurrentState" | grep -oP '^\(uint32 \K\d+')
+	gdbus call --session --dest "$BUS" --object-path "$OBJ" --method "$BUS.ApplyMonitorsConfig" "$SERIAL" 2 "[(0, 0, 1.0, uint32 0, true, [('HDMI-1', '3840x2160@59.982', {})])]" "{}"
+
+_toggle-hdmi-res:
 	#!/bin/bash
 	export QT_QPA_PLATFORM=wayland
 	export WAYLAND_DISPLAY=wayland-0
@@ -173,5 +209,5 @@ toggle-hdmi-res:
 	fi
 	just sunshine start
 
-restart_plasma_shell:
+_restart_plasma_shell:
 	systemctl --user restart plasma-plasmashell.service
