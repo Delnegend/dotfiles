@@ -33,6 +33,11 @@ done
 eval "$("$BREW" shellenv)"
 git lfs install --skip-repo
 
+if ! command -v opencode &>/dev/null; then
+    echo "Installing opencode..."
+    "$BREW" install anomalyco/tap/opencode
+fi
+
 if [ ! -d "$HOME/dotfiles" ]; then
     echo "Cloning dotfiles..."
     git clone --depth=1 https://github.com/Delnegend/dotfiles.git "$HOME/dotfiles"
