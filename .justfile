@@ -4,7 +4,7 @@ _default:
 	@just --choose
 
 # Symlink all configs
-all: gitconfig ssh opencode zed vscode mpv easyeffects font justfile
+all: agents gitconfig ssh opencode zed vscode mpv easyeffects font justfile
 
 # Agent skills
 agents:
