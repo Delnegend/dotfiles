@@ -22,6 +22,7 @@ ssh:
 opencode:
 	mkdir -p ~/.config/opencode
 	ln -sf {{REPO}}/.config/opencode.jsonc ~/.config/opencode/opencode.jsonc
+	ln -sfn {{REPO}}/.config/opencode/themes ~/.config/opencode/themes
 
 # Zed editor
 zed:
