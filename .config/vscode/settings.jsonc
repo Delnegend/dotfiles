@@ -55,7 +55,10 @@
   "editor.minimap.autohide": "mouseover",
   "editor.minimap.renderCharacters": false,
   "editor.renderWhitespace": "all",
-  "editor.rulers": [80, 120],
+  "editor.rulers": [
+    80,
+    120
+  ],
   "editor.smoothScrolling": true,
   "editor.stickyScroll.enabled": false,
   "editor.unicodeHighlight.includeComments": true,
@@ -177,6 +180,7 @@
   "workbench.editor.empty.hint": "hidden",
   "workbench.editorAssociations": {
     "*.copilotmd": "vscode.markdown.preview.editor",
+    "*.md": "vscode.markdown.preview.editor",
     "*.db": "sqlite-viewer.option",
     "file:/**/*.csv": "jupyter-data-wrangler",
   },
@@ -187,4 +191,8 @@
       ".continue/**/*.yaml"
     ]
   },
+  "git.autofetch": true,
+  "editor.tabSize": 2,
+  "remote.autoForwardPorts": false,
+  "js/ts.experimental.useTsgo": true,
 }

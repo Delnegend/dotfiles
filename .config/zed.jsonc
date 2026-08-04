@@ -8,6 +8,10 @@
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
   "language_models": {
+    "opencode": {
+      "show_free_models": true,
+      "show_zen_models": false
+    },
     "openai_compatible": {
 
     }
@@ -39,7 +43,14 @@
     }
   },
   "agent_servers": {
-
+    "opencode": {
+      "default_config_options": {
+        "effort": "max",
+        "model": "opencode-go/qwen3.7-plus",
+        "mode": "plan"
+      },
+      "type": "registry"
+    }
   },
   "diff_view_style": "split",
   "soft_wrap": "editor_width",
@@ -244,9 +255,10 @@
       }
     },
     "default_model": {
-      "provider": "Bifrost",
-      "model": "gpt-5",
-      "enable_thinking": false,
+      "effort": "max",
+      "provider": "opencode",
+      "model": "go/deepseek-v4-flash",
+      "enable_thinking": true,
     },
     "favorite_models": [
       {
