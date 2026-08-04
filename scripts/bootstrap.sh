@@ -51,4 +51,7 @@ if ! grep -q 'source ~/dotfiles/.bashrc_custom' "$HOME/.bashrc" 2>/dev/null; the
     echo 'source ~/dotfiles/.bashrc_custom' >> "$HOME/.bashrc"
 fi
 
+echo "Linking agent skills..."
+just agents
+
 echo "Done! Restart your shell or run: source ~/.bashrc"
