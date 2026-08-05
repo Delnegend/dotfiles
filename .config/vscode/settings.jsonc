@@ -137,6 +137,7 @@
   "js/ts.implicitProjectConfig.checkJs": true,
   "json.schemaDownload.trustedDomains": {
     "https://developer.microsoft.com/json-schemas/": true,
+    "https://github.com/devcontainers/spec/raw/refs/heads/main/schemas/devContainer.base.schema.json": true,
     "https://json-schema.org/": true,
     "https://json.schemastore.org/": true,
     "https://models.dev/model-schema.json": true,
@@ -195,4 +196,13 @@
   "editor.tabSize": 2,
   "remote.autoForwardPorts": false,
   "js/ts.experimental.useTsgo": true,
+  "workbench.experimental.modernUI": true,
+  "security.allowedUNCHosts": [
+    "wsl.localhost"
+  ],
+  "remote.SSH.remotePlatform": {
+    "core": "linux"
+  },
+  "terminal.integrated.fontLigatures.enabled": true,
+  "editor.fontLigatures": true,
 }
