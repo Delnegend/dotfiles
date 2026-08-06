@@ -4,7 +4,7 @@ _default:
 	@just --choose
 
 # Symlink all configs
-all: agents gitconfig ssh opencode zed vscode mpv easyeffects font justfile
+all: agents gitconfig ssh opencode zed vscode mpv easyeffects font systemd justfile
 
 # Agent skills
 agents:
@@ -86,6 +86,13 @@ font:
 	fi
 
 	fc-cache -f
+
+# systemd user units
+systemd:
+	mkdir -p ~/.config/systemd/user
+	for unit in {{REPO}}/systemd/user/*; do ln -sfn "$$unit" ~/.config/systemd/user/; done
+	systemctl --user daemon-reload
+	systemctl --user enable --now openrgb-off.service
 
 # justfile itself
 justfile:

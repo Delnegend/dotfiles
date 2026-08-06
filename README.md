@@ -37,6 +37,8 @@ After the shell config is set up, add a machine-specific file if one doesn't exi
 
 .ssh/                         # SSH public keys
 
+systemd/user/                 # systemd user units (openrgb-off.service, ...)
+
 .justfile                     # setup recipes for this dotfiles repo (symlinks, fonts)
 .justfile_custom              # general-purpose recipes for the host OS (backups, transcoding, system utils)
 ```

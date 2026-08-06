@@ -1,0 +1,11 @@
+[Unit]
+Description=Turn off all RGB lighting
+After=graphical-session.target
+ConditionPathExists=/home/lava/AppImages/openrgb.appimage
+
+[Service]
+Type=oneshot
+ExecStart=/home/lava/AppImages/openrgb.appimage -c 000000
+
+[Install]
+WantedBy=graphical-session.target
