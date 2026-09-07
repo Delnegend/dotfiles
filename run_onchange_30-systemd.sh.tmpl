@@ -3,6 +3,8 @@
 set -e
 # run_onchange: enable chezmoi-managed systemd user units (ex-.justfile `systemd` recipe).
 # Units themselves are files in dot_config/systemd/user/; this only reloads + enables.
+# Per-host scoping lives in the units (ConditionPathExists=/ConditionHost=),
+# so unmet conditions make enable --now a safe no-op on non-owning hosts.
 # openrgb-off hash: {{ include "dot_config/systemd/user/openrgb-off.service" | sha256sum }}
 # rsrpc hash: {{ include "dot_config/systemd/user/rsrpc.service" | sha256sum }}
 # npiperelay hash: {{ include "dot_config/systemd/user/npiperelay.service" | sha256sum }}

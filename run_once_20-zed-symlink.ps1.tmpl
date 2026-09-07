@@ -1,0 +1,29 @@
+{{- if eq .chezmoi.os "windows" }}
+# run_once: symlink %APPDATA%/Zed to ~/.config/zed for cross-platform Zed config.
+# On Linux, Zed reads from ~/.config/zed (dot_config/zed).
+# On Windows, Zed reads from %APPDATA%/Zed. This script makes the latter
+# a symlink to the former so both platforms share one config source.
+
+$source = "$env:USERPROFILE\.config\zed"
+$target = "$env:APPDATA\Zed"
+
+# Check if already a symlink
+$item = Get-Item $target -ErrorAction SilentlyContinue
+if ($item -and $item.LinkType -eq 'SymbolicLink') {
+    Write-Host "Zed config is already a symlink. Skipping."
+    exit 0
+}
+
+if (Test-Path $target) {
+    if ((Get-Item $target).PSIsContainer) {
+        $backup = "$target.chezmoi-backup-$(Get-Date -Format 'yyyyMMddHHmmss')"
+        Move-Item -Path $target -Destination $backup -Force
+        Write-Host "Backed up existing $target to $backup"
+    } else {
+        Remove-Item $target -Force
+    }
+}
+
+New-Item -ItemType SymbolicLink -Path $target -Target $source -Force | Out-Null
+Write-Host "Created symlink: $target -> $source"
+{{- end }}

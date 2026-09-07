@@ -1,5 +1,5 @@
 {{- if eq .chezmoi.hostname "bazzite" }}
 SSH_AUTH_SOCK=/home/lava/.var/app/com.bitwarden.desktop/data/.bitwarden-ssh-agent.sock
-{{- else }}
+{{- else if eq .chezmoi.hostname "wsl" }}
 SSH_AUTH_SOCK=$HOME/.ssh/agent.sock
 {{- end }}
