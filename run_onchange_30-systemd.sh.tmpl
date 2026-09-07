@@ -1,0 +1,16 @@
+{{- if eq .chezmoi.os "linux" -}}
+#!/bin/bash
+set -e
+# run_onchange: enable chezmoi-managed systemd user units (ex-.justfile `systemd` recipe).
+# Units themselves are files in dot_config/systemd/user/; this only reloads + enables.
+# openrgb-off hash: {{ include "dot_config/systemd/user/openrgb-off.service" | sha256sum }}
+# rsrpc hash: {{ include "dot_config/systemd/user/rsrpc.service" | sha256sum }}
+# npiperelay hash: {{ include "dot_config/systemd/user/npiperelay.service" | sha256sum }}
+# dotfiles-pull hash: {{ include "dot_config/systemd/user/dotfiles-pull.service" | sha256sum }}
+
+systemctl --user daemon-reload
+systemctl --user enable --now openrgb-off.service
+systemctl --user enable --now rsrpc.service
+systemctl --user enable --now npiperelay.service
+systemctl --user enable --now dotfiles-pull.timer
+{{- end -}}

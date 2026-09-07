@@ -1,0 +1,76 @@
+{{- if eq .chezmoi.os "linux" -}}
+#!/bin/bash
+set -e
+# run_once: base packages + Homebrew + shell wiring (ex-scripts/bootstrap.sh).
+# Re-runs only when this file's hash changes.
+
+BREW="/home/linuxbrew/.linuxbrew/bin/brew"
+
+install_sys() {
+    if command -v apt-get &>/dev/null; then
+        sudo apt-get install -y "$@"
+    elif command -v dnf &>/dev/null; then
+        sudo dnf install -y "$@"
+    elif command -v yum &>/dev/null; then
+        sudo yum install -y "$@"
+    fi
+}
+
+pkg_mgr=""
+if command -v bun &>/dev/null; then
+    pkg_mgr="bun"
+elif command -v pnpm &>/dev/null; then
+    pkg_mgr="pnpm"
+elif command -v npm &>/dev/null; then
+    pkg_mgr="npm"
+fi
+
+install_npm() {
+    case "$pkg_mgr" in
+        bun)  bun install -g "$1" ;;
+        pnpm) pnpm add -g "$1" ;;
+        npm)  npm install -g "$1" ;;
+    esac
+}
+
+if ! command -v git &>/dev/null; then
+    echo "Installing git..."
+    install_sys git curl
+fi
+
+if [ ! -x "$BREW" ]; then
+    echo "Installing Homebrew..."
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" < /dev/null
+fi
+
+for pkg in just zoxide starship fzf; do
+    if ! command -v "$pkg" &>/dev/null; then
+        echo "Installing $pkg..."
+        "$BREW" install "$pkg"
+    fi
+done
+
+eval "$("$BREW" shellenv)"
+
+if ! command -v opencode &>/dev/null; then
+    if [ -n "$pkg_mgr" ]; then
+        echo "Installing opencode via $pkg_mgr..."
+        install_npm opencode-ai
+    else
+        echo "No package manager found, installing opencode via curl..."
+        curl -fsSL https://opencode.ai/install | bash
+    fi
+fi
+
+echo "Wiring bash..."
+# chezmoi manages ~/.bashrc_custom (dot_bashrc_custom); ensure ~/.bashrc sources it.
+# Migrates the old cfg-system path if present.
+if grep -q 'source ~/dotfiles/cfg-system/bashrc_custom' "$HOME/.bashrc" 2>/dev/null; then
+    sed -i 's|source ~/dotfiles/cfg-system/bashrc_custom|source ~/.bashrc_custom|' "$HOME/.bashrc"
+elif ! grep -q 'source ~/.bashrc_custom' "$HOME/.bashrc" 2>/dev/null; then
+    echo >> "$HOME/.bashrc"
+    echo 'source ~/.bashrc_custom' >> "$HOME/.bashrc"
+fi
+
+echo "Done! Restart your shell or run: source ~/.bashrc"
+{{- end -}}

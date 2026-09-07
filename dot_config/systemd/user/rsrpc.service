@@ -1,0 +1,11 @@
+[Unit]
+Description=Run rsrpc
+ConditionPathExists=/home/linuxbrew/.linuxbrew/bin/rsrpc
+
+[Service]
+Type=simple
+ExecStart=/home/linuxbrew/.linuxbrew/bin/rsrpc
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

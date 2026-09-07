@@ -1,0 +1,56 @@
+tap "delnegend/tap", "https://github.com/Delnegend/homebrew-tap", trusted: true
+tap "ublue-os/tap", trusted: true
+tap "valkyrie00/bbrew", "https://github.com/Valkyrie00/homebrew-bbrew"
+# GitHub command-line tool
+brew "gh"
+# Cross-shell prompt for astronauts
+brew "starship"
+# Diagnostic, instructional, and debugging tool for the Linux kernel
+brew "strace"
+# Shell extension to navigate your filesystem faster
+brew "zoxide"
+# Alternative Discord RPC server
+brew "delnegend/tap/rsrpc"
+# Driver and daemon for Segotep Ice Moon / Digital series AIO CPU coolers
+brew "delnegend/tap/segotep-digital", trusted: true
+# Modern TUI for managing Homebrew packages and casks on macOS and Linux
+brew "valkyrie00/bbrew/bbrew", trusted: true
+# High-performance, multiplayer code editor (native, replaces Flatpak)
+cask "ublue-os/tap/zed-linux"
+# Terminal interface for Antigravity agents
+cask "ublue-os/tap/antigravity-cli-linux"
+flatpak "com.bitwarden.desktop"
+flatpak "com.brave.Browser"
+flatpak "com.github.Matoking.protontricks"
+flatpak "com.github.tchx84.Flatseal"
+flatpak "com.github.wwmm.easyeffects"
+flatpak "com.heroicgameslauncher.hgl"
+flatpak "com.mattjakeman.ExtensionManager"
+flatpak "com.protonvpn.www"
+flatpak "com.ranfdev.DistroShelf"
+flatpak "com.vysp3r.ProtonPlus"
+flatpak "dev.vencord.Vesktop"
+flatpak "im.riot.Riot"
+flatpak "io.github.flattool.Warehouse"
+flatpak "io.missioncenter.MissionCenter"
+flatpak "io.mpv.Mpv"
+flatpak "it.mijorus.gearlever"
+flatpak "org.freedesktop.Piper"
+flatpak "org.gnome.Calculator"
+flatpak "org.gnome.Calendar"
+flatpak "org.gnome.Characters"
+flatpak "org.gnome.Contacts"
+flatpak "org.gnome.Firmware"
+flatpak "org.gnome.Logs"
+flatpak "org.gnome.Loupe"
+flatpak "org.gnome.NautilusPreviewer"
+flatpak "org.gnome.Papers"
+flatpak "org.gnome.Showtime"
+flatpak "org.gnome.TextEditor"
+flatpak "org.gnome.Weather"
+flatpak "org.gnome.baobab"
+flatpak "org.gnome.clocks"
+flatpak "org.gnome.font-viewer"
+flatpak "org.kde.krdc"
+flatpak "org.openrgb.OpenRGB"
+flatpak "page.tesk.Refine"

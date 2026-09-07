@@ -1,0 +1,12 @@
+[Unit]
+Description=Turn off all RGB lighting
+After=graphical-session.target
+ConditionPathExists=%h/AppImages/openrgb.appimage
+
+[Service]
+Type=oneshot
+TimeoutStartSec=30
+ExecStart=-/usr/bin/timeout 15s %h/AppImages/openrgb.appimage -c 000000
+
+[Install]
+WantedBy=graphical-session.target

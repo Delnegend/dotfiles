@@ -1,0 +1,11 @@
+[Unit]
+Description=Pull dotfiles every 12 hours
+
+[Timer]
+OnBootSec=5m
+OnUnitActiveSec=12h
+Persistent=true
+RandomizedDelaySec=10m
+
+[Install]
+WantedBy=timers.target

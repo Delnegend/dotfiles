@@ -1,0 +1,13 @@
+.DS_Store
+*.swp
+*.tmp
+
+# opencode memory — runtime knowledge graph, keep out of repo (see dot_config/opencode/opencode.jsonc)
+.agents/memory.jsonl
+
+# chezmoi internals (when sourceDir is repo root, keep these out of git if ever created)
+.chezmoiignore.bak
+
+# Windows
+Thumbs.db
+desktop.ini

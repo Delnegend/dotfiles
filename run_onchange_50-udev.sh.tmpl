@@ -1,0 +1,18 @@
+{{- if eq .chezmoi.os "linux" -}}
+#!/bin/bash
+set -e
+# run_onchange: install udev hardware rules (needs sudo, copies not symlinks for
+# early boot before /home). Ex-cfg-system/99-disable-ncq-s4510.rules.
+# Re-runs automatically when this script's content changes (run_onchange).
+
+sudo mkdir -p /etc/udev/rules.d
+sudo tee /etc/udev/rules.d/99-disable-ncq-s4510.rules > /dev/null <<'EOF'
+# Disable NCQ on Intel D3-S4510 1.92TB (SSDSC2KB019T7R) s/n BTYS810202MW1P9DGN - sda currently ata7
+# Sets queue_depth=1 which disables Native Command Queueing for this SATA SSD only.
+# Does not affect NVMe drives (nvme1n1, nvme0n1).
+# Robust: match by serial (not sdN name) so it survives reordering to sdb/sdc.
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="sd[a-z]", ATTRS{serial}=="BTYS810202MW1P9DGN", ATTR{device/queue_depth}="1"
+EOF
+sudo udevadm control --reload-rules
+sudo udevadm trigger --action=change --subsystem-match=block --attr-match=serial=BTYS810202MW1P9DGN
+{{- end -}}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "websearch": "allow"
+  },
+  "lsp": {},
+  "mcp": {
+    "memory": {
+      "type": "local",
+      "command": ["bunx", "@modelcontextprotocol/server-memory"],
+      "enabled": true,
+      "environment": {
+        "MEMORY_FILE_PATH": "/var/home/lava/.local/share/opencode/memory.jsonl"
+      }
+    }
+  }
+}

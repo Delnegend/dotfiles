@@ -1,0 +1,15 @@
+[Unit]
+Description=Bridge Windows OpenSSH agent to Unix socket via npiperelay and socat (WSL)
+ConditionHost=wsl
+ConditionPathExists=/usr/local/bin/npiperelay.exe
+After=default.target
+
+[Service]
+Type=simple
+ExecStartPre=-/bin/rm -f %h/.ssh/agent.sock
+ExecStart=/bin/sh -c 'exec socat UNIX-LISTEN:"$HOME/.ssh/agent.sock",fork,unlink-close,unlink-early EXEC:"npiperelay.exe -ei -s //./pipe/openssh-ssh-agent",nofork'
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=default.target

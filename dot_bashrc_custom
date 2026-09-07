@@ -1,0 +1,50 @@
+case "$(hostname -s)" in
+    wsl)
+        export SSH_AUTH_SOCK=$HOME/.ssh/agent.sock
+        ;;
+    homelab)
+        alias k3s-check='sudo CONFIG=/usr/lib/modules/$(uname -r)/config k3s check-config'
+        alias sync='just sync'
+        command -v kubectl &>/dev/null && source <(kubectl completion bash)
+        ;;
+    bazzite)
+        if [ -f /usr/share/bazzite-cli/bling.sh ]; then
+            source /usr/share/bazzite-cli/bling.sh
+        fi
+        export SSH_AUTH_SOCK=/home/lava/.var/app/com.bitwarden.desktop/data/.bitwarden-ssh-agent.sock
+        export XMODIFIERS=@im=fcitx
+        export PATH=$PATH:/var/home/lava/bin/jdk-25.0.2+10-jre/bin/
+        alias ollama='podman exec -it ollama ollama'
+        alias tb=toolbox
+        ;;
+esac
+
+export DOCKER_HOST="unix://$XDG_RUNTIME_DIR/podman/podman.sock"
+[ -d "$HOME/.opencode/bin" ] && export PATH="$HOME/.opencode/bin:$PATH"
+export OPENCODE_ENABLE_EXA=1
+
+if [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
+    if ! grep -qs 'brew shellenv' "$HOME/.profile" 2>/dev/null; then
+        echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> "$HOME/.profile"
+    fi
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
+
+alias pm=podman
+alias ll='ls -lah --color=auto'
+alias j=just
+alias lg='lazygit'
+alias oc='opencode'
+alias up='podman compose up'
+alias down='podman compose down'
+
+if [ -f /run/.containerenv ]; then
+    alias pm="flatpak-spawn --host podman"
+    alias podman="flatpak-spawn --host podman"
+    export PATH=$PATH:/usr/local/go/bin
+fi
+
+eval "$(starship init bash)"
+eval "$(zoxide init bash --cmd cd)"
+
+[ -f /usr/share/bash-completion/bash_completion ] && source /usr/share/bash-completion/bash_completion

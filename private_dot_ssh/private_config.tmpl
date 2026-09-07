@@ -1,0 +1,34 @@
+{{- /* Unified SSH config (core + github + git.delnegend, IdentityAgent per OS) */ -}}
+Host core
+	HostName homelab
+	User core
+	ForwardAgent yes
+	Compression yes
+	IdentityFile ~/.ssh/core@homelab.pub
+	IdentitiesOnly yes
+{{- if eq .chezmoi.os "windows" }}
+	IdentityAgent //./pipe/openssh-ssh-agent
+{{- else }}
+	IdentityAgent ${SSH_AUTH_SOCK}
+{{- end }}
+
+Host github.com
+	HostName github.com
+	User git
+	IdentityFile ~/.ssh/delnegend@github.pub
+{{- if eq .chezmoi.os "windows" }}
+	IdentityAgent //./pipe/openssh-ssh-agent
+{{- else }}
+	IdentityAgent ${SSH_AUTH_SOCK}
+{{- end }}
+
+Host git.delnegend.com
+	HostName git.delnegend.com
+	User git
+	Port 2222
+	IdentityFile ~/.ssh/delnegend@git.delnegend.com.pub
+{{- if eq .chezmoi.os "windows" }}
+	IdentityAgent //./pipe/openssh-ssh-agent
+{{- else }}
+	IdentityAgent ${SSH_AUTH_SOCK}
+{{- end }}
