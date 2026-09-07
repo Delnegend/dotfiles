@@ -1,6 +1,7 @@
 # Non-chezmoi repo files (helpers — not home targets)
 README.md
 AGENTS.md
+LICENSE
 .gitignore
 sync-zed-vscode-theme.py
 

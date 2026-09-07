@@ -29,37 +29,22 @@ For a new machine, add a `case` branch in `dot_bashrc_custom` matching `$(hostna
 
 ### Windows
 
-Prerequisites: [Git for Windows](https://gitforwindows.org/) (`git` + `C:\Windows\System32\OpenSSH\ssh.exe`). Install via winget if needed:
+1. Install:
+    ```powershell
+    winget install Git.Git twpayne.chezmoi -e
+    ```
 
-   ```powershell
-   winget install Git.Git twpayne.chezmoi -e
-   ```
+2. Clone and apply:
+    ```powershell
+    chezmoi init --apply Delnegend
+    ```
 
-1. Clone and apply:
-
-   ```powershell
-   chezmoi init --apply Delnegend
-   # clones to ~/.local/share/chezmoi (i.e. $HOME\.local\share\chezmoi) and applies
-   ```
-
-   If chezmoi is not yet installed, bootstrap first:
-   ```powershell
-   irm get.chezmoi.io | iex
-   chezmoi init --apply Delnegend
-   ```
-
-   Chezmoi manages `~/.gitconfig` (`dot_gitconfig.tmpl` with OS-conditional `helper`/`program`/`sshCommand`), `~/.ssh/config` (`private_dot_ssh/private_config.tmpl` with `${SSH_AUTH_SOCK}` on Linux), and `~/.config/git/allowed_signers`. Existing files with differing content are backed up by chezmoi; `~/.ssh/known_hosts` is left untouched.
-
-2. Verify:
-
-   ```powershell
-   chezmoi status                          # should be clean
-   chezmoi diff                            # should be empty
-   git config --global --list --show-origin
-   ssh-add -L                          # should list keys
-   ssh -T github.com               # should print "Hi Delnegend! ..."
-   git ls-remote Delnegend/dotfiles.git  # should print HEAD
-   ```
+3. Verify:
+    ```powershell
+    chezmoi status            # should be clean
+    chezmoi diff              # should be empty
+    ssh -T github.com         # should print "Hi Delnegend! ..."
+    ```
 
 Daily use:
 
@@ -103,5 +88,9 @@ run_onchange_40-kde.sh.tmpl   # flatpak overrides for BreezeDark
 run_onchange_50-udev.sh.tmpl  # 99-disable-ncq-s4510.rules → /etc/udev (sudo)
 
 # Repo-only (ignored via .chezmoiignore, never applied)
-sync-zed-vscode-theme.py  README.md  AGENTS.md
+sync-zed-vscode-theme.py  README.md  AGENTS.md  LICENSE
 ```
+
+## License
+
+MIT — see [LICENSE](LICENSE).
