@@ -203,10 +203,10 @@ _restart_plasma_shell:
 
 # Zed theme — keep pixel-perfect with microsoft/vscode Dark Modern
 zed-theme-check:
-	python3 ~/dotfiles/sync-zed-vscode-theme.py --check
+	python3 ~/.local/share/chezmoi/sync-zed-vscode-theme.py --check
 
 zed-theme-sync:
-	python3 ~/dotfiles/sync-zed-vscode-theme.py --write
+	python3 ~/.local/share/chezmoi/sync-zed-vscode-theme.py --write
 
 # Brewfile dump — ~/Brewfile is chezmoi-managed (dot_Brewfile)
 brew-dump:

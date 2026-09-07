@@ -2,7 +2,7 @@
 
 ## Bootstrap (chezmoi)
 
-> **Managed with [chezmoi](https://www.chezmoi.io/)** — `~/dotfiles` is the chezmoi source directory (`sourceDir = ~/dotfiles` via `~/.config/chezmoi/chezmoi.toml`). `dot_*`/`private_*` map to `$HOME`, `.tmpl` files render per-OS, `run_*` scripts handle setup.
+> **Managed with [chezmoi](https://www.chezmoi.io/)** — the repo lives at the default source directory `~/.local/share/chezmoi` (no `sourceDir` override needed). `dot_*`/`private_*` map to `$HOME`, `.tmpl` files render per-OS, `run_*` scripts handle setup.
 
 ### Prerequisites
 
@@ -14,10 +14,8 @@
 Ensure SSH agent forwarding is active (`ssh -A`) or your SSH key is added (`ssh-add`):
 
 ```bash
-git clone git@github.com:Delnegend/dotfiles.git ~/dotfiles
-mkdir -p ~/.config/chezmoi
-printf 'sourceDir = "%s/dotfiles"\n' "$HOME" > ~/.config/chezmoi/chezmoi.toml
-chezmoi apply -v
+chezmoi init --apply git@github.com:Delnegend/dotfiles.git
+# clones to ~/.local/share/chezmoi and applies;
 # run_once/run_onchange scripts handle Homebrew, fonts, systemd, flatpak, udev automatically
 ```
 
@@ -37,12 +35,8 @@ Prerequisites: [Bitwarden Desktop](https://bitwarden.com/download/) with **Setti
 2. Clone and apply:
 
    ```powershell
-   git clone git@github.com:Delnegend/dotfiles.git ~/dotfiles  # ~/ is %USERPROFILE% on Git Bash / PowerShell
-   New-Item -ItemType Directory -Force -Path ~/.config/chezmoi | Out-Null
-   @"
-   sourceDir = "$($env:USERPROFILE.Replace('\','/'))/dotfiles"
-   "@ | Set-Content ~/.config/chezmoi/chezmoi.toml -Encoding UTF8
-   chezmoi apply -v
+   chezmoi init --apply git@github.com:Delnegend/dotfiles.git
+   # clones to ~/.local/share/chezmoi (i.e. $HOME\.local\share\chezmoi) and applies
    ```
 
    Chezmoi manages `~/.gitconfig` (`dot_gitconfig.tmpl` with OS-conditional `helper`/`program`/`sshCommand`), `~/.ssh/config` (`private_dot_ssh/private_config.tmpl` with `//./pipe/openssh-ssh-agent` on Windows, `${SSH_AUTH_SOCK}` on Linux), and `~/.config/git/allowed_signers`. Existing files with differing content are backed up by chezmoi; `~/.ssh/known_hosts` is left untouched.
@@ -72,7 +66,7 @@ chezmoi add ~/.config/newapp/config  # add new file to repo
 ## Layout
 
 ```
-~/.config/chezmoi/chezmoi.toml   # chezmoi config: sourceDir = ~/dotfiles
+~/.local/share/chezmoi/          # repo root = default chezmoi sourceDir (no config override)
 
 # Files (dot_ → ~/., private_ → 0600/0700, .tmpl → Go template)
 dot_gitconfig.tmpl            # → ~/.gitconfig (OS-conditional: Windows gh.exe vs Linux brew gh)
@@ -101,5 +95,5 @@ run_onchange_40-kde.sh.tmpl   # flatpak overrides for BreezeDark
 run_onchange_50-udev.sh.tmpl  # 99-disable-ncq-s4510.rules → /etc/udev (sudo)
 
 # Repo-only (ignored via .chezmoiignore, never applied)
-docs/  sync-zed-vscode-theme.py  README.md  AGENTS.md
+sync-zed-vscode-theme.py  README.md  AGENTS.md
 ```

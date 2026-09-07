@@ -2,11 +2,11 @@
 Description=Auto-update dotfiles from origin/main
 After=network-online.target
 Wants=network-online.target
-ConditionPathExists=%h/dotfiles/.git
+ConditionPathExists=%h/.local/share/chezmoi/.git
 
 [Service]
 Type=oneshot
-WorkingDirectory=%h/dotfiles
+WorkingDirectory=%h/.local/share/chezmoi
 ExecStart=/bin/sh -c 'git fetch origin main --quiet && LOCAL=$(git rev-parse HEAD 2>/dev/null) && REMOTE=$(git rev-parse origin/main 2>/dev/null) && if [ -n "$LOCAL" ] && [ -n "$REMOTE" ] && [ "$LOCAL" != "$REMOTE" ]; then git pull --ff-only origin main; fi'
 
 [Install]

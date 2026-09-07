@@ -13,7 +13,7 @@ just brew-dump    # regenerate ~/Brewfile from installed packages
 
 ## Architecture
 
-- chezmoi-managed: repo root (`~/dotfiles`) is `sourceDir`; `dot_*`/`private_*` map to `$HOME`, `.tmpl` renders per-OS via `{{ if eq .chezmoi.os "windows" }}`
+- chezmoi-managed: repo root (`~/.local/share/chezmoi`) is the default `sourceDir` (no config override); `dot_*`/`private_*` map to `$HOME`, `.tmpl` renders per-OS via `{{ if eq .chezmoi.os "windows" }}`
 - `run_once_*` = one-shot setup (Homebrew, `~/.bashrc` wiring); `run_onchange_*` = re-runs when hashed `include`d files change; all Linux-only scripts are gated with `{{ if eq .chezmoi.os "linux" }}`
 - `dot_justfile` (`~/.justfile`) = general-purpose recipes only — never symlink/setup logic (that's chezmoi's job)
 - When adding a new config file or unit, update the Layout section in `README.md` too
