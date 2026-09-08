@@ -1,5 +1,6 @@
 tap "delnegend/tap", "https://github.com/Delnegend/homebrew-tap", trusted: true
 tap "ublue-os/tap", trusted: true
+tap "anomalyco/tap", trusted: true
 tap "valkyrie00/bbrew", "https://github.com/Valkyrie00/homebrew-bbrew"
 # GitHub command-line tool
 brew "gh"

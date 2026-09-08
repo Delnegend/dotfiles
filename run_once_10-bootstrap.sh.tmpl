@@ -4,7 +4,13 @@ set -e
 # run_once: base packages + Homebrew + shell wiring (ex-scripts/bootstrap.sh).
 # Re-runs only when this file's hash changes.
 
-BREW="/home/linuxbrew/.linuxbrew/bin/brew"
+# Resolve brew across standard Linux Homebrew layouts (Bazzite uses /var/home).
+BREW=""
+for c in /home/linuxbrew/.linuxbrew/bin/brew /var/home/linuxbrew/.linuxbrew/bin/brew; do
+    if [ -x "$c" ]; then BREW="$c"; break; fi
+done
+[ -z "$BREW" ] && command -v brew &>/dev/null && BREW="$(command -v brew)"
+
 export NONINTERACTIVE=1
 export HOMEBREW_NO_AUTO_UPDATE=1
 export HOMEBREW_NO_ANALYTICS=1
@@ -29,13 +35,21 @@ if [ ! -x "$BREW" ]; then
     NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" < /dev/null
 fi
 
+if [ ! -x "$BREW" ]; then
+    for c in /home/linuxbrew/.linuxbrew/bin/brew /var/home/linuxbrew/.linuxbrew/bin/brew; do
+        if [ -x "$c" ]; then BREW="$c"; break; fi
+    done
+fi
+[ -x "$BREW" ] || { echo "Cannot locate brew after install" >&2; exit 1; }
+
 eval "$("$BREW" shellenv)"
 
-# Configure third-party taps upfront
-"$BREW" tap ublue-os/tap
-"$BREW" tap anomalyco/tap
-"$BREW" trust ublue-os/tap 2>/dev/null || true
-"$BREW" trust anomalyco/tap/opencode 2>/dev/null || "$BREW" trust anomalyco/tap 2>/dev/null || true
+# Homebrew 6.0+ requires explicit trust for non-official taps. Trust only the
+# specific items we install (minimal scope). No explicit `brew tap` here: a
+# fully-qualified install auto-taps and auto-trusts its item, and running
+# `brew tap <tap>` first would try to load every formula in the tap and fail.
+"$BREW" trust --formula anomalyco/tap/opencode
+"$BREW" trust --cask ublue-os/tap/antigravity-cli-linux
 
 pkgs=(
     "just:just"
@@ -43,7 +57,7 @@ pkgs=(
     "starship:starship"
     "fzf:fzf"
     "opencode:anomalyco/tap/opencode"
-    "agy:--cask antigravity-cli-linux"
+    "agy:--cask ublue-os/tap/antigravity-cli-linux"
 )
 
 for entry in "${pkgs[@]}"; do
