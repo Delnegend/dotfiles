@@ -5,6 +5,9 @@ set -e
 # Re-runs only when this file's hash changes.
 
 BREW="/home/linuxbrew/.linuxbrew/bin/brew"
+export NONINTERACTIVE=1
+export HOMEBREW_NO_AUTO_UPDATE=1
+export HOMEBREW_NO_ANALYTICS=1
 
 install_sys() {
     if command -v apt-get &>/dev/null; then
