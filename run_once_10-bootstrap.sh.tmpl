@@ -53,6 +53,13 @@ for pkg in just zoxide starship fzf; do
     fi
 done
 
+if ! command -v agy &>/dev/null && ! command -v antigravity &>/dev/null; then
+    echo "Installing antigravity-cli-linux from ublue-os/tap..."
+    "$BREW" tap ublue-os/tap
+    "$BREW" trust ublue-os/tap 2>/dev/null || true
+    "$BREW" install --cask antigravity-cli-linux
+fi
+
 eval "$("$BREW" shellenv)"
 
 if ! command -v opencode &>/dev/null; then
