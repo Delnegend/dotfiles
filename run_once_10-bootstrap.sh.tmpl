@@ -19,23 +19,6 @@ install_sys() {
     fi
 }
 
-pkg_mgr=""
-if command -v bun &>/dev/null; then
-    pkg_mgr="bun"
-elif command -v pnpm &>/dev/null; then
-    pkg_mgr="pnpm"
-elif command -v npm &>/dev/null; then
-    pkg_mgr="npm"
-fi
-
-install_npm() {
-    case "$pkg_mgr" in
-        bun)  bun install -g "$1" ;;
-        pnpm) pnpm add -g "$1" ;;
-        npm)  npm install -g "$1" ;;
-    esac
-}
-
 if ! command -v git &>/dev/null; then
     echo "Installing git..."
     install_sys git curl
@@ -63,13 +46,10 @@ fi
 eval "$("$BREW" shellenv)"
 
 if ! command -v opencode &>/dev/null; then
-    if [ -n "$pkg_mgr" ]; then
-        echo "Installing opencode via $pkg_mgr..."
-        install_npm opencode-ai
-    else
-        echo "No package manager found, installing opencode via curl..."
-        curl -fsSL https://opencode.ai/install | bash
-    fi
+    echo "Installing opencode from anomalyco/tap..."
+    "$BREW" tap anomalyco/tap
+    "$BREW" trust anomalyco/tap/opencode 2>/dev/null || true
+    "$BREW" install anomalyco/tap/opencode
 fi
 
 echo "Wiring bash..."
