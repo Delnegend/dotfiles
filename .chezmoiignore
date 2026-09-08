@@ -5,11 +5,15 @@ LICENSE
 .gitignore
 sync-zed-vscode-theme.py
 
+# Flatpak app configs (mpv, easyeffects) — only applied on bazzite
+{{- if ne .chezmoi.hostname "bazzite" }}
+.var/**
+{{- end }}
+
 # Linux-only items — excluded on non-Linux machines.
 # Per-host scoping of systemd units lives in the units themselves
 # (ConditionPathExists=/ConditionHost=), not here.
 {{- if ne .chezmoi.os "linux" }}
-.var/**
 .config/environment.d/**
 .config/fontconfig/**
 .config/systemd/**
