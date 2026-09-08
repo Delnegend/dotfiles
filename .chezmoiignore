@@ -12,6 +12,7 @@ sync-zed-vscode-theme.py
 .config/fontconfig/**
 .config/kdeglobals
 .justfile
+.Brewfile
 {{- end }}
 
 # Linux-only items — excluded on non-Linux machines.
