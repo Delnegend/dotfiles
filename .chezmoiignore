@@ -5,9 +5,13 @@ LICENSE
 .gitignore
 sync-zed-vscode-theme.py
 
-# Flatpak app configs (mpv, easyeffects) — only applied on bazzite
+# Desktop / Bazzite-only items (Flatpak apps, KDE theme, fontconfig)
 {{- if ne .chezmoi.hostname "bazzite" }}
 .var/**
+.config/environment.d/kde-dark.conf
+.config/fontconfig/**
+.config/kdeglobals
+.justfile
 {{- end }}
 
 # Linux-only items — excluded on non-Linux machines.
