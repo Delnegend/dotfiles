@@ -1,13 +1,10 @@
-{{- if eq .chezmoi.os "linux" -}}
+{{- if eq .chezmoi.hostname "bazzite" -}}
 #!/bin/bash
 set -e
-# devcontainers and other containers lack udev entirely.
-if ! command -v udevadm >/dev/null 2>&1; then
-    exit 0
-fi
 # run_onchange: install udev hardware rules (needs sudo, copies not symlinks for
 # early boot before /home). Ex-cfg-system/99-disable-ncq-s4510.rules.
 # Re-runs automatically when this script's content changes (run_onchange).
+# This SATA SSD lives only in the bazzite machine, so skip everywhere else.
 
 sudo mkdir -p /etc/udev/rules.d
 sudo tee /etc/udev/rules.d/99-disable-ncq-s4510.rules > /dev/null <<'EOF'
