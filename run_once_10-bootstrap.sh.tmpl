@@ -29,28 +29,34 @@ if [ ! -x "$BREW" ]; then
     NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" < /dev/null
 fi
 
-for pkg in just zoxide starship fzf; do
-    if ! command -v "$pkg" &>/dev/null; then
-        echo "Installing $pkg..."
-        "$BREW" install "$pkg"
-    fi
-done
-
 eval "$("$BREW" shellenv)"
 
-if ! command -v agy &>/dev/null && ! command -v antigravity &>/dev/null; then
-    echo "Installing antigravity-cli-linux from ublue-os/tap..."
-    "$BREW" tap ublue-os/tap
-    "$BREW" trust ublue-os/tap 2>/dev/null || true
-    "$BREW" install --cask antigravity-cli-linux
-fi
+# Configure third-party taps upfront
+"$BREW" tap ublue-os/tap
+"$BREW" tap anomalyco/tap
+"$BREW" trust ublue-os/tap 2>/dev/null || true
+"$BREW" trust anomalyco/tap/opencode 2>/dev/null || "$BREW" trust anomalyco/tap 2>/dev/null || true
 
-if ! command -v opencode &>/dev/null; then
-    echo "Installing opencode from anomalyco/tap..."
-    "$BREW" tap anomalyco/tap
-    "$BREW" trust anomalyco/tap/opencode 2>/dev/null || true
-    "$BREW" install anomalyco/tap/opencode
-fi
+pkgs=(
+    "just:just"
+    "zoxide:zoxide"
+    "starship:starship"
+    "fzf:fzf"
+    "opencode:anomalyco/tap/opencode"
+    "agy:--cask antigravity-cli-linux"
+)
+
+for entry in "${pkgs[@]}"; do
+    cmd="${entry%%:*}"
+    args="${entry#*:}"
+    if ! command -v "$cmd" &>/dev/null; then
+        if [ "$cmd" = "agy" ] && command -v antigravity &>/dev/null; then
+            continue
+        fi
+        echo "Installing $cmd..."
+        "$BREW" install $args
+    fi
+done
 
 echo "Wiring bash..."
 # chezmoi manages ~/.bashrc_custom (dot_bashrc_custom); ensure ~/.bashrc sources it.
