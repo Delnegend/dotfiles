@@ -7,10 +7,10 @@
 $source = "$env:USERPROFILE\.config\zed"
 $target = "$env:APPDATA\Zed"
 
-# Check if already a symlink
+# Check if already a link
 $item = Get-Item $target -ErrorAction SilentlyContinue
-if ($item -and $item.LinkType -eq 'SymbolicLink') {
-    Write-Host "Zed config is already a symlink. Skipping."
+if ($item -and ($item.LinkType -eq 'SymbolicLink' -or $item.LinkType -eq 'Junction')) {
+    Write-Host "Zed config is already linked. Skipping."
     exit 0
 }
 
@@ -24,6 +24,6 @@ if (Test-Path $target) {
     }
 }
 
-New-Item -ItemType SymbolicLink -Path $target -Target $source -Force | Out-Null
-Write-Host "Created symlink: $target -> $source"
+New-Item -ItemType Junction -Path $target -Target $source -Force | Out-Null
+Write-Host "Created junction: $target -> $source"
 {{- end }}

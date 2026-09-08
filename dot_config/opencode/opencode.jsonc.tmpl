@@ -5,13 +5,23 @@
   },
   "lsp": {},
   "mcp": {
+    "browsermcp": {
+      "type": "local",
+      "command": [
+        "bunx",
+        "@browsermcp/mcp@latest"
+      ]
+    }{{- if eq .chezmoi.hostname "bazzite" }},
     "memory": {
       "type": "local",
-      "command": ["bunx", "@modelcontextprotocol/server-memory"],
+      "command": [
+        "bunx",
+        "@modelcontextprotocol/server-memory"
+      ],
       "enabled": true,
       "environment": {
         "MEMORY_FILE_PATH": "/var/home/lava/.local/share/opencode/memory.jsonl"
       }
-    }
+    }{{- end }}
   }
 }

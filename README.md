@@ -69,7 +69,7 @@ private_dot_ssh/              # → ~/.ssh/ (0700)
 dot_config/
   private_git/allowed_signers # → ~/.config/git/allowed_signers
   zed/settings.json + themes/ # → ~/.config/zed/
-  opencode/opencode.jsonc     # → ~/.config/opencode/opencode.jsonc
+  opencode/opencode.jsonc.tmpl # → ~/.config/opencode/opencode.jsonc (per-host MCP)
   fontconfig/fonts.conf       # → ~/.config/fontconfig/fonts.conf (Linux)
   kdeglobals                  # → ~/.config/kdeglobals
   environment.d/              # → ~/.config/environment.d/ (kde-dark.conf, ssh.conf.tmpl)
