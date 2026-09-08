@@ -18,6 +18,7 @@ case "$(hostname -s)" in
 esac
 
 export DOCKER_HOST="unix://$XDG_RUNTIME_DIR/podman/podman.sock"
+[ -d "$HOME/.local/share/bin" ] && export PATH="$HOME/.local/share/bin:$PATH"
 [ -d "$HOME/.opencode/bin" ] && export PATH="$HOME/.opencode/bin:$PATH"
 export OPENCODE_ENABLE_EXA=1
 
