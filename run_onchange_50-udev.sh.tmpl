@@ -1,6 +1,10 @@
 {{- if eq .chezmoi.os "linux" -}}
 #!/bin/bash
 set -e
+# devcontainers and other containers lack udev entirely.
+if ! command -v udevadm >/dev/null 2>&1; then
+    exit 0
+fi
 # run_onchange: install udev hardware rules (needs sudo, copies not symlinks for
 # early boot before /home). Ex-cfg-system/99-disable-ncq-s4510.rules.
 # Re-runs automatically when this script's content changes (run_onchange).
