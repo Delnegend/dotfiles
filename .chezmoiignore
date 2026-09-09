@@ -23,4 +23,5 @@ sync-zed-vscode-theme.py
 .config/fontconfig/**
 .config/systemd/**
 .config/kdeglobals
+.bashrc_custom
 {{- end }}
