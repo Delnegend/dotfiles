@@ -69,7 +69,16 @@ for entry in "${pkgs[@]}"; do
             continue
         fi
         echo "Installing $cmd..."
-        "$BREW" install $args
+        attempt=0
+        until "$BREW" install $args; do
+            attempt=$((attempt + 1))
+            if [ "$attempt" -ge 3 ]; then
+                echo "Failed to install $cmd after 3 attempts" >&2
+                exit 1
+            fi
+            echo "Retrying $cmd (attempt $((attempt + 1))/3) after transient failure..."
+            sleep $((attempt * 5))
+        done
     fi
 done
 
