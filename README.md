@@ -15,8 +15,10 @@ Ensure SSH agent forwarding is active (`ssh -A`) or your SSH key is added (`ssh-
 
 If chezmoi is not yet installed, bootstrap with:
 ```bash
-sh -c "$(curl -fsLS https://get.chezmoi.io)" -- init --apply Delnegend
+sh -c "$(curl -fsLS https://get.chezmoi.io)" -- -b "$HOME/.local/bin" init --apply Delnegend
 ```
+
+The `-b "$HOME/.local/bin"` is required: the installer's default `bin/` is relative to the current directory, so running the one-liner from e.g. `/workspaces/<project>` would install chezmoi there instead of under `$HOME`. `~/.local/bin` is on `PATH` by default on Debian/Ubuntu devcontainers.
 
 Otherwise:
 ```bash
