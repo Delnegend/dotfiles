@@ -12,6 +12,19 @@
         "@browsermcp/mcp@latest"
       ]
     }{{- if eq .chezmoi.hostname "bazzite" }},
+    "mikrotik": {
+      "type": "local",
+      "command": [
+        "mikrotik-mcp",
+        "{env:MIKROTIK_IP_ADDRESS}",
+      ],
+      "enabled": true,
+      "environment": {
+        "MIKROTIK_USER": "admin",
+        "MIKROTIK_PASSWORD": "{env:MIKROTIK_PASSWORD}",
+        "MIKROTIK_API_SSL": "false"
+      }
+    },
     "memory": {
       "type": "local",
       "command": [
