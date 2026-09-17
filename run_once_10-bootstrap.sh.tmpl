@@ -93,5 +93,12 @@ elif ! grep -q 'source ~/.bashrc_custom' "$HOME/.bashrc" 2>/dev/null; then
     echo 'source ~/.bashrc_custom' >> "$HOME/.bashrc"
 fi
 
+echo "Wiring chezmoi remote to SSH..."
+repo="$HOME/.local/share/chezmoi"
+url="$(git -C "$repo" remote get-url origin 2>/dev/null || true)"
+if [ "$url" = "https://github.com/Delnegend/dotfiles.git" ]; then
+    git -C "$repo" remote set-url origin git@github.com:Delnegend/dotfiles.git
+fi
+
 echo "Done! Restart your shell or run: source ~/.bashrc"
 {{- end -}}
