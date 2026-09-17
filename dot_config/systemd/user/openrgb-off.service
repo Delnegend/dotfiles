@@ -1,12 +1,13 @@
 [Unit]
 Description=Turn off all RGB lighting
 After=graphical-session.target
-ConditionPathExists=%h/AppImages/openrgb.appimage
+ConditionPathExists=|/var/lib/flatpak/app/org.openrgb.OpenRGB
+ConditionPathExists=|%h/.local/share/flatpak/app/org.openrgb.OpenRGB
 
 [Service]
 Type=oneshot
 TimeoutStartSec=30
-ExecStart=-/usr/bin/timeout 15s %h/AppImages/openrgb.appimage -c 000000
+ExecStart=-/usr/bin/timeout 15s /usr/bin/flatpak run org.openrgb.OpenRGB -c 000000
 
 [Install]
 WantedBy=graphical-session.target
