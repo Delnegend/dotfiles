@@ -15,7 +15,7 @@ flowchart TD
     D -->|green| E[dependabot-auto-merge<br/>gh pr merge --auto --rebase<br/>ubuntu-slim • exits in <10s]
     E -->|GitHub auto-rebases on green| F[Accumulate on main]
     F --> G[Weekly Release Cron<br/>Sunday 00:00 UTC or manual dispatch<br/>ubuntu-slim]
-    G -->|if new commits exist| H[Consolidated Release<br/>Single patch bump + batch changelog<br/>+ project-specific artifacts]
+    G -->|if new commits exist| H[Consolidated Release<br/>semver-action bump from Conventional Commits<br/>+ generated notes + project-specific artifacts]
 ```
 
 ## Customize Before You Apply (Strong Recommendation)
@@ -31,11 +31,14 @@ file.
 Strong recommended defaults (confirm with the owner; deviate when the project
 justifies it):
 
-1. **Release model** — weekly batched patch release (Sunday 00:00 UTC) plus
-   manual dispatch. Alternatives: release on every merge, label-gated releases.
-2. **Version source of truth** — git tags; the release computes the next patch
-   and injects it so `--version` matches the tag. Alternatives: bumping a
-   manifest, `release-plz`/`release-please`.
+1. **Release model** — weekly batched release (Sunday 00:00 UTC) plus manual
+   dispatch. Alternatives: release on every merge, label-gated releases.
+2. **Version source of truth** — git tags;
+   [`ietf-tools/semver-action`](https://github.com/ietf-tools/semver-action)
+   derives the next version from the Conventional Commits since the latest tag
+   (**never** a hand-rolled calculation or a manually typed version). If the
+   binary must report its version, inject the action's output so `--version`
+   matches the tag. Alternatives: `release-plz`/`release-please`.
 3. **Release artifacts** — build only what the project ships; for CLIs, Linux
    x64 + Windows x64 + macOS arm64; notes-only otherwise. Confirm formats and
    publish targets (GitHub Releases, a registry, a Homebrew tap, a CDN).
@@ -57,7 +60,7 @@ justifies it):
 2. **Standard `just check` Single Contract**: The target project is assumed to use the `just` command runner with a `check` recipe (`just check`) that orchestrates all formatting, linting, tests, and static type checking. **This "no build" rule applies to the CI gate only**: the CI gate runs `just check` and nothing else, and does **not** run multi-platform build steps. Building and shipping artifacts is the release workflow's job (Rule 5), and what it builds is project-specific. Target agents can rely on this single CI gate without project-specific CI scaffolding.
 3. **Supply Chain Defense (Mandatory 2-Week Cooldown)**: Dependabot runs **daily** to pick up mature packages immediately, but strictly enforces `cooldown: default-days: 14`. All newly published versions are quarantined for 14 days before an upgrade PR is created. This directly mitigates software supply chain attacks (e.g., account takeovers, poisoned point-releases, typosquatting), allowing registries and the security community time to detect and yank compromised releases.
 4. **Split Dependency Groups (`patch-and-minor` vs `major`)**: Dependabot groups must separate `patch` and `minor` from `major` updates. This prevents a single breaking major update from blocking the autonomous merging of routine patches.
-5. **Weekly Batched Releases (Zero Polling & Drastic Compute Savings)**: Rather than releasing on every individual PR (which would churn version numbers, burn runner minutes, and require fragile polling loops due to `GITHUB_TOKEN` event suppression), updates accumulate on `main` throughout the week. A scheduled weekly cron job generates a **single consolidated patch release** containing the combined changelog. **The release builds whatever the target project needs** — a per-platform native binary matrix, a package, or notes only — and that is project-specific and deliberately kept out of the CI gate.
+5. **Weekly Batched Releases (Zero Polling & Drastic Compute Savings)**: Rather than releasing on every individual PR (which would churn version numbers, burn runner minutes, and require fragile polling loops due to `GITHUB_TOKEN` event suppression), updates accumulate on `main` throughout the week. A scheduled weekly cron job generates a **single consolidated release** — the version bump comes from Conventional Commits via [`ietf-tools/semver-action`](https://github.com/ietf-tools/semver-action), never from a hand-rolled calculation or a manual input. **The release builds whatever the target project needs** — a per-platform native binary matrix, a package, or notes only — and that is project-specific and deliberately kept out of the CI gate.
 6. **Single-Core Runner Efficiency (`ubuntu-slim`)**: Except for `Check (just check)` (which uses `ubuntu-latest` for compiler/toolchain headroom), all **orchestration** jobs (`automerge`, and the release coordination/version/tagging jobs) use GitHub's single-core `ubuntu-slim` runner to minimize resource consumption and queue latency. Any release **build** jobs that produce artifacts run on whatever runners their target platforms require — that choice is project-specific.
 7. **Linear History & Rebase Only**: Repositories require rebase merges only (`allow_rebase_merge: true`, `allow_squash_merge: false`, `allow_merge_commit: false`).
 8. **Release Concurrency Lock**: Releases use a concurrency group (`release-main`) with `cancel-in-progress: false` to ensure tag creation and releases are serialized without collision.
@@ -205,9 +208,24 @@ jobs:
 ```
 
 #### D. `.github/workflows/release.yml`
-Weekly batched release. Runs every Sunday at 00:00 UTC (or on demand via `workflow_dispatch`). Checks if new commits exist before releasing.
+Weekly batched release. Runs every Sunday at 00:00 UTC (or on demand via
+`workflow_dispatch`). The next version comes from
+[`ietf-tools/semver-action`](https://github.com/ietf-tools/semver-action), which
+derives it from the **Conventional Commits since the latest tag** — there is no
+version input and no custom version arithmetic anywhere.
 
-Keep the weekly trigger, the no-new-commits skip, and the `release-main` concurrency lock. **The artifact build is project-specific**: insert a build step/job (or matrix) between the version step and publishing that produces exactly what your project ships — native binaries (commonly Linux x64, Windows x64, and macOS arm64), a package, or nothing but notes — pass the computed version to it, and upload the results. The baseline below is notes-only for a project with no build artifacts:
+Keep the weekly trigger and the `release-main` concurrency lock. `fallbackTag`
+must reference a tag that already exists (create `v0.0.0` on the initial commit,
+once). `noNewCommitBehavior: silent` + `noVersionBumpBehavior: patch` mean: no
+new commits → `bump == 'none'` → skip; a week of only `chore(deps):` commits →
+patch.
+
+**The artifact build is project-specific**: insert a build step/job (or matrix)
+between the version step and publishing that produces exactly what your project
+ships — native binaries (commonly Linux x64, Windows x64, and macOS arm64), a
+package, or nothing but notes — passing `${{ steps.semver.outputs.next }}` (or
+`nextStrict` for a tag-less name), then upload the results. The baseline below is
+notes-only for a project with no build artifacts:
 
 ```yaml
 name: Release
@@ -216,12 +234,6 @@ on:
   schedule:
     - cron: '0 0 * * 0' # Weekly: Sunday 00:00 UTC
   workflow_dispatch:
-    inputs:
-      release_version:
-        description: 'Explicit version (e.g. 0.1.0) - leave empty for auto patch bump'
-        required: false
-        type: string
-        default: ""
 
 concurrency:
   group: release-main
@@ -236,43 +248,21 @@ jobs:
     runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v4
+
+      - name: Next version (Conventional Commits)
+        id: semver
+        uses: ietf-tools/semver-action@v1
         with:
-          fetch-depth: 0
-
-      - name: Check for new commits since last release
-        id: check_commits
-        run: |
-          LATEST_TAG="$(git describe --tags --abbrev=0 2>/dev/null || echo '')"
-          if [ -n "$LATEST_TAG" ]; then
-            COMMIT_COUNT=$(git rev-list "${LATEST_TAG}..HEAD" --count)
-            echo "Commits since $LATEST_TAG: $COMMIT_COUNT"
-            if [ "$COMMIT_COUNT" -eq 0 ] && [ -z "${{ inputs.release_version }}" ]; then
-              echo "skip=true" >> "$GITHUB_OUTPUT"
-              echo "No new commits since $LATEST_TAG. Skipping release."
-              exit 0
-            fi
-          fi
-          echo "skip=false" >> "$GITHUB_OUTPUT"
-
-      - name: Compute Next Version
-        if: steps.check_commits.outputs.skip != 'true'
-        id: version
-        run: |
-          if [ -n "${{ inputs.release_version }}" ]; then
-            echo "tag=v${{ inputs.release_version }}" >> "$GITHUB_OUTPUT"
-          else
-            LATEST_TAG="$(git describe --tags --abbrev=0 2>/dev/null || echo 'v0.0.0')"
-            RAW="${LATEST_TAG#v}"
-            IFS='.' read -r major minor patch <<< "$RAW"
-            NEXT_VERSION="v${major:-0}.${minor:-1}.$(( ${patch:-0} + 1 ))"
-            echo "tag=$NEXT_VERSION" >> "$GITHUB_OUTPUT"
-          fi
+          token: ${{ github.token }}
+          fallbackTag: v0.0.0
+          noNewCommitBehavior: silent
+          noVersionBumpBehavior: patch
 
       - name: Publish Consolidated Release
-        if: steps.check_commits.outputs.skip != 'true'
+        if: steps.semver.outputs.bump != 'none'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
+          tag_name: ${{ steps.semver.outputs.next }}
           generate_release_notes: true
 ```
 
