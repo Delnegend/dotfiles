@@ -166,8 +166,8 @@ jobs:
     name: Check (just check)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: extractions/setup-just@v2
+      - uses: actions/checkout@v7
+      - uses: extractions/setup-just@v4
       # Insert any language setup needed by `just check` here (e.g. setup-go, setup-node)
       - name: Run verification
         run: just check
@@ -194,7 +194,7 @@ jobs:
     steps:
       - name: Fetch Dependabot metadata
         id: meta
-        uses: dependabot/fetch-metadata@v2
+        uses: dependabot/fetch-metadata@v3
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
@@ -247,7 +247,7 @@ jobs:
     name: Tag & Release
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Next version (Conventional Commits)
         id: semver
@@ -260,7 +260,7 @@ jobs:
 
       - name: Publish Consolidated Release
         if: steps.semver.outputs.bump != 'none'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.semver.outputs.next }}
           generate_release_notes: true
