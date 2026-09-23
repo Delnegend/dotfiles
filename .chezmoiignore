@@ -1,3 +1,6 @@
+# Local secret consumed via ${HINDSIGHT_API_TOKEN} indirection — chezmoi must never overwrite it
+.omp/agent/.env
+
 # Non-chezmoi repo files (helpers — not home targets)
 README.md
 AGENTS.md

@@ -8,6 +8,10 @@
 # chezmoi internals (when sourceDir is repo root, keep these out of git if ever created)
 .chezmoiignore.bak
 
+# Local secrets for env indirection — never commit (chezmoi names 0600 files private_*)
+.env
+private_.env
+
 # Windows
 Thumbs.db
 desktop.ini

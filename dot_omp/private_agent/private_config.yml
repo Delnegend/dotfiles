@@ -1,0 +1,57 @@
+modelRoles:
+  web: web/exa
+  default: opencode-go/mimo-v2.6-flash
+  vision: opencode-go/mimo-v2.6-flash:auto
+symbolPreset: ascii
+composer:
+  shape: band
+  tokenRate: false
+theme:
+  dark: dark-terminal
+  light: light
+setupVersion: 2
+github:
+  enabled: true
+defaultThinkingLevel: auto
+hideThinkingBlock: true
+statusLine:
+  preset: default
+  separator: ascii
+  sessionAccent: true
+  compactThinkingLevel: true
+  showHookStatus: true
+tui:
+  renderMermaid: true
+  reactions: true
+  tight: false
+display:
+  cacheMissMarker: false
+  shimmer: classic
+  hideToolActivity: false
+  showTokenUsage: false
+  collapseCompacted: true
+error:
+  notify: "on"
+memory:
+  backend: hindsight
+providers:
+  autoThinkingMaxEffort: xhigh
+power:
+  sleepPrevention: idle
+terminal:
+  showProgress: true
+showHardwareCursor: true
+externalThinking: false
+hindsight:
+  apiUrl: https://hindsight.delnegend.com
+  apiToken: ${HINDSIGHT_API_TOKEN}
+  bankId: coding
+  scoping: global
+autolearn:
+  enabled: true
+secrets:
+  enabled: true
+security:
+  enabled: false
+bashInterceptor:
+  enabled: false
