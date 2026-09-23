@@ -5,7 +5,7 @@ modelRoles:
 symbolPreset: ascii
 composer:
   shape: band
-  tokenRate: false
+  tokenRate: true
 theme:
   dark: dark-terminal
   light: light
