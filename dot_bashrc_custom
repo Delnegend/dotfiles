@@ -20,8 +20,6 @@ esac
 export DOCKER_HOST="unix://$XDG_RUNTIME_DIR/podman/podman.sock"
 [ -d "$HOME/.local/bin" ] && export PATH="$HOME/.local/bin:$PATH"
 [ -d "$HOME/.local/share/bin" ] && export PATH="$HOME/.local/share/bin:$PATH"
-[ -d "$HOME/.opencode/bin" ] && export PATH="$HOME/.opencode/bin:$PATH"
-export OPENCODE_ENABLE_EXA=1
 
 if [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
     if ! grep -qs 'brew shellenv' "$HOME/.profile" 2>/dev/null; then
@@ -35,7 +33,6 @@ alias pm=podman
 alias ll='ls -lah --color=auto'
 alias j=just
 alias lg='lazygit'
-alias oc='opencode'
 alias up='podman compose up'
 alias down='podman compose down'
 

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json",
+  "mcpServers": {
+    "browsermcp": {
+      "command": "bunx",
+      "args": ["@browsermcp/mcp@latest"]
+    }{{- if eq .chezmoi.hostname "bazzite" }},
+    "mikrotik": {
+      "command": "mikrotik-mcp",
+      "args": ["${MIKROTIK_IP_ADDRESS}"],
+      "env": {
+        "MIKROTIK_USER": "admin",
+        "MIKROTIK_PASSWORD": "${MIKROTIK_PASSWORD}",
+        "MIKROTIK_API_SSL": "false"
+      }
+    },
+    "memory": {
+      "command": "bunx",
+      "args": ["@modelcontextprotocol/server-memory"],
+      "env": {
+        "MEMORY_FILE_PATH": "/var/home/lava/.local/share/opencode/memory.jsonl"
+      }
+    }{{- end }}
+  }
+}

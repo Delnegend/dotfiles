@@ -70,8 +70,6 @@ private_dot_ssh/              # → ~/.ssh/ (0700)
   core@homelab.pub, delnegend@*.pub  #   public keys
 dot_config/
   private_git/allowed_signers # → ~/.config/git/allowed_signers
-  zed/settings.json + themes/ # → ~/.config/zed/
-  opencode/opencode.jsonc.tmpl # → ~/.config/opencode/opencode.jsonc (per-host MCP)
   fontconfig/fonts.conf       # → ~/.config/fontconfig/fonts.conf (Linux)
   kdeglobals                  # → ~/.config/kdeglobals
   environment.d/              # → ~/.config/environment.d/ (kde-dark.conf, ssh.conf.tmpl)
@@ -79,7 +77,10 @@ dot_config/
 dot_bashrc_custom             # → ~/.bashrc_custom (sourced from ~/.bashrc, per-host case)
 dot_Brewfile                  # → ~/Brewfile (Linux)
 dot_agents/                   # → ~/.agents (skills)
-dot_justfile                  # → ~/.justfile (general-purpose recipes + brew-dump + zed-theme-*)
+dot_omp/private_agent/        # → ~/.omp/agent/ (0700)
+  private_config.yml          #   oh-my-pi config (secrets via ${ENV} indirection)
+  mcp.json.tmpl               #   per-host MCP servers (bazzite: mikrotik, memory)
+dot_justfile                  # → ~/.justfile (general-purpose recipes + brew-dump)
 dot_var/app/...               # → ~/.var/app/... (Flatpak mpv/easyeffects, Linux)
 
 # Setup scripts (Linux-gated via {{ if eq .chezmoi.os "linux" }})
@@ -90,7 +91,7 @@ run_onchange_40-kde.sh.tmpl   # flatpak overrides for BreezeDark
 run_onchange_50-udev.sh.tmpl  # 99-disable-ncq-s4510.rules → /etc/udev (sudo)
 
 # Repo-only (ignored via .chezmoiignore, never applied)
-sync-zed-vscode-theme.py  README.md  AGENTS.md  LICENSE
+README.md  AGENTS.md  LICENSE
 ```
 
 ## License

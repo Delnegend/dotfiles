@@ -6,7 +6,6 @@ README.md
 AGENTS.md
 LICENSE
 .gitignore
-sync-zed-vscode-theme.py
 
 # Desktop / Bazzite-only items (Flatpak apps, KDE theme, fontconfig)
 {{- if ne .chezmoi.hostname "bazzite" }}

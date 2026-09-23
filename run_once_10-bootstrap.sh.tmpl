@@ -45,12 +45,24 @@ fi
 
 eval "$("$BREW" shellenv)"
 
+# Homebrew on Linux does not symlink unversioned compiler binaries (gcc, g++, etc.),
+# causing non-bottled taps and source builds to fail with "No developer tools installed".
+# Link unversioned gcc/g++ from Homebrew's versioned binaries if present.
+brew_prefix="$("$BREW" --prefix)"
+latest_gcc="$(find "$brew_prefix/bin" -maxdepth 1 -name "gcc-[0-9]*" 2>/dev/null | sort -V | tail -n 1)"
+if [ -n "$latest_gcc" ]; then
+    suffix="${latest_gcc##*-}"
+    ln -sf "$latest_gcc" "$brew_prefix/bin/gcc"
+    [ -e "$brew_prefix/bin/g++-$suffix" ] && ln -sf "$brew_prefix/bin/g++-$suffix" "$brew_prefix/bin/g++"
+    [ -e "$brew_prefix/bin/cpp-$suffix" ] && ln -sf "$brew_prefix/bin/cpp-$suffix" "$brew_prefix/bin/cpp"
+    [ -e "$brew_prefix/bin/c++-$suffix" ] && ln -sf "$brew_prefix/bin/c++-$suffix" "$brew_prefix/bin/c++"
+fi
+
 # Homebrew 6.0+ requires explicit trust for non-official taps. Trust only the
 # specific items we install (minimal scope). No explicit `brew tap` here: a
 # fully-qualified install auto-taps and auto-trusts its item, and running
 # `brew tap <tap>` first would try to load every formula in the tap and fail.
-"$BREW" trust --formula anomalyco/tap/opencode
-"$BREW" trust --cask ublue-os/tap/antigravity-cli-linux
+"$BREW" trust --formula can1357/tap/omp
 
 pkgs=(
     "just:just"
@@ -58,17 +70,13 @@ pkgs=(
     "starship:starship"
     "fzf:fzf"
     "ssh:openssh"
-    "opencode:anomalyco/tap/opencode"
-    "agy:--cask ublue-os/tap/antigravity-cli-linux"
+    "omp:can1357/tap/omp"
 )
 
 for entry in "${pkgs[@]}"; do
     cmd="${entry%%:*}"
     args="${entry#*:}"
     if ! command -v "$cmd" &>/dev/null; then
-        if [ "$cmd" = "agy" ] && command -v antigravity &>/dev/null; then
-            continue
-        fi
         echo "Installing $cmd..."
         attempt=0
         until "$BREW" install $args; do
