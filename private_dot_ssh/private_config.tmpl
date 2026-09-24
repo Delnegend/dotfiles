@@ -1,6 +1,8 @@
 {{- /* Unified SSH config (core + github + git.delnegend, IdentityAgent per OS) */ -}}
 Host core
 	HostName homelab
+	AddressFamily inet
+	ConnectTimeout 10
 	User core
 	ForwardAgent yes
 	Compression yes
@@ -24,6 +26,8 @@ Host github.com
 
 Host git.delnegend.com
 	HostName homelab
+	AddressFamily inet
+	ConnectTimeout 10
 	User git
 	Port 2222
 	IdentityFile ~/.ssh/delnegend@git.delnegend.com.pub
