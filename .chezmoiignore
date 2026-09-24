@@ -26,4 +26,5 @@ LICENSE
 .config/systemd/**
 .config/kdeglobals
 .bashrc_custom
+.tmux.conf
 {{- end }}

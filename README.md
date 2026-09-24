@@ -83,6 +83,7 @@ dot_config/
   environment.d/              # → ~/.config/environment.d/ (kde-dark.conf, ssh.conf.tmpl)
   systemd/user/*              # → ~/.config/systemd/user/ (Linux)
 dot_bashrc_custom             # → ~/.bashrc_custom (sourced from ~/.bashrc, per-host case)
+dot_tmux.conf                 # → ~/.tmux.conf (Linux; tmux installed via brew bootstrap)
 dot_Brewfile                  # → ~/Brewfile (Linux)
 dot_agents/                   # → ~/.agents (skills)
 dot_omp/private_agent/        # → ~/.omp/agent/ (0700)
