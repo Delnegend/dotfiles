@@ -88,7 +88,7 @@ dot_Brewfile                  # → ~/Brewfile (Linux)
 dot_agents/                   # → ~/.agents (skills)
 dot_omp/private_agent/        # → ~/.omp/agent/ (0700)
   private_config.yml          #   oh-my-pi config (secrets via ${ENV} indirection)
-  mcp.json.tmpl               #   per-host MCP servers (bazzite: mikrotik, memory)
+  mcp.json.tmpl               #   per-host MCP servers (bazzite: mikrotik)
 dot_justfile                  # → ~/.justfile (general-purpose recipes + brew-dump)
 dot_var/app/...               # → ~/.var/app/... (Flatpak mpv/easyeffects, Linux)
 
