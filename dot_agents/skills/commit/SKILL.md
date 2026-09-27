@@ -35,7 +35,7 @@ Use when the user says `/commit <description>` (e.g. `/commit changes related to
 Do NOT use interactive commands like `git add -p` or `git add -i`. Instead, use the following non-interactive strategies:
 - **Full File Staging:** If all changes in a file are related, stage it directly using `git add <file>`.
 - **Selective Line/Hunk Staging:** If only some lines/hunks in a file are related:
-  1. Create a backup of the modified file to a temporary path under `/tmp/opencode/` (e.g., `/tmp/opencode/backup_file`).
+  1. Create a backup of the modified file to a temporary path under `/tmp/omp/` (e.g., `/tmp/omp/backup_file`).
   2. Edit the workspace file to temporarily revert or exclude the unrelated changes.
   3. Run `git add <file>` to stage only the desired changes.
   4. Copy the backup file back to the workspace to restore the remaining unstaged changes.
@@ -63,7 +63,7 @@ Format:
 - Run `git commit -m "<message>"` to commit the staged changes.
 
 ### 5. Clean Up Temporary Files
-- Remove `/tmp/opencode/` directory and all its contents: `rm -rf /tmp/opencode/`
+- Remove `/tmp/omp/` directory and all its contents: `rm -rf /tmp/omp/`
 - This prevents stale backup files from leaking into future sessions.
 
 ### 6. Keep Responses Concise and Detailed
