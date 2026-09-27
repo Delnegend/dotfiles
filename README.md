@@ -105,4 +105,4 @@ README.md  AGENTS.md  LICENSE
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT
