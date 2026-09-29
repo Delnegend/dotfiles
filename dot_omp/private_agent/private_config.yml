@@ -1,6 +1,6 @@
 modelRoles:
   web: web/exa
-  default: opencode-go/mimo-v2.6-flash
+  default: opencode-go/space-bunny-free
   vision: opencode-go/mimo-v2.6-flash:auto
 symbolPreset: ascii
 composer:
@@ -44,7 +44,7 @@ showHardwareCursor: true
 externalThinking: false
 hindsight:
   apiUrl: https://hindsight.delnegend.com
-  apiToken: ${HINDSIGHT_API_TOKEN}
+  apiToken: "${HINDSIGHT_API_TOKEN}"
   bankId: coding
   scoping: global
 autolearn:
@@ -54,4 +54,6 @@ secrets:
 security:
   enabled: false
 bashInterceptor:
+  enabled: false
+browser:
   enabled: false

@@ -1,9 +1,10 @@
 {
   "$schema": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json",
   "mcpServers": {
-    "browsermcp": {
+    "playwright": {
       "command": "bunx",
-      "args": ["@browsermcp/mcp@latest"]
+      "args": ["@playwright/mcp@latest", "--cdp-endpoint", "ws://localhost:9222"],
+      "enabled": true
     }{{- if eq .chezmoi.hostname "bazzite" }},
     "mikrotik": {
       "command": "mikrotik-mcp",
