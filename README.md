@@ -88,6 +88,7 @@ dot_Brewfile                  # → ~/Brewfile (Linux)
 dot_agents/                   # → ~/.agents (skills)
 dot_omp/private_agent/        # → ~/.omp/agent/ (0700)
   private_config.yml          #   oh-my-pi config (secrets via ${ENV} indirection)
+  APPEND_SYSTEM.md             #   standing reply rules (plain language, conclusion first); appends to the built-in prompt
   mcp.json.tmpl               #   per-host MCP servers (bazzite: mikrotik)
 dot_justfile                  # → ~/.justfile (general-purpose recipes + brew-dump)
 dot_var/app/...               # → ~/.var/app/... (Flatpak mpv/easyeffects, Linux)
