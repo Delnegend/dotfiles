@@ -80,7 +80,7 @@ dot_config/
   private_git/allowed_signers # → ~/.config/git/allowed_signers
   fontconfig/fonts.conf       # → ~/.config/fontconfig/fonts.conf (Linux)
   kdeglobals                  # → ~/.config/kdeglobals
-  environment.d/              # → ~/.config/environment.d/ (kde-dark.conf, ssh.conf.tmpl)
+  environment.d/              # → ~/.config/environment.d/ (kde-dark.conf, linuxbrew.conf.tmpl, ssh.conf.tmpl)
   systemd/user/*              # → ~/.config/systemd/user/ (Linux)
 dot_bashrc_custom             # → ~/.bashrc_custom (sourced from ~/.bashrc, per-host case)
 dot_tmux.conf                 # → ~/.tmux.conf (Linux; tmux installed via brew bootstrap)

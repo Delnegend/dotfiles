@@ -1,0 +1,3 @@
+{{- if eq .chezmoi.hostname "bazzite" }}
+XDG_DATA_DIRS="/home/linuxbrew/.linuxbrew/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+{{- end }}
