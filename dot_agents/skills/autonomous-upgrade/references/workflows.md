@@ -1,0 +1,457 @@
+# Workflow templates
+
+Four baselines to adapt. Path and runner label follow the host (see
+`hosts.md`); the substance does not change.
+
+## A. Dependency upgrade job
+
+Runs daily, opens one PR with the upgraded manifest and lockfile. The cooldown
+has already filtered out too-new versions, so the PR only carries versions that
+passed quarantine. **No-op when nothing changed** — the common case.
+
+Substitute the three Bun-specific lines for your ecosystem (see
+`ecosystems.md`).
+
+```yaml
+name: Dependency updates
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # Daily 02:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: deps-main
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: Upgrade dependencies
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@v7
+
+      # Bun example. Swap the setup/update steps per ecosystem:
+      #   Cargo → dtolnay/rust-toolchain@stable (needs ≥1.100 for the cooldown),
+      #            then `cargo update` (reads .cargo/config.toml)
+      #   npm   → actions/setup-node@v4, then
+      #            `npx npm-check-updates -u --cooldown 14d && npm install`
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Upgrade (cooldown enforced by bunfig.toml)
+        run: bun update
+
+      - name: Detect whether anything changed
+        id: diff
+        run: |
+          if git diff --quiet -- package.json bun.lock; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open upgrade PR
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Forgejo: use a Forgejo secret instead
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout -B deps/automatic
+          git add package.json bun.lock
+          git commit -m "chore(deps): upgrade dependencies"
+          git push --force origin deps/automatic
+          gh pr create --fill --base main --head deps/automatic \
+            --title "chore(deps): upgrade dependencies" \
+            --body "Automated daily upgrade. Versions published less than 14 days ago were filtered out by the package manager."
+```
+
+**Forgejo:** seed `fj`'s keys file from the secret, then use `fj pr create`.
+There is no `gh`-style env-var token, and `fj pr create` takes the title
+positionally with `-A/--autofill` rather than `--fill`:
+
+```yaml
+      - name: Open upgrade PR (Forgejo)
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
+        run: |
+          fj auth add-token "$FORGEJO_TOKEN" -H "$FORGEJO_HOST"
+          fj pr create "chore(deps): upgrade dependencies" \
+            -H "$FORGEJO_HOST" \
+            --base main --head deps/automatic \
+            --body "Automated daily upgrade. Versions published less than 14 days ago were filtered out by the package manager."
+```
+
+Keep the `chore(deps):` commit prefix so the release workflow's Conventional
+Commits scan reads a patch bump.
+
+## B. CI gate
+
+One `just check`, no build matrix. Runner label follows the host
+(`ubuntu-latest` on GitHub, a self-hosted equivalent on Forgejo).
+
+```yaml
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check (just check)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: extractions/setup-just@v4
+      # Insert any language setup needed by `just check` here (e.g. setup-go, setup-node)
+      - name: Run verification
+        run: just check
+```
+
+The job `name:` must match the branch protection context exactly.
+
+## C. Auto-merge
+
+Exits in <10 seconds; no polling. No `fetch-metadata` step — that was
+Dependabot-specific. The `dependencies` label is the signal.
+
+```yaml
+name: Auto-merge dependencies
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  automerge:
+    if: contains(github.event.pull_request.labels.*.name, 'dependencies')
+    runs-on: ubuntu-slim
+    steps:
+      - name: Enable auto-merge and rebase
+        run: gh pr merge --auto --rebase "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+**Forgejo:** `fj` has **no `--auto` flag** (see `hosts.md`), so
+`gh pr merge --auto --rebase` has no direct translation. Two options:
+
+- Set auto-merge in the Forgejo instance UI, then the workflow only needs to
+  label the PR `dependencies`.
+- Or gate explicitly in the job. `fj pr status --wait` blocks until all checks
+  finish, then merge:
+
+  ```bash
+  fj pr status "$PR_NUM" -H "$FORGEJO_HOST" --wait
+  fj pr merge "$PR_NUM" -H "$FORGEJO_HOST" --method rebase --delete
+  ```
+
+Auto-merge only fires once `Check (just check)` is green on the PR head.
+
+## D. Version bump & release gate (`bump-version.yml`)
+
+This workflow is the gatekeeper. It derives the version from Conventional
+Commits, verifies that CI passes, updates the package manager's config file
+via the package-agnostic `just bump` recipe, atomically commits and tags on
+`main`, and dispatches `release.yml`.
+
+### Mode-dependent trigger
+
+- **Maintenance mode:** scheduled weekly cron (`0 0 * * 0`) + `workflow_dispatch`.
+- **Active development:** `workflow_dispatch` only (no `on.schedule`).
+
+```yaml
+name: bump-version
+
+on:
+  workflow_dispatch:
+  # Maintenance mode adds:
+  # schedule:
+  #   - cron: '0 0 * * 0' # Weekly: Sunday 00:00 UTC
+
+concurrency:
+  group: bump-version
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    name: Bump Version & Tag
+    runs-on: ubuntu-slim
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          token: ${{ github.token }}
+          persist_credentials: true
+          fetch-depth: 0   # semver-action needs full git history
+
+      - name: Calculate Next SemVer
+        id: semver
+        uses: ietf-tools/semver-action@v1
+        with:
+          token: ${{ github.token }}
+          fallbackTag: v0.0.0
+          noNewCommitBehavior: silent
+          noVersionBumpBehavior: patch
+
+      - name: Report skip
+        if: steps.semver.outputs.bump == 'none'
+        run: |
+          echo "No version bump needed (current: ${{ steps.semver.outputs.current }}). Exiting."
+
+      - name: CI Gate (verify code is green before bumping)
+        if: steps.semver.outputs.bump != 'none'
+        # Single repo: runs `just check`
+        # Forgejo+twin: dispatches CI to twin and waits (see hosts.md)
+        run: just check
+
+      - name: Bump package manager version
+        if: steps.semver.outputs.bump != 'none'
+        env:
+          NEXT_STRICT: ${{ steps.semver.outputs.nextStrict }}
+        run: |
+          set -euo pipefail
+          # Package-manager agnostic: delegates to `just bump` (see ecosystems.md)
+          just bump "$NEXT_STRICT"
+
+      - name: Commit, Tag, and Push atomically
+        if: steps.semver.outputs.bump != 'none'
+        env:
+          NEXT_TAG: ${{ steps.semver.outputs.next }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "actions@users.noreply.github.com"
+
+          # Stage all modified tracked files (manifests and lockfiles)
+          git add -u
+          git diff --staged --quiet && { echo "::error::bump produced no change in package files"; exit 1; }
+          git commit -m "chore(release): ${NEXT_TAG}"
+
+          git rev-parse -q --verify "refs/tags/${NEXT_TAG}" >/dev/null && { echo "::error::tag ${NEXT_TAG} already exists"; exit 1; }
+          git tag -a "${NEXT_TAG}" -m "Release ${NEXT_TAG}"
+
+          # Atomic push: commit and tag land together on main
+          git push origin HEAD:main "refs/tags/${NEXT_TAG}"
+
+      - name: Trigger Release
+        if: steps.semver.outputs.bump != 'none'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Single repo: dispatches release workflow for the new tag
+          # Forgejo+twin: dispatches twin release workflow (see hosts.md)
+          gh workflow run release.yml -f target=tag -f ref="${{ steps.semver.outputs.next }}" || true
+```
+
+## E. Release / Build Artifacts (`release.yml`)
+
+Builds and publishes artifacts (native binaries, container images, packages).
+Normal releases are dispatched by `bump-version` after the tag is verified
+and pushed.
+### The trigger is mode-dependent
+
+Both modes provide two build targets via `workflow_dispatch`:
+- `tag`: (default) builds against the latest tag and publishes an official release.
+- `commit`: test build against latest commit on `main` (kept as Actions run artifacts, no release published).
+
+```yaml
+# Maintenance mode — unattended weekly tag (defaults to target: tag) + manual dispatch:
+on:
+  schedule:
+    - cron: '0 0 * * 0' # Weekly: Sunday 00:00 UTC
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Build target"
+        required: true
+        type: choice
+        default: "tag"
+        options:
+          - tag      # Build latest tag and publish release
+          - commit   # Test build latest commit (action artifacts only, no release)
+      ref:
+        description: "Custom tag or commit SHA (optional, defaults to latest)"
+        required: false
+        type: string
+```
+
+```yaml
+# Active development — manual dispatch ONLY, no `on.schedule` at all:
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Build target"
+        required: true
+        type: choice
+        default: "tag"
+        options:
+          - tag      # Build latest tag and publish release
+          - commit   # Test build latest commit (action artifacts only, no release)
+      ref:
+        description: "Custom tag or commit SHA (optional, defaults to latest)"
+        required: false
+        type: string
+```
+
+Do not leave a commented-out `schedule:` block in an active-development
+project's workflow; delete it so nobody re-enables it by accident.
+
+### The body (identical in both modes)
+
+Keep the filename `release.yml` so automated dispatchers and URLs remain
+stable. The display name `name: Release / Build Artifacts` makes it clear in
+the Actions UI that test builds can be run here without publishing.
+
+```yaml
+name: Release / Build Artifacts
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Build target"
+        required: true
+        type: choice
+        default: "tag"
+        options:
+          - tag
+          - commit
+      ref:
+        description: "Custom tag or commit SHA (optional, defaults to latest)"
+        required: false
+        type: string
+
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Release
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0   # semver-action needs full history for Conventional Commits
+
+      - name: Resolve target and publish mode
+        id: target
+        run: |
+          set -euo pipefail
+          TARGET="${{ inputs.target || 'tag' }}"
+          INPUT_REF="${{ inputs.ref || '' }}"
+
+          if [ "$TARGET" = "commit" ]; then
+            REF="${INPUT_REF:-$(git rev-parse HEAD)}"
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "ref=$REF" >> "$GITHUB_OUTPUT"
+            echo "Test build against commit $REF (will not publish release)"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            echo "Release build against tag"
+          fi
+
+      - name: Next version (Conventional Commits)
+        if: steps.target.outputs.publish == 'true'
+        id: semver
+        uses: ietf-tools/semver-action@v1
+        with:
+          token: ${{ github.token }}
+          fallbackTag: v0.0.0
+          noNewCommitBehavior: silent
+          noVersionBumpBehavior: patch
+
+      # Insert project-specific build step here.
+      # Outputs saved to dist/ (or your artifact directory).
+
+      - name: Upload build artifacts (always kept in Actions)
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-${{ steps.target.outputs.ref || steps.semver.outputs.next || 'run' }}
+          path: dist/
+          if-no-files-found: ignore
+
+      - name: Publish Consolidated Release
+        if: steps.target.outputs.publish == 'true' && steps.semver.outputs.bump != 'none'
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ steps.semver.outputs.next }}
+          generate_release_notes: true
+          files: dist/*
+```
+
+### Division of responsibilities: `bump-version` vs `release`
+
+1. **`bump-version.yml` is the gatekeeper:** It calculates SemVer from commits,
+   verifies that CI is green, updates the package manager's manifest via the
+   package-agnostic `just bump` recipe, and atomically pushes the commit and
+   tag to `main`.
+2. **`release.yml` builds artifacts:** It receives the verified tag and compiles
+   binaries or container images, publishing them to GitHub Releases or registries.
+   When run manually with `target: commit`, it runs a test build of latest code
+   and saves artifacts in the Actions run without publishing.
+
+`fallbackTag` in `bump-version.yml` must reference a tag that already exists
+(create `v0.0.0` on the initial commit, once); if it is missing the action
+errors rather than treating it as "no tags yet".
+### Skip cleanly when there is nothing to release
+
+`noNewCommitBehavior: silent` yields `bump == 'none'`. Make that visible
+rather than silently exiting, so an operator can tell "nothing to release"
+from "the job died":
+
+```yaml
+      - name: Report skip
+        if: steps.semver.outputs.bump == 'none'
+        run: |
+          echo "No version bump needed (current: ${{ steps.semver.outputs.current }})."
+          echo "::warning::if a tag exists without a twin release, rebuild via the release workflow"
+```
+
+`semver-action` exposes only `current`, `next`, `nextStrict`, `nextMajor`,
+`nextMajorStrict`, and `bump` — **there is no `skip` output.** Test on `bump`.
+A wrapper composite action may add its own outputs, but verify them against
+that action's `action.yml` rather than assuming.
+
+### Artifact build (project-specific)
+
+Insert a build step or matrix between the target resolution and publishing,
+producing exactly what the project ships — native binaries (commonly Linux x64,
+Windows x64, macOS arm64), a package, or nothing but notes. Pass
+`${{ steps.target.outputs.ref || steps.semver.outputs.next }}` to the build command.
+
+Always include `actions/upload-artifact@v4` as shown above:
+- When running `target: tag`, artifacts are uploaded to the Actions run AND published to GitHub Releases.
+- When running `target: commit`, artifacts are uploaded to the Actions run for testing, and the GitHub Release step is skipped.
+
+On a Forgejo+twin project this workflow lives in `.forgejo/workflows/` and ends
+by dispatching the twin's build workflow rather than publishing locally.
+
+The template above is notes-only, for a project with no build artifacts.
