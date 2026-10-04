@@ -82,5 +82,8 @@ milestones are checked `[x]` and feature work freezes, the project flips to
   actions.
 - **Rule 7 (single-core runners).** Every job that does not build artifacts is
   I/O-bound orchestration; running it on a multi-core runner is waste.
-- **Rule 9 (concurrency lock).** Without it, two overlapping release runs race to
-  create the same tag.
+- **Rule 9 (concurrency locks).** Releases serialize on `group: release-main`
+  with `cancel-in-progress: false` so overlapping runs never race on tag creation.
+  CI runs use dynamic `group: ${{ github.workflow }}-${{ github.ref }}` with
+  `cancel-in-progress: true` to cancel stale pushes on the same branch without
+  interrupting runs on other branches or PRs.

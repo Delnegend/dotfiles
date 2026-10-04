@@ -69,7 +69,9 @@ These are not negotiable. Rationale is in `references/decisions.md`.
    owner's self-hosted label on Forgejo). Full runners only for `just check` and
    artifact builds.
 8. **Rebase-only, linear history.** No squash, no merge commits.
-9. **`release-main` concurrency lock**, `cancel-in-progress: false`.
+9. **Concurrency locks:** `release-main` (`cancel-in-progress: false`) for
+   releases; dynamic per-branch `${{ github.workflow }}-${{ github.ref }}`
+   (`cancel-in-progress: true`) for CI to safely cancel stale runs.
 10. **Verify action runtimes match the runner.** `using: node24` actions fail on
     lean images like Alpine. Prefer shell-only composites on self-hosted runners.
 11. **Push the version commit and its tag in one `git push`**, and never tag a
