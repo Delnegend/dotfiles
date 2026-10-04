@@ -59,7 +59,7 @@ jobs:
       - name: Open upgrade PR
         if: steps.diff.outputs.changed == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Forgejo: use a Forgejo secret instead
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "actions@users.noreply.github.com"
@@ -72,17 +72,16 @@ jobs:
             --body "Automated daily upgrade. Versions published less than 14 days ago were filtered out by the package manager."
 ```
 
-**Forgejo:** seed `fj`'s keys file from the secret, then use `fj pr create`.
+**Forgejo:** seed `fj`'s keys file using the ambient `${{ github.token }}`
+(Forgejo automatically aliases this to its own token), then run `fj pr create`.
 There is no `gh`-style env-var token, and `fj pr create` takes the title
 positionally with `-A/--autofill` rather than `--fill`:
 
 ```yaml
       - name: Open upgrade PR (Forgejo)
         if: steps.diff.outputs.changed == 'true'
-        env:
-          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
         run: |
-          fj auth add-token "$FORGEJO_TOKEN" -H "$FORGEJO_HOST"
+          fj auth add-token "${{ github.token }}" -H "$FORGEJO_HOST"
           fj pr create "chore(deps): upgrade dependencies" \
             -H "$FORGEJO_HOST" \
             --base main --head deps/automatic \
@@ -177,7 +176,7 @@ jobs:
         run: gh pr merge --auto --rebase "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
 ```
 
 **Forgejo:** `fj` has **no `--auto` flag** (see `hosts.md`), so

@@ -89,8 +89,9 @@ Two facts that shape how you write Forgejo steps:
 
 1. **`fj` reads no token from the environment.** It stores credentials in its
    own keys file, so CI must seed it first with
-   `fj auth add-token "$TOKEN" -H <forgejo-host>` (the token may also be piped
-   on stdin). Store the token as a Forgejo secret; never commit it.
+   `fj auth add-token "${{ github.token }}" -H <forgejo-host>`. Forgejo
+   automatically aliases `${{ github.token }}` to its built-in token, so no
+   custom secret is required for same-repo tasks.
 2. **`fj pr merge` has no `--auto` flag.** Methods are
    `merge`, `rebase`, `rebase-merge`, `squash`, `manual`; there is no
    auto-merge-on-green equivalent of `gh pr merge --auto`. For a Forgejo
