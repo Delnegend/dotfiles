@@ -11,7 +11,7 @@ uncovered.
 |---|---|---|
 | **Bun** | `bun update` | `bunfig.toml` → `[install] minimumReleaseAge = 1209600` (seconds) |
 | **Cargo** ≥1.100 | `cargo update` | `.cargo/config.toml` → `[registry] global-min-publish-age = "14 days"` |
-| **npm** | `npx npm-check-updates -u` | no config file — pass `--cooldown 14d` on the command line |
+| **npm** | `npx npm-check-updates -u -t minor` | no config file — pass `--cooldown 14d` on the command line |
 | **pnpm** | `pnpm update` | `pnpm-workspace.yaml` → `minimumReleaseAge: 20160` (**minutes**) |
 | **Go** | `go get -u ./...` | **no native gate** — skip autonomous bumps |
 | **uv / pip** | `uv lock --upgrade` | **no native gate** — skip autonomous bumps |
@@ -84,15 +84,15 @@ cooldown is *not* applying — a runner below 1.100 upgrades unprotected.
 
 ## npm
 
-No config file, so the threshold is a CLI flag:
+No config file, so the threshold and target are CLI flags:
 
 ```bash
-npx npm-check-updates -u --cooldown 14d
+npx npm-check-updates -u -t minor --cooldown 14d
 ```
 
-`--target latest` falls back to the greatest version that passes the cooldown
-threshold when `latest` is too recent. `--cooldown` also has a companion report
-that lists skipped packages.
+`-t minor` restricts updates to patch and minor versions, keeping breaking
+major upgrades out of autonomous daily PRs (Rule 5). When used with `--cooldown`,
+it upgrades to the highest minor/patch version that has passed quarantine.
 
 ## pnpm
 

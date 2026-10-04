@@ -39,7 +39,7 @@ jobs:
       #   Cargo → dtolnay/rust-toolchain@stable (needs ≥1.100 for the cooldown),
       #            then `cargo update` (reads .cargo/config.toml)
       #   npm   → actions/setup-node@v4, then
-      #            `npx npm-check-updates -u --cooldown 14d && npm install`
+      #            `npx npm-check-updates -u -t minor --cooldown 14d && npm install`
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
@@ -50,7 +50,7 @@ jobs:
       - name: Detect whether anything changed
         id: diff
         run: |
-          if git diff --quiet -- package.json bun.lock; then
+          if git diff --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
@@ -64,7 +64,7 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "actions@users.noreply.github.com"
           git checkout -B deps/automatic
-          git add package.json bun.lock
+          git add -u
           git commit -m "chore(deps): upgrade dependencies"
           git push --force origin deps/automatic
           gh pr create --fill --base main --head deps/automatic \
@@ -219,11 +219,12 @@ concurrency:
 
 permissions:
   contents: write
+  actions: write   # Required for `gh workflow run release.yml`
 
 jobs:
   bump:
     name: Bump Version & Tag
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest   # Compiler/toolchain headroom for `just check`
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
@@ -231,6 +232,8 @@ jobs:
           token: ${{ github.token }}
           persist_credentials: true
           fetch-depth: 0   # semver-action needs full git history
+      - uses: extractions/setup-just@v4
+      # Insert any language setup needed by `just check` (e.g. setup-go, setup-node)
 
       - name: Calculate Next SemVer
         id: semver

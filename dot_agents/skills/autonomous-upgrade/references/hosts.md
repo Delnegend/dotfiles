@@ -207,8 +207,7 @@ gh api -X PUT "repos/<owner>/<repo>/branches/main/protection" \
   "restrictions": null,
   "required_linear_history": true,
   "allow_force_pushes": false,
-  "allow_deletions": false,
-  "allow_auto_merge": true
+  "allow_deletions": false
 }
 EOF
 ```
