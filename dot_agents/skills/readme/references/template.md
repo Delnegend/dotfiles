@@ -65,6 +65,13 @@ flowchart LR
 
 For component boundaries, internal pipelines, and design decisions, see **[Architecture Guide](docs/architecture.md)**.
 
+## Roadmap
+
+<!-- Optional: for active projects. Omit once in maintenance mode. -->
+- [x] **<Shipped milestone>** — <Brief description of what landed.>
+- [ ] **<In-flight milestone>** — <Current focus before next tag.>
+- [ ] **<Final milestone>** — <Feature-freeze criteria to cut over to maintenance mode.>
+
 ## Documentation
 
 - **[Configuration](docs/configuration.md)** — Environment variables, settings schema, and flag reference.
@@ -85,3 +92,4 @@ For component boundaries, internal pipelines, and design decisions, see **[Archi
 - **For Libraries / SDKs:** Replace "Common Options" with a 5-line code snippet showing `import` and standard invocation.
 - **For Containers / Services:** Quick Start should be `docker compose up -d` followed by `curl localhost:<port>/health`.
 - **For Dotfiles / Config Repos:** Quick Start should be the bootstrap one-liner followed by verification commands.
+- **For active projects:** An optional `## Roadmap` section tracks in-flight milestones (max 3–5 items); checking all items signals readiness to cut over to maintenance mode.

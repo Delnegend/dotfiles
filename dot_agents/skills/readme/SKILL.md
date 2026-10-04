@@ -52,4 +52,4 @@ Read the relevant file for the active task; do not load both:
 5. **Outcome-focused highlights:** Exactly 3–5 bullet points. State user outcomes (speed, safety, ease), never implementation trivia (e.g. "Uses Tokio 1.2" is forbidden).
 6. **No configuration dumps:** Never place more than 5 CLI flags or environment variables in `README.md`. More than 5 items MUST live in `docs/configuration.md`.
 7. **No deep architecture treatises & use Mermaid:** Root architecture gets a compact Mermaid diagram or 2 sentences max. Never use ASCII art. Deep explanations belong in `docs/architecture.md`.
-8. **No placeholder debt:** Never leave `TODO`, `WIP`, or empty sections in published READMEs. If a feature or doc is not ready, omit it entirely.
+8. **No placeholder debt & clean roadmap:** Never leave `TODO`, `WIP`, or empty sections in published READMEs. In-flight work for active projects belongs in an optional `## Roadmap` checklist (max 3–5 items), never in scattered scratch files. Omit the section once in maintenance mode.

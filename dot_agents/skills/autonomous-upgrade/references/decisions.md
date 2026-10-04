@@ -62,27 +62,12 @@ Heuristic: *would a tag cut on Sunday surprise anyone?* No → maintenance mode.
 Yes → active development. Revisit when the roadmap changes; this is a
 per-application choice, not a permanent property.
 
-### Optional: Roadmap for ongoing projects
+### Transitioning to maintenance mode via `README.md` roadmap
 
-For projects under active development, maintain an optional **`## Roadmap`**
-section in the root `README.md` (or `docs/roadmap.md`). This provides clear
-visibility into in-flight milestones and sets the exact criteria for when the
-project transitions into maintenance mode:
-
-```markdown
-## Roadmap
-
-- [x] **Core feature** — short description of what shipped.
-- [ ] **Next feature** — in flight, planned before next minor tag.
-- [ ] **Final milestone** — criteria to freeze features and cut over to maintenance.
-```
-
-**Why keep it in `README.md`?**
-- Serves as the single public source of truth for project status (avoiding
-  ephemeral or fragmented `TODO.md` / `plan.md` files).
-- Makes the transition unambiguous: when all active milestones are checked
-  `[x]` and no new features are queued, the project flips to **maintenance mode**
-  (enabling the `on.schedule` weekly cron in `bump-version.yml`).
+Active development projects track in-flight milestones in an optional `## Roadmap`
+section in the root `README.md` (structured per the `readme` skill). When all
+milestones are checked `[x]` and feature work freezes, the project flips to
+**maintenance mode** (enabling the `on.schedule` weekly cron in `bump-version.yml`).
 
 ## Why the hard rules exist
 
