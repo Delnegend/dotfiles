@@ -30,8 +30,9 @@ agreed choices and any deviations in the PR description or conversation.
    a Forgejo+twin project, artifacts publish from the twin.
 6. **CI gate** — one `just check` gate, no build matrix. *Default:* add only the
    runtimes/services the check needs.
-7. **Dependencies** — daily at 02:00, patch/minor split from major, open-PR
-   limit 2. Cooldown enforced natively (see `ecosystems.md`).
+7. **Dependencies** — daily at 02:00 for code dependencies (via native package
+   managers with native cooldown). On GitHub-hosted repos, Dependabot runs
+   weekly for `package-ecosystem: "github-actions"` only.
 8. **Security & config** — rebase-only, linear history, required
    `Check (just check)`. Prefer the built-in token for same-repo automation; a
    fine-grained PAT or GitHub App only for cross-repo dispatch to a twin. Avoid
@@ -68,6 +69,10 @@ per-application choice, not a permanent property.
   npm supply-chain attacks outright. The gate must come from the package manager
   because only the resolver knows about transitive versions.
 - **Rule 6 (no cron when active).** See the project-mode table above.
+- **Rule 4 (Dependabot scope).** Package managers handle their own libraries via
+  native commands and cooldown gates. On GitHub repos, Dependabot is retained
+  exclusively for `github-actions` because native tools cannot update workflow
+  actions.
 - **Rule 7 (single-core runners).** Every job that does not build artifacts is
   I/O-bound orchestration; running it on a multi-core runner is waste.
 - **Rule 9 (concurrency lock).** Without it, two overlapping release runs race to

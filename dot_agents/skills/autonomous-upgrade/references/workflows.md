@@ -1,7 +1,7 @@
 # Workflow templates
 
-Four baselines to adapt. Path and runner label follow the host (see
-`hosts.md`); the substance does not change.
+Five workflow templates plus Dependabot for GitHub Actions. Path and runner label
+follow the host (see `hosts.md`); the substance does not change.
 
 ## A. Dependency upgrade job
 
@@ -92,6 +92,31 @@ positionally with `-A/--autofill` rather than `--fill`:
 Keep the `chore(deps):` commit prefix so the release workflow's Conventional
 Commits scan reads a patch bump.
 
+
+### Dependabot for GitHub Actions (`github.com` repos only)
+
+For repositories hosted on GitHub, Dependabot is retained **exclusively** for
+updating GitHub Actions versions in `.github/workflows/`. It is never configured
+for language dependencies (which are handled by the native job above).
+
+```yaml
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "02:00"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore(deps)"
+```
+
+Because it uses the `dependencies` label and `chore(deps):` commit prefix,
+these PRs are automatically verified by `ci.yml` and merged by `auto-merge.yml`.
 ## B. CI gate
 
 One `just check`, no build matrix. Runner label follows the host

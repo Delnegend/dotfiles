@@ -33,12 +33,17 @@ The differences that actually bite:
 | PR CLI | `gh pr ...` | `fj pr ...` (forgejo-contrib CLI) |
 | Settings UI | Settings → Actions | Settings → Actions (different labels) |
 | PR/secret permission | "Allow GitHub Actions to create and approve pull requests" | "Allow pull requests and security alerts" |
+| Dependabot | `.github/dependabot.yml` (`github-actions` only) | none (not supported) |
 
 Never write `ubuntu-slim` into a Forgejo workflow unless that label is actually
 registered on the instance — the job will sit queued forever.
 
 `actions/checkout` and `actions/setup-*` may need to be swapped for
 `<forgejo-host>/actions/checkout@vN` if the runner cannot reach github.com.
+
+On GitHub, `.github/dependabot.yml` is maintained solely for
+`package-ecosystem: "github-actions"` to bump workflow action versions.
+Dependabot is never configured for code dependencies.
 
 ### Minimal runner images have no Node
 

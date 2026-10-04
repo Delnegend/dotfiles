@@ -57,8 +57,10 @@ These are not negotiable. Rationale is in `references/decisions.md`.
    the age filter as a shell script — the tool's own gate also covers transitive
    dependencies. If an ecosystem has no native gate, that project does not get
    autonomous bumps.
-4. **No Dependabot for upgrades.** It is GitHub-exclusive and its lockfile support
-   has gaps. Use native commands (`bun update`, `cargo update`, `ncu`).
+4. **Dependabot for GitHub Actions only.** On GitHub-hosted repos, Dependabot is
+   used exclusively for `package-ecosystem: "github-actions"` to keep workflow
+   actions up to date, and nothing else. Code dependencies are upgraded through
+   native package managers (`bun update`, `cargo update`, `ncu`).
 5. **Split patch/minor from major**, so a breaking major cannot block routine merges.
 6. **Weekly releases only in maintenance mode.** Active development gets
    `workflow_dispatch` alone. The workflow supports two targets: `tag` (publishes
