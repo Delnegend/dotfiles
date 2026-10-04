@@ -12,16 +12,16 @@ agreed choices and any deviations in the PR description or conversation.
 2. **Project mode** — maintenance or active development.
    *Default:* active development. Determinates whether the release workflow gets
    an `on.schedule` cron at all.
-3. **Release model** — weekly batch (maintenance mode) plus manual dispatch;
-   manual dispatch only (active). In both modes, manual dispatch supports two
-   targets: `tag` (default, publishes release) and `commit` (test build against
-   latest commit on `main`, uploads to Actions run artifacts without publishing).
-   *Alternatives:* release on every merge, label-gated releases.
+3. **Release model** — weekly batch (maintenance mode: scheduled cron with
+   `target: new-tag`) plus manual dispatch; manual dispatch only (active).
+   The `release.yml` workflow provides 3 targets: `new-tag` (CI gate + bump +
+   tag + publish), `tag` (rebuild existing tag), and `commit` (test build, Actions
+   artifacts only). *Alternatives:* release on every merge, label-gated releases.
 4. **Version source of truth and manifest bump** — git tags, with
    [`ietf-tools/semver-action`](https://github.com/ietf-tools/semver-action)
    deriving the next version from Conventional Commits since the last tag.
-   **Never** a hand-rolled calculation or a manually typed version. The
-   `bump-version` action updates the package manager's config file via the
+   **Never** a hand-rolled calculation or a manually typed version. When running
+   `new-tag`, `release.yml` updates the package manager's config file via the
    package-agnostic `just bump <version>` recipe before committing and tagging
    atomically on `main`. *Alternatives:* `release-plz`, `release-please`.
 5. **Release artifacts** — build only what the project ships: for CLIs, commonly
@@ -67,7 +67,7 @@ per-application choice, not a permanent property.
 Active development projects track in-flight milestones in an optional `## Roadmap`
 section in the root `README.md` (structured per the `readme` skill). When all
 milestones are checked `[x]` and feature work freezes, the project flips to
-**maintenance mode** (enabling the `on.schedule` weekly cron in `bump-version.yml`).
+**maintenance mode** (enabling the `on.schedule` weekly cron in `release.yml`).
 
 ## Why the hard rules exist
 

@@ -5,14 +5,14 @@ description: Sets up or maintains an autonomous dependency-update and release pi
 
 # Autonomous Upgrade
 
-Pipeline: **native upgrade (daily + 14d cooldown) → `just check` → auto-rebase → `bump-version` (CI gate + `just bump` + atomic tag) → `release` (artifacts)**.
+Pipeline: **native upgrade (daily + 14d cooldown) → `just check` → auto-rebase → `release` (3 targets: new-tag, tag, commit)**.
 
 ## Do these three things first, in order
 
 | # | Gate | Why it blocks everything after |
 |---|---|---|
 | 1 | **Locate the host** — `git remote -v` | Decides `.github/` vs `.forgejo/`, runner labels, `gh` vs `fj`, and whether a GitHub twin exists |
-| 2 | **Ask the project mode** — maintenance or active | Decides whether `bump-version.yml` gets `on.schedule` (active projects track milestones in an optional roadmap) |
+| 2 | **Ask the project mode** — maintenance or active | Decides whether `release.yml` gets `on.schedule` (active projects track milestones in an optional roadmap) |
 | 3 | **Consult the owner** on the checklist in `references/decisions.md` | The rest are baselines to adapt, not mandates |
 
 Never assume github.com. Never write a weekly cron for a project under active
@@ -27,11 +27,10 @@ flowchart TD
     B --> D[just check]
     D -->|green| E[auto-merge, rebase]
     E --> F[Accumulate on main]
-    F --> G[bump-version: weekly cron<br/>or manual dispatch]
-    G --> H[CI Gate passes]
-    H --> I[just bump version<br/>package-agnostic manifest update]
-    I --> J[Atomic commit + tag push]
-    J --> K[release: build artifacts<br/>tag publish or commit test]
+    F --> G[release workflow]
+    G -->|new-tag: cron or manual| H[CI gate -> just bump -> atomic tag push -> publish]
+    G -->|tag: manual| I[rebuild existing tag -> publish]
+    G -->|commit: manual| J[test build -> Actions artifacts only]
 ```
 
 ## Reference files
@@ -43,7 +42,7 @@ Read the file for the task at hand; do not read all four.
 | `references/decisions.md` | The customization checklist — host, release model, artifacts, runner budget |
 | `references/hosts.md` | Writing any workflow: GitHub vs Forgejo differences, the twin-repository pattern, branch protection |
 | `references/ecosystems.md` | Setting the 14-day cooldown, or choosing whether an ecosystem qualifies at all |
-| `references/workflows.md` | The five YAML templates: deps, CI, auto-merge, bump-version, release |
+| `references/workflows.md` | The four YAML templates: deps, CI, auto-merge, release |
 
 ## Hard rules
 
@@ -63,8 +62,9 @@ These are not negotiable. Rationale is in `references/decisions.md`.
    native package managers (`bun update`, `cargo update`, `ncu`).
 5. **Split patch/minor from major**, so a breaking major cannot block routine merges.
 6. **Weekly releases only in maintenance mode.** Active development gets
-   `workflow_dispatch` alone. The workflow supports two targets: `tag` (publishes
-   release) and `commit` (test build only, keeps Actions artifacts without publishing).
+   `workflow_dispatch` alone. The unified `release.yml` workflow provides 3
+   targets: `new-tag` (default/cron: CI gate + bump + tag + publish), `tag`
+   (rebuild existing tag), and `commit` (test build, Actions artifacts only).
 7. **Cheapest single-core runner for orchestration** (`ubuntu-slim` on GitHub, the
    owner's self-hosted label on Forgejo). Full runners only for `just check` and
    artifact builds.

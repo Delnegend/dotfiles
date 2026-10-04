@@ -1,6 +1,6 @@
 # Workflow templates
 
-Five workflow templates plus Dependabot for GitHub Actions. Path and runner label
+Four workflow templates plus Dependabot for GitHub Actions. Path and runner label
 follow the host (see `hosts.md`); the substance does not change.
 
 ## A. Dependency upgrade job
@@ -192,50 +192,74 @@ jobs:
 
 Auto-merge only fires once `Check (just check)` is green on the PR head.
 
-## D. Version bump & release gate (`bump-version.yml`)
+## D. Release / Build Artifacts (`release.yml`)
 
-This workflow is the gatekeeper. It derives the version from Conventional
-Commits, verifies that CI passes, updates the package manager's config file
-via the package-agnostic `just bump` recipe, atomically commits and tags on
-`main`, and dispatches `release.yml`.
+The unified release workflow. Supports three execution targets:
+1. **`new-tag`** *(Default / Weekly Cron)* — calculates next SemVer from commits,
+   verifies CI is green, updates the package manifest via `just bump`, pushes the
+   commit and tag to `main`, and builds/publishes the release.
+2. **`tag`** — rebuilds and publishes an existing release tag without bumping.
+3. **`commit`** — test build against a commit (uploads Actions artifacts only, no release).
 
 ### Mode-dependent trigger
 
-- **Maintenance mode:** scheduled weekly cron (`0 0 * * 0`) + `workflow_dispatch`.
+- **Maintenance mode:** scheduled weekly cron (`0 0 * * 0`, defaults to `new-tag`) + `workflow_dispatch`.
 - **Active development:** `workflow_dispatch` only (no `on.schedule`).
 
 ```yaml
-name: bump-version
+name: Release / Build Artifacts
 
 on:
   workflow_dispatch:
+    inputs:
+      target:
+        description: "Release mode / build target"
+        required: true
+        type: choice
+        default: "new-tag"
+        options:
+          - new-tag  # Gate on CI -> bump version -> tag & push -> build & publish release
+          - tag      # Rebuild existing tag -> build & publish release
+          - commit   # Test build latest commit -> upload Actions artifacts only (no release)
+      ref:
+        description: "Custom tag or commit SHA (optional, defaults to latest)"
+        required: false
+        type: string
   # Maintenance mode adds:
   # schedule:
-  #   - cron: '0 0 * * 0' # Weekly: Sunday 00:00 UTC
+  #   - cron: '0 0 * * 0' # Weekly: Sunday 00:00 UTC (defaults to target: new-tag)
 
 concurrency:
-  group: bump-version
+  group: release-main
   cancel-in-progress: false
 
 permissions:
   contents: write
-  actions: write   # Required for `gh workflow run release.yml`
 
 jobs:
-  bump:
-    name: Bump Version & Tag
-    runs-on: ubuntu-latest   # Compiler/toolchain headroom for `just check`
+  prepare:
+    name: Prepare / Bump Version
+    runs-on: ubuntu-latest   # Full runner for compiler/toolchain headroom during `just check`
     timeout-minutes: 30
+    outputs:
+      ref: ${{ steps.resolve.outputs.ref }}
+      version: ${{ steps.resolve.outputs.version }}
+      publish: ${{ steps.resolve.outputs.publish }}
+      skip: ${{ steps.resolve.outputs.skip }}
     steps:
       - uses: actions/checkout@v7
         with:
           token: ${{ github.token }}
           persist_credentials: true
-          fetch-depth: 0   # semver-action needs full git history
+          fetch-depth: 0   # Full git history for tags, commits, and semver-action
       - uses: extractions/setup-just@v4
       # Insert any language setup needed by `just check` (e.g. setup-go, setup-node)
 
+      # -----------------------------------------------------------------------
+      # Mode 1: new-tag (calculate semver -> CI gate -> just bump -> atomic push)
+      # -----------------------------------------------------------------------
       - name: Calculate Next SemVer
+        if: (inputs.target || 'new-tag') == 'new-tag'
         id: semver
         uses: ietf-tools/semver-action@v1
         with:
@@ -244,19 +268,14 @@ jobs:
           noNewCommitBehavior: silent
           noVersionBumpBehavior: patch
 
-      - name: Report skip
-        if: steps.semver.outputs.bump == 'none'
-        run: |
-          echo "No version bump needed (current: ${{ steps.semver.outputs.current }}). Exiting."
-
       - name: CI Gate (verify code is green before bumping)
-        if: steps.semver.outputs.bump != 'none'
+        if: (inputs.target || 'new-tag') == 'new-tag' && steps.semver.outputs.bump != 'none'
         # Single repo: runs `just check`
         # Forgejo+twin: dispatches CI to twin and waits (see hosts.md)
         run: just check
 
       - name: Bump package manager version
-        if: steps.semver.outputs.bump != 'none'
+        if: (inputs.target || 'new-tag') == 'new-tag' && steps.semver.outputs.bump != 'none'
         env:
           NEXT_STRICT: ${{ steps.semver.outputs.nextStrict }}
         run: |
@@ -265,7 +284,7 @@ jobs:
           just bump "$NEXT_STRICT"
 
       - name: Commit, Tag, and Push atomically
-        if: steps.semver.outputs.bump != 'none'
+        if: (inputs.target || 'new-tag') == 'new-tag' && steps.semver.outputs.bump != 'none'
         env:
           NEXT_TAG: ${{ steps.semver.outputs.next }}
         run: |
@@ -284,202 +303,90 @@ jobs:
           # Atomic push: commit and tag land together on main
           git push origin HEAD:main "refs/tags/${NEXT_TAG}"
 
-      - name: Trigger Release
-        if: steps.semver.outputs.bump != 'none'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # -----------------------------------------------------------------------
+      # Resolve outputs for Job 2 (build)
+      # -----------------------------------------------------------------------
+      - name: Resolve outputs
+        id: resolve
         run: |
-          # Single repo: dispatches release workflow for the new tag
-          # Forgejo+twin: dispatches twin release workflow (see hosts.md)
-          gh workflow run release.yml -f target=tag -f ref="${{ steps.semver.outputs.next }}" || true
-```
+          set -euo pipefail
+          TARGET="${{ inputs.target || 'new-tag' }}"
+          INPUT_REF="${{ inputs.ref || '' }}"
 
-## E. Release / Build Artifacts (`release.yml`)
+          if [ "$TARGET" = "new-tag" ]; then
+            BUMP="${{ steps.semver.outputs.bump }}"
+            if [ "$BUMP" = "none" ]; then
+              echo "No version bump needed (current: ${{ steps.semver.outputs.current }})."
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "ref=${{ steps.semver.outputs.next }}" >> "$GITHUB_OUTPUT"
+            echo "version=${{ steps.semver.outputs.nextStrict }}" >> "$GITHUB_OUTPUT"
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
 
-Builds and publishes artifacts (native binaries, container images, packages).
-Normal releases are dispatched by `bump-version` after the tag is verified
-and pushed.
-### The trigger is mode-dependent
+          elif [ "$TARGET" = "tag" ]; then
+            TAG="${INPUT_REF:-$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1 || true)}"
+            [ -n "$TAG" ] || { echo "::error::No release tag found"; exit 1; }
+            echo "ref=$TAG" >> "$GITHUB_OUTPUT"
+            echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
 
-Both modes provide two build targets via `workflow_dispatch`:
-- `tag`: (default) builds against the latest tag and publishes an official release.
-- `commit`: test build against latest commit on `main` (kept as Actions run artifacts, no release published).
+          elif [ "$TARGET" = "commit" ]; then
+            SHA="${INPUT_REF:-$(git rev-parse HEAD)}"
+            echo "ref=$SHA" >> "$GITHUB_OUTPUT"
+            echo "version=$SHA" >> "$GITHUB_OUTPUT"
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "Running test build against commit $SHA (will not publish release)"
+          fi
 
-```yaml
-# Maintenance mode — unattended weekly tag (defaults to target: tag) + manual dispatch:
-on:
-  schedule:
-    - cron: '0 0 * * 0' # Weekly: Sunday 00:00 UTC
-  workflow_dispatch:
-    inputs:
-      target:
-        description: "Build target"
-        required: true
-        type: choice
-        default: "tag"
-        options:
-          - tag      # Build latest tag and publish release
-          - commit   # Test build latest commit (action artifacts only, no release)
-      ref:
-        description: "Custom tag or commit SHA (optional, defaults to latest)"
-        required: false
-        type: string
-```
-
-```yaml
-# Active development — manual dispatch ONLY, no `on.schedule` at all:
-on:
-  workflow_dispatch:
-    inputs:
-      target:
-        description: "Build target"
-        required: true
-        type: choice
-        default: "tag"
-        options:
-          - tag      # Build latest tag and publish release
-          - commit   # Test build latest commit (action artifacts only, no release)
-      ref:
-        description: "Custom tag or commit SHA (optional, defaults to latest)"
-        required: false
-        type: string
-```
-
-Do not leave a commented-out `schedule:` block in an active-development
-project's workflow; delete it so nobody re-enables it by accident.
-
-### The body (identical in both modes)
-
-Keep the filename `release.yml` so automated dispatchers and URLs remain
-stable. The display name `name: Release / Build Artifacts` makes it clear in
-the Actions UI that test builds can be run here without publishing.
-
-```yaml
-name: Release / Build Artifacts
-
-on:
-  workflow_dispatch:
-    inputs:
-      target:
-        description: "Build target"
-        required: true
-        type: choice
-        default: "tag"
-        options:
-          - tag
-          - commit
-      ref:
-        description: "Custom tag or commit SHA (optional, defaults to latest)"
-        required: false
-        type: string
-
-concurrency:
-  group: release-main
-  cancel-in-progress: false
-
-permissions:
-  contents: write
-
-jobs:
-  release:
-    name: Build & Release
-    runs-on: ubuntu-slim
+  build:
+    name: Build & Release Artifacts
+    needs: prepare
+    if: needs.prepare.outputs.skip != 'true'
+    runs-on: ubuntu-slim   # or matrix runners for multi-platform binaries
     steps:
       - uses: actions/checkout@v7
         with:
-          fetch-depth: 0   # semver-action needs full history for Conventional Commits
+          ref: ${{ needs.prepare.outputs.ref }}
+          fetch-depth: 0
 
-      - name: Resolve target and publish mode
-        id: target
-        run: |
-          set -euo pipefail
-          TARGET="${{ inputs.target || 'tag' }}"
-          INPUT_REF="${{ inputs.ref || '' }}"
+      # -----------------------------------------------------------------------
+      # Project-specific build step (binaries, packages, container images)
+      # Produces files in dist/ (or your artifact directory)
+      # -----------------------------------------------------------------------
 
-          if [ "$TARGET" = "commit" ]; then
-            REF="${INPUT_REF:-$(git rev-parse HEAD)}"
-            echo "publish=false" >> "$GITHUB_OUTPUT"
-            echo "ref=$REF" >> "$GITHUB_OUTPUT"
-            echo "Test build against commit $REF (will not publish release)"
-          else
-            echo "publish=true" >> "$GITHUB_OUTPUT"
-            echo "Release build against tag"
-          fi
-
-      - name: Next version (Conventional Commits)
-        if: steps.target.outputs.publish == 'true'
-        id: semver
-        uses: ietf-tools/semver-action@v1
-        with:
-          token: ${{ github.token }}
-          fallbackTag: v0.0.0
-          noNewCommitBehavior: silent
-          noVersionBumpBehavior: patch
-
-      # Insert project-specific build step here.
-      # Outputs saved to dist/ (or your artifact directory).
-
-      - name: Upload build artifacts (always kept in Actions)
+      - name: Upload build artifacts (always kept in Actions run)
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts-${{ steps.target.outputs.ref || steps.semver.outputs.next || 'run' }}
+          name: build-artifacts-${{ needs.prepare.outputs.ref }}
           path: dist/
           if-no-files-found: ignore
 
       - name: Publish Consolidated Release
-        if: steps.target.outputs.publish == 'true' && steps.semver.outputs.bump != 'none'
+        if: needs.prepare.outputs.publish == 'true'
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ steps.semver.outputs.next }}
+          tag_name: ${{ needs.prepare.outputs.ref }}
           generate_release_notes: true
           files: dist/*
 ```
 
-### Division of responsibilities: `bump-version` vs `release`
-
-1. **`bump-version.yml` is the gatekeeper:** It calculates SemVer from commits,
-   verifies that CI is green, updates the package manager's manifest via the
-   package-agnostic `just bump` recipe, and atomically pushes the commit and
-   tag to `main`.
-2. **`release.yml` builds artifacts:** It receives the verified tag and compiles
-   binaries or container images, publishing them to GitHub Releases or registries.
-   When run manually with `target: commit`, it runs a test build of latest code
-   and saves artifacts in the Actions run without publishing.
-
-`fallbackTag` in `bump-version.yml` must reference a tag that already exists
-(create `v0.0.0` on the initial commit, once); if it is missing the action
-errors rather than treating it as "no tags yet".
-### Skip cleanly when there is nothing to release
-
-`noNewCommitBehavior: silent` yields `bump == 'none'`. Make that visible
-rather than silently exiting, so an operator can tell "nothing to release"
-from "the job died":
-
-```yaml
-      - name: Report skip
-        if: steps.semver.outputs.bump == 'none'
-        run: |
-          echo "No version bump needed (current: ${{ steps.semver.outputs.current }})."
-          echo "::warning::if a tag exists without a twin release, rebuild via the release workflow"
-```
-
-`semver-action` exposes only `current`, `next`, `nextStrict`, `nextMajor`,
-`nextMajorStrict`, and `bump` — **there is no `skip` output.** Test on `bump`.
-A wrapper composite action may add its own outputs, but verify them against
-that action's `action.yml` rather than assuming.
-
 ### Artifact build (project-specific)
 
-Insert a build step or matrix between the target resolution and publishing,
-producing exactly what the project ships — native binaries (commonly Linux x64,
-Windows x64, macOS arm64), a package, or nothing but notes. Pass
-`${{ steps.target.outputs.ref || steps.semver.outputs.next }}` to the build command.
+Insert a build step or matrix in the `build` job, producing exactly what the
+project ships — native binaries (commonly Linux x64, Windows x64, macOS arm64),
+a package, or nothing but notes. Pass `${{ needs.prepare.outputs.version }}` or
+`${{ needs.prepare.outputs.ref }}` to the build command.
 
-Always include `actions/upload-artifact@v4` as shown above:
-- When running `target: tag`, artifacts are uploaded to the Actions run AND published to GitHub Releases.
+`actions/upload-artifact@v4` runs on every build:
+- When running `target: new-tag` or `target: tag`, artifacts are uploaded to the Actions run AND published to GitHub Releases.
 - When running `target: commit`, artifacts are uploaded to the Actions run for testing, and the GitHub Release step is skipped.
 
-On a Forgejo+twin project this workflow lives in `.forgejo/workflows/` and ends
-by dispatching the twin's build workflow rather than publishing locally.
+On a Forgejo+twin project, the Forgejo workflow's `build` job dispatches the
+twin's release workflow with `ref: ${{ needs.prepare.outputs.ref }}` rather
+than publishing locally.
 
 The template above is notes-only, for a project with no build artifacts.

@@ -111,8 +111,8 @@ Some projects are private on the internal Forgejo but published as a public
 GitHub mirror. The **twin is where release artifacts are built and published**
 (GitHub Releases, GHCR), while the Forgejo repo owns CI triggering and the tag.
 
-- Forgejo repo → computes the version, gates on CI, commits, tags, pushes.
-- Then dispatches the twin's build workflow and waits for it.
+- Forgejo repo → `release.yml` prepares version/tag, gates on CI, commits, and pushes.
+- Then dispatches the twin's `release` workflow with the resolved ref and waits for it.
 - Wire the two with a Forgejo workflow dispatching a `repository_dispatch`
  event, using a fine-grained PAT stored as a **Forgejo secret**. Never commit
  the PAT.
@@ -169,11 +169,9 @@ it is a security tradeoff, not an oversight.
 
 ### Repair path after a partial release
 
-When a tag exists on Forgejo but the twin release never completed, **re-run the
-twin's release workflow with the existing tag. Do not re-run the version bump** —
-a second bump creates a new tag for a version that was already released. Make
-the release workflow accept an optional tag input (defaulting to the newest tag)
-so this repair is a button rather than a code change.
+When a tag exists on Forgejo but the twin release never completed, **re-run
+`release` with `target: tag` and the existing tag. Do not run `target: new-tag`** —
+that would create a second tag for a version that was already released.
 
 **Name no specific account.** The GitHub account hosting a twin is the owner's
 private arrangement and must never appear in committed workflow files, generated
