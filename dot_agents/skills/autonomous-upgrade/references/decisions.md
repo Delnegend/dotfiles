@@ -8,7 +8,7 @@ agreed choices and any deviations in the PR description or conversation.
 
 1. **Host** — github.com, self-hosted Forgejo, or Forgejo + a GitHub twin.
    *Default:* whatever `git remote -v` says. Determines workflow directory,
-   runner labels, and `gh` vs `fj`.
+   runner labels, and PR creation (`gh` vs native AGit).
 2. **Project mode** — maintenance or active development.
    *Default:* active development. Determinates whether the release workflow gets
    an `on.schedule` cron at all.

@@ -11,7 +11,7 @@ Pipeline: **native upgrade (daily + 14d cooldown) → `just check` → auto-reba
 
 | # | Gate | Why it blocks everything after |
 |---|---|---|
-| 1 | **Locate the host** — `git remote -v` | Decides `.github/` vs `.forgejo/`, runner labels, `gh` vs `fj`, and whether a GitHub twin exists |
+| 1 | **Locate the host** — `git remote -v` | Decides `.github/` vs `.forgejo/`, runner labels, `gh` vs native AGit, and whether a GitHub twin exists |
 | 2 | **Ask the project mode** — maintenance or active | Decides whether `release.yml` gets `on.schedule` (active projects track milestones in an optional roadmap) |
 | 3 | **Consult the owner** on the checklist in `references/decisions.md` | The rest are baselines to adapt, not mandates |
 

@@ -30,7 +30,7 @@ The differences that actually bite:
 | Workflow dir | `.github/workflows/` | `.forgejo/workflows/` |
 | Slim runner | `ubuntu-slim` | whatever self-hosted label exists (e.g. `alpine`) |
 | Full runner | `ubuntu-latest` | owner's equivalent |
-| PR CLI | `gh pr ...` | `fj pr ...` (forgejo-contrib CLI) |
+| PR creation | `gh pr create` | Native AGit (`git push origin HEAD:refs/for/<branch>`) |
 | Settings UI | Settings → Actions | Settings → Actions (different labels) |
 | PR/secret permission | "Allow GitHub Actions to create and approve pull requests" | "Allow pull requests and security alerts" |
 | Dependabot | `.github/dependabot.yml` (`github-actions` only) | none (not supported) |
@@ -79,32 +79,36 @@ with an authentication error that looks like a permissions problem.
           fetch-depth: 0        # semver-action needs full history
 ```
 
-### The Forgejo CLI is `fj`
+### PR creation on Forgejo: Native AGit (`refs/for/<branch>`)
 
-`fj` is the CLI from `forgejo-contrib/forgejo-cli` — the `gh`-equivalent for
-Forgejo. Install it on the runner (prebuilt binaries for Linux x86_64/aarch64
-and Windows are on the releases tab) or via `cargo install forgejo-cli`.
+Rather than installing CLI tools (`tea`/`fj`) and managing tokens on the runner,
+Forgejo natively supports the **AGit protocol**. Pushing to the virtual namespace
+`refs/for/<target-branch>` commands Forgejo to create or update a Pull Request
+directly over Git transport:
 
-Two facts that shape how you write Forgejo steps:
+```bash
+git push origin HEAD:refs/for/main \
+  -o topic="deps/automatic" \
+  -o force-push=true \
+  -o title="chore(deps): upgrade dependencies" \
+  -o description="Automated daily upgrade."
+```
 
-1. **`fj` reads no token from the environment.** It stores credentials in its
-   own keys file, so CI must seed it first with
-   `fj auth add-token "${{ github.token }}" -H <forgejo-host>`. Forgejo
-   automatically aliases `${{ github.token }}` to its built-in token, so no
-   custom secret is required for same-repo tasks.
-2. **`fj pr merge` has no `--auto` flag.** Methods are
-   `merge`, `rebase`, `rebase-merge`, `squash`, `manual`; there is no
-   auto-merge-on-green equivalent of `gh pr merge --auto`. For a Forgejo
-   project, either set auto-merge in the instance UI, or use
-   `fj pr merge --method rebase --delete` gated behind a
-   `fj pr status` CI check in the same job. Do not write a `--auto` flag that
-   does not exist.
+Why AGit is the standard for Forgejo:
+1. **Zero runner dependencies:** Plain `git` is the only tool needed. Works on
+   any minimal container image (Alpine, scratch-based) with no extra packages.
+2. **Zero token / permission bugs:** Runs over the standard Git credentials already
+   configured by checkout (`persist_credentials: true`). Bypasses Forgejo issue
+   #13739 where the REST API rejects automatic tokens on private/internal repos.
+3. **Automatic updates:** Pushing again with the same `-o topic="..."` and
+   `-o force-push=true` updates the existing open PR cleanly instead of creating duplicates.
 
-Install and version-check in the workflow with `fj version` (currently v0.6.x)
-so a silent upgrade cannot change the CLI surface under you.
+### Optional: The Forgejo CLI (`fj`)
 
-`fj` also needs the host on every call (`-H <forgejo-host>`); it has no
-repository auto-detection that survives a detached CI checkout.
+`fj` (`forgejo-contrib/forgejo-cli`) is only needed if a workflow explicitly
+requires CLI operations (like querying status or manual reviews):
+- Credentials must be seeded first via `fj auth add-token "${{ github.token }}" -H <host>`.
+- `fj pr merge` has no `--auto` flag (use native auto-merge settings in the Forgejo UI, or gate with `fj pr status --wait`).
 
 ## Twin-repository pattern
 

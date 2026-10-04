@@ -72,22 +72,25 @@ jobs:
             --body "Automated daily upgrade. Versions published less than 14 days ago were filtered out by the package manager."
 ```
 
-**Forgejo:** seed `fj`'s keys file using the ambient `${{ github.token }}`
-(Forgejo automatically aliases this to its own token), then run `fj pr create`.
-There is no `gh`-style env-var token, and `fj pr create` takes the title
-positionally with `-A/--autofill` rather than `--fill`:
+**Forgejo:** use native **AGit** (`refs/for/main`). Forgejo opens or updates
+the Pull Request directly over Git transport — **zero CLI tools (`gh`/`fj`)
+and zero extra tokens needed**:
 
 ```yaml
-      - name: Open upgrade PR (Forgejo)
+      - name: Open upgrade PR (Forgejo AGit)
         if: steps.diff.outputs.changed == 'true'
         run: |
-          fj auth add-token "${{ github.token }}" -H "$FORGEJO_HOST"
-          fj pr create "chore(deps): upgrade dependencies" \
-            -H "$FORGEJO_HOST" \
-            --base main --head deps/automatic \
-            --body "Automated daily upgrade. Versions published less than 14 days ago were filtered out by the package manager."
+          git config user.name "actions[bot]"
+          git config user.email "actions@git.local"
+          git checkout -B deps/automatic
+          git add -u
+          git commit -m "chore(deps): upgrade dependencies" \
+            -m "Automated daily upgrade. Versions published less than 14 days ago were filtered out by the package manager."
+          # AGit: pushes to virtual refs/for/main; Forgejo creates or updates the PR automatically
+          git push origin HEAD:refs/for/main \
+            -o topic="deps/automatic" \
+            -o force-push=true
 ```
-
 Keep the `chore(deps):` commit prefix so the release workflow's Conventional
 Commits scan reads a patch bump.
 
