@@ -1,6 +1,7 @@
 [Unit]
 Description=Rclone Google Drive Mount (gdrive-kiennguyen19323)
 Documentation=man:rclone(1)
+ConditionHost=bazzite
 ConditionPathExists=/home/linuxbrew/.linuxbrew/bin/rclone
 After=network-online.target
 Wants=network-online.target
