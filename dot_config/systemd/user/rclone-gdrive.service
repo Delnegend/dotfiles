@@ -1,0 +1,18 @@
+[Unit]
+Description=Rclone Google Drive Mount (gdrive-kiennguyen19323)
+Documentation=man:rclone(1)
+ConditionPathExists=/home/linuxbrew/.linuxbrew/bin/rclone
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+ExecStartPre=/usr/bin/mkdir -p %h/mnt/gdrive
+ExecStart=/home/linuxbrew/.linuxbrew/bin/rclone mount gdrive-kiennguyen19323: %h/mnt/gdrive \
+    --vfs-cache-mode full
+ExecStop=/usr/bin/fusermount3 -u %h/mnt/gdrive
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
