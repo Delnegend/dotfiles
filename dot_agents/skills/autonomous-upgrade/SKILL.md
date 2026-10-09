@@ -5,7 +5,21 @@ description: Sets up or maintains an autonomous dependency-update and release pi
 
 # Autonomous Upgrade
 
-Pipeline: **native upgrade (daily + 14d cooldown) → `just check` → auto-rebase → `release` (3 targets: new-tag, tag, commit)**.
+Pipeline: **native upgrade (daily + 14d cooldown) → CI gate → auto-rebase → `release` (3 targets: new-tag, tag, commit)**.
+
+Host model (settled — no longer juggling two repos):
+
+| Setup | Source of truth | Twin | Workflows live in |
+|---|---|---|---|
+| GitHub-hosted repo | `origin` on github.com | none | `.github/workflows/` |
+| Self-hosted Forgejo, no twin | Forgejo origin | none | `.forgejo/workflows/` |
+| Self-hosted Forgejo + GitHub twin | Forgejo origin | **throwaway** public mirror, free runners only | `.forgejo/workflows/` (triggers) + `.github/workflows/` (**authored in the source repo**, synced by the dispatch action before every run) |
+
+The twin holds no source and no independent history worth preserving: it is
+regenerated from the source repo's `.github/` on every dispatch. Never author,
+edit, or commit directly in the twin — any hand edit there is overwritten by
+the next sync. The twin's `.github/workflows/` in the source repo is what
+Semgrep/Gitleaks scan; suppressions and pins live there, once.
 
 ## Do these three things first, in order
 
@@ -24,8 +38,11 @@ flowchart TD
     Y --> A[Native upgrade<br/>daily 02:00 UTC<br/>14d cooldown from the tool]
     A -->|patch/minor| B[PR labelled dependencies]
     A -->|major| C[Stays open<br/>human review]
-    B --> D[just check]
-    D -->|green| E[auto-merge, rebase]
+    B --> D[CI gate]
+    D -->|Forgejo+twin| D2[dispatch-github:<br/>sync .github/<br/>then dispatch + wait]
+    D -->|single host| D3[just check]
+    D2 -->|green| E[auto-merge, rebase]
+    D3 -->|green| E
     E --> F[Accumulate on main]
     F --> G[release workflow]
     G -->|new-tag: cron or manual| H[CI gate -> just bump -> atomic tag push -> publish]
@@ -50,8 +67,13 @@ These are not negotiable. Rationale is in `references/decisions.md`.
 
 1. **Consult the owner before applying.** No universal CI/CD flow. Record agreed
    choices and deviations in the PR/conversation — never a committed decision file.
-2. **One CI gate: `just check`.** No build matrix in CI. Building artifacts is
-   the release workflow's job.
+2. **CI gate shape follows the host.** Single-host repos: one `just check`, no
+   build matrix. Forgejo+twin repos: the CI workflow runs `just check` **plus
+   the security scans in parallel** — Gitleaks (secrets), Semgrep (SAST),
+   Trivy (OS packages + misconfigurations), OSV-Scanner (deps). Security
+   scanning is a GitHub-runners-only concern: it runs on the twin, never on
+   self-hosted Forgejo (no Docker images, no registry egress, no runner
+   minutes there). Building artifacts is always the release workflow's job.
 3. **14-day cooldown, enforced by the package manager itself.** Never re-implement
    the age filter as a shell script — the tool's own gate also covers transitive
    dependencies. If an ecosystem has no native gate, that project does not get
@@ -76,6 +98,18 @@ These are not negotiable. Rationale is in `references/decisions.md`.
     lean images like Alpine. Prefer shell-only composites on self-hosted runners.
 11. **Push the version commit and its tag in one `git push`**, and never tag a
     commit whose manifest still carries the old version.
+12. **Self-owned action refs get `nosemgrep`, third-party refs get SHA pins.**
+    The `github-actions-mutable-action-tag` rule fires on every `uses: …@<tag>`;
+    on refs the owner controls on both ends (own Forgejo actions repo, own
+    GitHub org) a tag can only be repointed by the owner, so suppress with a
+    bare `# nosemgrep` comment (verified: the `rule-id` form is silently ignored
+    on YAML `uses:` lines by current Semgrep). Third-party refs keep the rule
+    live — pin them to full SHAs instead.
+13. **No `${{ }}` interpolation inside `run:` blocks.** Move every workflow
+    context value (`inputs.*`, `steps.*.outputs.*`, `needs.*.outputs.*`,
+    `secrets.*`) into the step's `env:` block and reference `$VAR` in shell.
+    `if:`/`with:`/`env:` interpolation is fine — the injection sink is the shell.
+    Verified clean by scanning `run: |` blocks for `${{` before committing.
 
 ## Project contract
 

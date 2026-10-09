@@ -154,6 +154,35 @@ jobs:
 
 The job `name:` must match the branch protection context exactly.
 
+### B2. CI gate for Forgejo+twin repos (checks + security scans in parallel)
+
+Single-host repos use template B as-is. When the repo has a GitHub twin, the
+CI workflow (authored in the source repo's `.github/workflows/`, synced into
+the twin by the dispatch action) runs `just check` **plus the four security
+scans as parallel jobs** — each fetches the source from Forgejo at
+`inputs.ref` first. Security scanning is GitHub-runners-only: the scan jobs
+need Docker images and registry egress that self-hosted Forgejo runners
+typically lack.
+
+```yaml
+jobs:
+  check:
+    name: Check (just check)
+    runs-on: ubuntu-latest
+    steps:
+      # ... fetch source, language setup ...
+      - name: Run checks
+        run: just check
+
+  secret-scan: # Gitleaks — full history (fetch-depth: 0)
+  sast-scan: # Semgrep OSS --config=auto --error
+  trivy-scan: # Trivy fs, HIGH+CRITICAL only, --exit-code 1
+  osv-scan: # OSV-Scanner --recursive
+  # Each scan job: fetch source from Forgejo at inputs.ref, then one docker run.
+  # Self-owned action refs carry `# nosemgrep`; third-party refs are SHA-pinned.
+  # No ${{ }} interpolation inside run: blocks (env: first).
+```
+
 ## C. Auto-merge
 
 Exits in <10 seconds; no polling. No `fetch-metadata` step — that was

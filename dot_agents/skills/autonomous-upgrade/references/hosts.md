@@ -110,20 +110,33 @@ requires CLI operations (like querying status or manual reviews):
 - Credentials must be seeded first via `fj auth add-token "${{ github.token }}" -H <host>`.
 - `fj pr merge` has no `--auto` flag (use native auto-merge settings in the Forgejo UI, or gate with `fj pr status --wait`).
 
-## Twin-repository pattern
+## Twin-repository pattern (settled: the twin is throwaway)
 
-Some projects are private on the internal Forgejo but published as a public
-GitHub mirror. The **twin is where release artifacts are built and published**
-(GitHub Releases, GHCR), while the Forgejo repo owns CI triggering and the tag.
+Some projects are private on the internal Forgejo but run CI on a public
+GitHub mirror (free runners). The **Forgejo repo is the sole source of truth**;
+the **twin is regenerated from it on every dispatch** and holds no history
+worth preserving. Never juggle two repos: author everything in the source,
+including the twin's own `.github/workflows/` files.
 
-- Forgejo repo → `release.yml` prepares version/tag, gates on CI, commits, and pushes.
-- Then dispatches the twin's `release` workflow with the resolved ref and waits for it.
+- The source repo carries **both** `.forgejo/workflows/` (triggers) and
+  `.github/workflows/` (the twin's workflows, authored here).
+- The shared dispatch action copies the source repo's `.github/` into the twin
+  as its **first step, before dispatching** — so the twin is always current
+  and there is no race between "sync the workflows" and "run the workflows".
+  Only `.github/` is replaced; the twin's `LICENSE`/`README` are kept. A repo
+  without `.github/` is left untouched.
+- The twin is where release artifacts are built and published (GitHub
+  Releases, GHCR), and where the security scans run (Docker-based: Gitleaks,
+  Semgrep, Trivy, OSV-Scanner — unsuitable for self-hosted runners without
+  images or registry egress). The Forgejo side owns triggering and the tag.
+- Forgejo ignores `.github/workflows/` whenever `.forgejo/workflows/` exists
+  (fallback applies only when `.forgejo/` is absent), so the twin's workflows
+  never double-run on Forgejo. Verified on Forgejo v16.
 - Wire the two with a Forgejo workflow dispatching a `repository_dispatch`
- event, using a fine-grained PAT stored as a **Forgejo secret**. Never commit
- the PAT.
+  event, using a fine-grained PAT stored as a **Forgejo secret**. Never commit
+  the PAT.
 - Ask the owner which side owns which step. Do not infer it from the remote
- alone — a mirror existing does not mean it builds artifacts.
-
+  alone — a mirror existing does not mean it builds artifacts.
 ### `repository_dispatch`, not `workflow_dispatch`
 
 Dispatch across repos with a `repository_dispatch` event whose
