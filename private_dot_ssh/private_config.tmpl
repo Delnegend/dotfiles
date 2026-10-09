@@ -24,6 +24,16 @@ Host github.com
 	IdentityAgent ${SSH_AUTH_SOCK}
 {{- end }}
 
+Host github.com-twin
+	HostName github.com
+	User git
+	IdentityFile ~/.ssh/twin@github.pub
+{{- if eq .chezmoi.os "windows" }}
+	IdentityAgent //./pipe/openssh-ssh-agent
+{{- else }}
+	IdentityAgent ${SSH_AUTH_SOCK}
+{{- end }}
+
 Host git.delnegend.com
 	HostName git.delnegend.com
 	AddressFamily inet
