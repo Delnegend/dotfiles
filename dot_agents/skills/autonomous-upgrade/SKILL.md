@@ -7,7 +7,7 @@ description: Sets up or maintains an autonomous dependency-update and release pi
 
 Pipeline: **native upgrade (daily + 14d cooldown) → CI gate → auto-rebase → `release` (3 targets: new-tag, tag, commit)**.
 
-Host model (settled — no longer juggling two repos):
+Host model:
 
 | Setup | Source of truth | Twin | Workflows live in |
 |---|---|---|---|
@@ -15,11 +15,11 @@ Host model (settled — no longer juggling two repos):
 | Self-hosted Forgejo, no twin | Forgejo origin | none | `.forgejo/workflows/` |
 | Self-hosted Forgejo + GitHub twin | Forgejo origin | **throwaway** public mirror, free runners only | `.forgejo/workflows/` (triggers) + `.github/workflows/` (**authored in the source repo**, synced by the dispatch action before every run) |
 
-The twin holds no source and no independent history worth preserving: it is
-regenerated from the source repo's `.github/` on every dispatch. Never author,
-edit, or commit directly in the twin — any hand edit there is overwritten by
-the next sync. The twin's `.github/workflows/` in the source repo is what
-Semgrep/Gitleaks scan; suppressions and pins live there, once.
+The twin holds no source: it is regenerated from the source repo's `.github/`
+on every dispatch. Never author, edit, or commit directly in the twin — any
+hand edit there is overwritten by the next sync. The twin's
+`.github/workflows/` in the source repo is what Semgrep/Gitleaks scan;
+suppressions and pins live there, once.
 
 ## Do these three things first, in order
 

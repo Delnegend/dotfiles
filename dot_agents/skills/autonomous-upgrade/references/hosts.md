@@ -110,13 +110,12 @@ requires CLI operations (like querying status or manual reviews):
 - Credentials must be seeded first via `fj auth add-token "${{ github.token }}" -H <host>`.
 - `fj pr merge` has no `--auto` flag (use native auto-merge settings in the Forgejo UI, or gate with `fj pr status --wait`).
 
-## Twin-repository pattern (settled: the twin is throwaway)
+## Twin-repository pattern
 
 Some projects are private on the internal Forgejo but run CI on a public
 GitHub mirror (free runners). The **Forgejo repo is the sole source of truth**;
-the **twin is regenerated from it on every dispatch** and holds no history
-worth preserving. Never juggle two repos: author everything in the source,
-including the twin's own `.github/workflows/` files.
+the **twin is regenerated from it on every dispatch**. Author everything in
+the source, including the twin's own `.github/workflows/` files.
 
 - The source repo carries **both** `.forgejo/workflows/` (triggers) and
   `.github/workflows/` (the twin's workflows, authored here).
