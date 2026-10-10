@@ -1,7 +1,7 @@
 modelRoles:
   web: web/exa
-  default: opencode-go/space-bunny-free
   vision: opencode-go/mimo-v2.6-flash:auto
+  default: opencode-go/deepseek-v4.1-flash
 symbolPreset: ascii
 composer:
   shape: band
