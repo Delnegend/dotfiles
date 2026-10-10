@@ -112,39 +112,29 @@ requires CLI operations (like querying status or manual reviews):
 
 ## Twin-repository pattern
 
-Some projects are private on the internal Forgejo but run CI on a public
-GitHub mirror (free runners). The **Forgejo repo is the sole source of truth**;
-the **twin is regenerated from it on every dispatch**. Author everything in
-the source, including the twin's own `.github/workflows/` files.
+Some projects are private on Forgejo but run CI on a public GitHub mirror
+(free runners). The Forgejo repo is the sole source of truth; the twin is
+regenerated from it on every dispatch.
 
 ### GitHub needs only a repo and a token
 
 1. **Create an empty repo** on GitHub with the same name (only the owner
-   differs). No branches, no files, no workflow edits — the first dispatch
-   populates `.github/` from the source.
-2. **Create one fine-grained PAT** with read/write on **Contents** and
-   read/write on **Actions**, store it as the `GH_ACTIONS` secret on the
-   Forgejo repo. Never commit the PAT.
+   differs). The first dispatch populates `.github/` from the source.
+2. **Create one fine-grained PAT** (Contents + Actions read/write), store it
+   as `GH_ACTIONS` on the Forgejo repo. Never commit the PAT.
 
-That is the entire GitHub-side surface. Never open the twin in a browser to
-edit files, never clone it to push fixes, never create branches or tags there.
-A wrong-looking twin is fixed with a source-repo change plus a dispatch.
+Nothing else is ever done on GitHub: no file edits, no branches, no tags. A
+wrong-looking twin is fixed with a source-repo change plus a dispatch.
 
-- The source repo carries **both** `.forgejo/workflows/` (triggers) and
-  `.github/workflows/` (the twin's workflows, authored here).
-- The shared dispatch action copies the source repo's `.github/` into the twin
-  as its first step, before dispatching. Only `.github/` is replaced; the
-  twin's `LICENSE`/`README` are kept. A repo without `.github/` is skipped.
-- The twin is where release artifacts are built and published (GitHub
-  Releases, GHCR), and where the security scans run (Docker-based: Gitleaks,
-  Semgrep, Trivy, OSV-Scanner — unsuitable for self-hosted runners without
-  images or registry egress). The Forgejo side owns triggering and the tag.
-- Forgejo reads `.forgejo/workflows/` in preference to `.github/workflows/`,
-  so the twin's workflows never run on Forgejo.
-- Wire the two with a Forgejo workflow dispatching a `repository_dispatch`
-  event (PAT already stored as above).
-- Ask the owner which side owns which step. Do not infer it from the remote
-  alone — a mirror existing does not mean it builds artifacts.
+- The source repo carries `.forgejo/workflows/` (triggers) and
+  `.github/workflows/` (the twin's workflows, authored here; only `.github/`
+  is synced, `LICENSE`/`README` are kept; repos without `.github/` skip).
+- The twin builds release artifacts (GitHub Releases, GHCR) and runs the
+  Docker-based security scans (Gitleaks, Semgrep, Trivy, OSV-Scanner); Forgejo
+  owns triggering and the tag. Forgejo prefers `.forgejo/workflows/`, so the
+  twin's workflows never run there.
+- Dispatch via `repository_dispatch` (PAT stored as above). Ask the owner
+  which side owns which step; a mirror existing does not mean it builds.
 ### `repository_dispatch`, not `workflow_dispatch`
 
 Dispatch across repos with a `repository_dispatch` event whose

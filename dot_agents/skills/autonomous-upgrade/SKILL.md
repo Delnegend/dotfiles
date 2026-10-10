@@ -13,13 +13,11 @@ Host model:
 |---|---|---|---|
 | GitHub-hosted repo | `origin` on github.com | none | `.github/workflows/` |
 | Self-hosted Forgejo, no twin | Forgejo origin | none | `.forgejo/workflows/` |
-| Self-hosted Forgejo + GitHub twin | Forgejo origin | **throwaway** public mirror, free runners only | `.forgejo/workflows/` (triggers) + `.github/workflows/` (**authored in the source repo**, synced by the dispatch action before every run) |
+| Self-hosted Forgejo + GitHub twin | Forgejo origin | Throwaway public mirror, free runners only | `.forgejo/` + `.github/` (both authored here; see `hosts.md`) |
 
-The twin holds no source: it is regenerated from the source repo's `.github/`
-on every dispatch. Never author, edit, or commit directly in the twin — any
-hand edit there is overwritten by the next sync. The twin's
-`.github/workflows/` in the source repo is what Semgrep/Gitleaks scan;
-suppressions and pins live there, once.
+Never author in the twin: it is regenerated from the source `.github/` on
+every dispatch, and hand edits are overwritten. Scan suppressions and pins
+live in the source `.github/`.
 
 ## Do these three things first, in order
 
