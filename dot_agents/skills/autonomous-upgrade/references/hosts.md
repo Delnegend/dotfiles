@@ -117,10 +117,7 @@ GitHub mirror (free runners). The **Forgejo repo is the sole source of truth**;
 the **twin is regenerated from it on every dispatch**. Author everything in
 the source, including the twin's own `.github/workflows/` files.
 
-### GitHub is hands-off: create the repo and the token, then never touch it
-
-Setting up the twin side is a one-time, two-step job — after that, every
-change is made on Forgejo and the dispatch action syncs it over automatically:
+### GitHub needs only a repo and a token
 
 1. **Create an empty repo** on GitHub with the same name (only the owner
    differs). No branches, no files, no workflow edits — the first dispatch
@@ -131,22 +128,19 @@ change is made on Forgejo and the dispatch action syncs it over automatically:
 
 That is the entire GitHub-side surface. Never open the twin in a browser to
 edit files, never clone it to push fixes, never create branches or tags there.
-If the twin looks wrong, the fix is always a source-repo change plus a dispatch.
+A wrong-looking twin is fixed with a source-repo change plus a dispatch.
 
 - The source repo carries **both** `.forgejo/workflows/` (triggers) and
   `.github/workflows/` (the twin's workflows, authored here).
 - The shared dispatch action copies the source repo's `.github/` into the twin
-  as its **first step, before dispatching** — so the twin is always current
-  and there is no race between "sync the workflows" and "run the workflows".
-  Only `.github/` is replaced; the twin's `LICENSE`/`README` are kept. A repo
-  without `.github/` is left untouched.
+  as its first step, before dispatching. Only `.github/` is replaced; the
+  twin's `LICENSE`/`README` are kept. A repo without `.github/` is skipped.
 - The twin is where release artifacts are built and published (GitHub
   Releases, GHCR), and where the security scans run (Docker-based: Gitleaks,
   Semgrep, Trivy, OSV-Scanner — unsuitable for self-hosted runners without
   images or registry egress). The Forgejo side owns triggering and the tag.
-- Forgejo ignores `.github/workflows/` whenever `.forgejo/workflows/` exists
-  (fallback applies only when `.forgejo/` is absent), so the twin's workflows
-  never double-run on Forgejo. Verified on Forgejo v16.
+- Forgejo reads `.forgejo/workflows/` in preference to `.github/workflows/`,
+  so the twin's workflows never run on Forgejo.
 - Wire the two with a Forgejo workflow dispatching a `repository_dispatch`
   event (PAT already stored as above).
 - Ask the owner which side owns which step. Do not infer it from the remote
