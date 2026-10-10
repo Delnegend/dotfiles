@@ -207,10 +207,18 @@ without touching the twin's git state. Anything that would change the twin's
 files, branches, or tags is done on Forgejo and synced over — never pushed
 directly.
 
-**Name no specific account.** The GitHub account hosting a twin is the owner's
+> Live reference: `github.com/Vessel9457/emsui-agent` — a working twin.
+> Its `.github/workflows/` (authored in the Forgejo source's `.github/`,
+> synced by the dispatch step) shows the scan-job layout, `fj_repo` wiring,
+> and `nosemgrep`/SHA-pin conventions in production. Read it with `gh api
+> repos/Vessel9457/emsui-agent/contents/.github/workflows --jq` or a shallow
+> clone when grounding a new twin setup.
+
+**Name no specific account in generated output.** The GitHub account hosting a twin is the owner's
 private arrangement and must never appear in committed workflow files, generated
 docs, or summaries. Refer to it as "the GitHub twin" and let the owner supply
-`owner/repo` at apply time.
+`owner/repo` at apply time. (The curated reference above is skill content, not
+generated output — it stays.)
 
 ## Branch protection
 
