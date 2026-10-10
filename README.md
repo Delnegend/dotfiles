@@ -1,50 +1,109 @@
-<div align="center">
-
 # dotfiles
 
-**One command restores this whole desk — shell, editor, tools, and fonts — on a fresh Linux box or a Windows machine, exactly as it is here.**
+## Bootstrap (chezmoi)
 
-</div>
+> **Managed with [chezmoi](https://www.chezmoi.io/)** — the repo lives at the default source directory `~/.local/share/chezmoi` (no `sourceDir` override needed). `dot_*`/`private_*` map to `$HOME`, `.tmpl` files render per-OS, `run_*` scripts handle setup. The repo is public.
 
----
+### Prerequisites
 
-## Quick Start
+- **chezmoi** `>=2.40` — install via the one-liner below if not yet present
+- **Git** (+ OpenSSH on Windows)
 
+### Linux
+
+Ensure SSH agent forwarding is active (`ssh -A`) or your SSH key is added (`ssh-add`):
+
+If chezmoi is not yet installed, bootstrap with:
 ```bash
-# 1. On a new machine, name it
-#    add a `case` branch in `dot_bashrc_custom` matching `$(hostname -s)`
-
-# 2. Bootstrap
 sh -c "$(curl -fsLS https://get.chezmoi.io)" -- -b "$HOME/.local/bin" init --apply Delnegend
-
-# 3. Verify
-chezmoi status    # what would change — expect clean
 ```
 
-## Highlights
+The `-b "$HOME/.local/bin"` is required: the installer's default `bin/` is relative to the current directory, so running the one-liner from e.g. `/workspaces/<project>` would install chezmoi there instead of under `$HOME`. `~/.local/bin` is on `PATH` by default on Debian/Ubuntu devcontainers.
 
-- **One source of truth for every setting** — shell, git, tmux, KDE, fonts, systemd units, udev rules, editor and agent configs, all as templates that render per OS.
-- **Secrets pull their weight** — SSH keys, signing keys and agent tokens stay on the machine (nothing sensitive is ever committed).
-- **One-shot setup, quiet maintenance** — `run_once_*` scripts set the machine up; `run_onchange_*` scripts re-run only when their inputs change.
-- **Machine-aware by default** — `wsl`, `homelab` (`core`), `bazzite` and new hosts each get their own branch instead of commented-out blocks.
+Otherwise:
+```bash
+chezmoi init --apply Delnegend
+# clones to ~/.local/share/chezmoi and applies;
+# run_once/run_onchange scripts handle Homebrew, fonts, systemd, flatpak, udev automatically
+```
+
+For a new machine, add a `case` branch in `dot_bashrc_custom` matching `$(hostname -s)` _or_ extend `dot_config/environment.d/ssh.conf.tmpl`.
+
+### Windows
+
+1. Install:
+    ```powershell
+    winget install Git.Git twpayne.chezmoi -e
+    ```
+
+2. Clone and apply:
+    ```powershell
+    chezmoi init --apply Delnegend
+    ```
+
+3. Verify:
+    ```powershell
+    chezmoi status            # should be clean
+    chezmoi diff              # should be empty
+    ssh -T github.com         # should print "Hi Delnegend! ..."
+    ```
+
+Daily use:
+
+```powershell
+chezmoi status          # what would change
+chezmoi diff            # detailed diff
+chezmoi apply -v        # apply
+chezmoi edit ~/.gitconfig  # edit tracked file (writes back to dot_gitconfig.tmpl)
+chezmoi add ~/.config/newapp/config  # add new file to repo
+```
+
+## Secrets
+
+Secrets never live in this repo — each machine carries its own secret files.
+
+- **Hindsight API key (oh-my-pi memory):** put `HINDSIGHT_API_TOKEN=<token>` in `~/.omp/agent/.env` (mode `600`). The managed config `dot_omp/private_agent/private_config.yml` only references it as `apiToken: ${HINDSIGHT_API_TOKEN}`; `omp` auto-loads the agent `.env` at startup (load order: process env → project `.env` → agent `.env` → `~/.omp/.env` → `~/.env`, only unset keys are filled).
+- Guards: `.gitignore` excludes `.env`/`private_.env` from ever being committed; `.chezmoiignore` lists `.omp/agent/.env` so `chezmoi apply` cannot overwrite the local file.
+- New hosts: `dotfiles-pull.timer` syncs only the repo — create `~/.omp/agent/.env` by hand after `chezmoi apply`, or Hindsight auth silently falls back to unset.
 
 ## Layout
 
-| File | Maps to | Purpose |
-|---|---|---|
-| `dot_bashrc_custom` | `~/.bashrc_custom` | Shell entry point; per-host branches on `$(hostname -s)` |
-| `dot_gitconfig.tmpl` | `~/.gitconfig` | OS-conditional git config |
-| `dot_tmux.conf` | `~/.tmux.conf` | Tmux + system clipboard (Linux) |
-| `dot_config/` | `~/.config/` | git signers, fontconfig, KDE, environment, systemd units |
-| `dot_agents/` | `~/.agents/` | Agent skills, including the ones that maintain this repo |
-| `dot_omp/` | `~/.omp/` | Agent config and model roles |
-| `private_dot_ssh/` | `~/.ssh/` (`0700`) | SSH client config and signing keys |
-| `dot_Brewfile` | `~/Brewfile` | Package list, refreshed with `just brew-dump` + `chezmoi re-add` |
-| `run_once_10-bootstrap.sh.tmpl` | once | Sources `~/.bashrc_custom` from `~/.bashrc` |
-| `run_onchange_*.sh.tmpl` | on change | Fonts, systemd, KDE, udev |
+```
+~/.local/share/chezmoi/          # repo root = default chezmoi sourceDir (no config override)
 
-System layout changes belong in `AGENTS.md` next to the commands (`chezmoi status` / `diff` / `apply -v`, `just --list`) that verify them.
+# Files (dot_ → ~/., private_ → 0600/0700, .tmpl → Go template)
+dot_gitconfig.tmpl            # → ~/.gitconfig (OS-conditional: Windows gh.exe vs Linux brew gh)
+private_dot_ssh/              # → ~/.ssh/ (0700)
+  private_config.tmpl         #   unified SSH config (core + github + git.delnegend)
+  core@homelab.pub, delnegend@*.pub  #   public keys
+dot_config/
+  private_git/allowed_signers # → ~/.config/git/allowed_signers
+  fontconfig/fonts.conf       # → ~/.config/fontconfig/fonts.conf (Linux)
+  kdeglobals                  # → ~/.config/kdeglobals
+  environment.d/              # → ~/.config/environment.d/ (kde-dark.conf, linuxbrew.conf.tmpl, ssh.conf.tmpl)
+  systemd/user/*              # → ~/.config/systemd/user/ (Linux)
+dot_bashrc_custom             # → ~/.bashrc_custom (sourced from ~/.bashrc, per-host case)
+dot_tmux.conf                 # → ~/.tmux.conf (Linux; tmux installed via brew bootstrap)
+dot_Brewfile                  # → ~/Brewfile (Linux)
+dot_agents/                   # → ~/.agents (skills)
+dot_omp/private_agent/        # → ~/.omp/agent/ (0700)
+  private_config.yml          #   oh-my-pi config (secrets via ${ENV} indirection)
+  APPEND_SYSTEM.md             #   standing reply rules (plain language, conclusion first); appends to the built-in prompt
+  mcp.json.tmpl               #   per-host MCP servers (bazzite: mikrotik)
+dot_justfile                  # → ~/.justfile (general-purpose recipes + brew-dump)
+dot_var/app/...               # → ~/.var/app/... (Flatpak mpv/easyeffects, Linux)
+
+# Setup scripts (Linux-gated via {{ if eq .chezmoi.os "linux" }})
+run_once_10-bootstrap.sh.tmpl # Homebrew + base packages + ~/.bashrc wiring
+run_onchange_20-fonts.sh.tmpl # Iosevka + Noto Color Emoji + fc-cache
+run_onchange_30-systemd.sh.tmpl # daemon-reload + enable units (scoped by ConditionPathExists/ConditionHost in units)
+run_onchange_40-kde.sh.tmpl   # flatpak overrides for BreezeDark
+run_onchange_50-udev.sh.tmpl  # 99-disable-ncq-s4510.rules → /etc/udev (sudo)
+
+# Repo-only (ignored via .chezmoiignore, never applied)
+README.md  AGENTS.md  LICENSE
+```
 
 ## License
 
-[MIT](LICENSE)
+MIT
