@@ -117,6 +117,22 @@ GitHub mirror (free runners). The **Forgejo repo is the sole source of truth**;
 the **twin is regenerated from it on every dispatch**. Author everything in
 the source, including the twin's own `.github/workflows/` files.
 
+### GitHub is hands-off: create the repo and the token, then never touch it
+
+Setting up the twin side is a one-time, two-step job — after that, every
+change is made on Forgejo and the dispatch action syncs it over automatically:
+
+1. **Create an empty repo** on GitHub with the same name (only the owner
+   differs). No branches, no files, no workflow edits — the first dispatch
+   populates `.github/` from the source.
+2. **Create one fine-grained PAT** with read/write on **Contents** and
+   read/write on **Actions**, store it as the `GH_ACTIONS` secret on the
+   Forgejo repo. Never commit the PAT.
+
+That is the entire GitHub-side surface. Never open the twin in a browser to
+edit files, never clone it to push fixes, never create branches or tags there.
+If the twin looks wrong, the fix is always a source-repo change plus a dispatch.
+
 - The source repo carries **both** `.forgejo/workflows/` (triggers) and
   `.github/workflows/` (the twin's workflows, authored here).
 - The shared dispatch action copies the source repo's `.github/` into the twin
@@ -132,8 +148,7 @@ the source, including the twin's own `.github/workflows/` files.
   (fallback applies only when `.forgejo/` is absent), so the twin's workflows
   never double-run on Forgejo. Verified on Forgejo v16.
 - Wire the two with a Forgejo workflow dispatching a `repository_dispatch`
-  event, using a fine-grained PAT stored as a **Forgejo secret**. Never commit
-  the PAT.
+  event (PAT already stored as above).
 - Ask the owner which side owns which step. Do not infer it from the remote
   alone — a mirror existing does not mean it builds artifacts.
 ### `repository_dispatch`, not `workflow_dispatch`
@@ -189,6 +204,24 @@ it is a security tradeoff, not an oversight.
 When a tag exists on Forgejo but the twin release never completed, **re-run
 `release` with `target: tag` and the existing tag. Do not run `target: new-tag`** —
 that would create a second tag for a version that was already released.
+
+### Observe the twin with `gh` — read-only, never write
+
+The twin is inspected from the Forgejo-side checkout with the `gh` CLI (any
+read token works; the `GH_ACTIONS` PAT is fine). These are the only twin-side
+operations the skill ever performs:
+
+```bash
+gh run list --repo <twin> --limit 5                      # recent runs + verdicts
+gh run view <run-id> --repo <twin>                        # per-job pass/fail
+gh run view --repo <twin> --job <job-id> --log            # failing step output
+gh run rerun --failed --repo <twin> <run-id>              # retry transient failures
+```
+
+`gh run rerun` is the single sanctioned write: it re-executes an existing run
+without touching the twin's git state. Anything that would change the twin's
+files, branches, or tags is done on Forgejo and synced over — never pushed
+directly.
 
 **Name no specific account.** The GitHub account hosting a twin is the owner's
 private arrangement and must never appear in committed workflow files, generated
