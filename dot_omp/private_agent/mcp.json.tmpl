@@ -5,15 +5,15 @@
       "command": "bunx",
       "args": ["@playwright/mcp@latest", "--cdp-endpoint", "ws://localhost:9222"],
       "enabled": true
-    }{{- if eq .chezmoi.hostname "bazzite" }},
+    },
     "mikrotik": {
       "command": "mikrotik-mcp",
       "args": ["${MIKROTIK_IP_ADDRESS}"],
       "env": {
-        "MIKROTIK_USER": "admin",
+        "MIKROTIK_USER": "${MIKROTIK_USER}",
         "MIKROTIK_PASSWORD": "${MIKROTIK_PASSWORD}",
         "MIKROTIK_API_SSL": "false"
       }
-    }{{- end }}
+    }
   }
 }
