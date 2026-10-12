@@ -186,10 +186,11 @@ jobs:
 ## C. Auto-merge
 
 Exits in <10 seconds; no polling. No `fetch-metadata` step — that was
-Dependabot-specific. The `dependencies` label is the signal.
+Dependabot-specific. Two signals: the `dependencies` label (upgrade PRs) and
+the `release/` branch prefix (release PRs opened by `release.yml`).
 
 ```yaml
-name: Auto-merge dependencies
+name: Auto-merge dependencies and releases
 
 on:
   pull_request:
@@ -201,7 +202,7 @@ permissions:
 
 jobs:
   automerge:
-    if: contains(github.event.pull_request.labels.*.name, 'dependencies')
+    if: contains(github.event.pull_request.labels.*.name, 'dependencies') || startsWith(github.event.pull_request.head.ref, 'release/')
     runs-on: ubuntu-slim
     steps:
       - name: Enable auto-merge and rebase
@@ -231,9 +232,11 @@ Auto-merge only fires once `Check (just check)` is green on the PR head.
 The unified release workflow. Supports three execution targets:
 1. **`new-tag`** *(Default / Weekly Cron)* — calculates next SemVer from commits,
    verifies CI is green, updates the package manifest via `just bump`, and opens
-   a release PR. The owner merges it (required status checks pass on the PR);
+   a release PR. Auto-merge (section C) rebases it once checks are green;
    then `tag` builds and publishes. Never pushes to `main` directly, because
-   branch protection blocks it.
+   branch protection blocks it. Manifest-less repos (Go: `just bump` is a
+   no-op echo, versions live in git tags) skip the PR: `new-tag` tags HEAD
+   directly and publishes.
 2. **`tag`** — tags the merged release commit (or rebuilds an existing tag
    when `ref` is given) and publishes.
 3. **`commit`** — test build against a commit (uploads Actions artifacts only, no release).
