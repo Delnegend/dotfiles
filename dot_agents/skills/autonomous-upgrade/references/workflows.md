@@ -230,9 +230,12 @@ Auto-merge only fires once `Check (just check)` is green on the PR head.
 
 The unified release workflow. Supports three execution targets:
 1. **`new-tag`** *(Default / Weekly Cron)* — calculates next SemVer from commits,
-   verifies CI is green, updates the package manifest via `just bump`, pushes the
-   commit and tag to `main`, and builds/publishes the release.
-2. **`tag`** — rebuilds and publishes an existing release tag without bumping.
+   verifies CI is green, updates the package manifest via `just bump`, and opens
+   a release PR. The owner merges it (required status checks pass on the PR);
+   then `tag` builds and publishes. Never pushes to `main` directly, because
+   branch protection blocks it.
+2. **`tag`** — tags the merged release commit (or rebuilds an existing tag
+   when `ref` is given) and publishes.
 3. **`commit`** — test build against a commit (uploads Actions artifacts only, no release).
 
 ### Mode-dependent trigger
@@ -252,9 +255,9 @@ on:
         type: choice
         default: "new-tag"
         options:
-          - new-tag  # Gate on CI -> bump version -> tag & push -> build & publish release
-          - tag      # Rebuild existing tag -> build & publish release
-          - commit   # Test build latest commit -> upload Actions artifacts only (no release)
+          - new-tag  # CI gate -> bump -> open release PR (merge, then run tag)
+          - tag      # Tag merged release commit (or rebuild ref) -> build & publish
+          - commit   # Test build a commit -> Actions artifacts only (no release)
       ref:
         description: "Custom tag or commit SHA (optional, defaults to latest)"
         required: false
@@ -269,6 +272,7 @@ concurrency:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   prepare:
@@ -290,7 +294,7 @@ jobs:
       # Insert any language setup needed by `just check` (e.g. setup-go, setup-node)
 
       # -----------------------------------------------------------------------
-      # Mode 1: new-tag (calculate semver -> CI gate -> just bump -> atomic push)
+      # Mode 1: new-tag (semver -> CI gate -> bump -> open release PR for review)
       # -----------------------------------------------------------------------
       - name: Calculate Next SemVer
         if: (inputs.target || 'new-tag') == 'new-tag'
@@ -317,10 +321,12 @@ jobs:
           # Package-manager agnostic: delegates to `just bump` (see ecosystems.md)
           just bump "$NEXT_STRICT"
 
-      - name: Commit, Tag, and Push atomically
+      - name: Commit and open release PR
         if: (inputs.target || 'new-tag') == 'new-tag' && steps.semver.outputs.bump != 'none'
+        id: release-pr
         env:
           NEXT_TAG: ${{ steps.semver.outputs.next }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
@@ -331,11 +337,20 @@ jobs:
           git diff --staged --quiet && { echo "::error::bump produced no change in package files"; exit 1; }
           git commit -m "chore(release): ${NEXT_TAG}"
 
-          git rev-parse -q --verify "refs/tags/${NEXT_TAG}" >/dev/null && { echo "::error::tag ${NEXT_TAG} already exists"; exit 1; }
-          git tag -a "${NEXT_TAG}" -m "Release ${NEXT_TAG}"
+          # Branch protection blocks a direct push to main, so open a PR.
+          # The owner merges it (status checks run on the PR), then re-runs
+          # the workflow with target=tag to tag and publish.
+          BRANCH="release/${NEXT_TAG}"
+          git checkout -b "$BRANCH"
+          git push -u origin "$BRANCH"
 
-          # Atomic push: commit and tag land together on main
-          git push origin HEAD:main "refs/tags/${NEXT_TAG}"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          gh pr create --title "chore(release): ${NEXT_TAG}" \
+            --body "Automated version bump to \`${NEXT_TAG}\`. Merge this PR, then run the release workflow with \`target=tag\` to build and publish." \
+            --head "$BRANCH" --base main
+        # Forgejo: replace the push + gh pr create with native AGit
+        # (see hosts.md): git push origin HEAD:refs/for/main
+        # -o topic="release/${NEXT_TAG}" -o force-push=false
 
       # -----------------------------------------------------------------------
       # Resolve outputs for Job 2 (build)
@@ -347,21 +362,40 @@ jobs:
           TARGET="${{ inputs.target || 'new-tag' }}"
           INPUT_REF="${{ inputs.ref || '' }}"
 
+          # new-tag only opens the release PR (branch protection blocks a
+          # direct push to main). Merge the PR, then re-run with target=tag.
           if [ "$TARGET" = "new-tag" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
             BUMP="${{ steps.semver.outputs.bump }}"
             if [ "$BUMP" = "none" ]; then
               echo "No version bump needed (current: ${{ steps.semver.outputs.current }})."
-              echo "skip=true" >> "$GITHUB_OUTPUT"
-              exit 0
+            else
+              echo "Release PR opened; merge it, then re-run with target=tag to build and publish."
             fi
-            echo "ref=${{ steps.semver.outputs.next }}" >> "$GITHUB_OUTPUT"
-            echo "version=${{ steps.semver.outputs.nextStrict }}" >> "$GITHUB_OUTPUT"
-            echo "publish=true" >> "$GITHUB_OUTPUT"
-            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
 
           elif [ "$TARGET" = "tag" ]; then
-            TAG="${INPUT_REF:-$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1 || true)}"
-            [ -n "$TAG" ] || { echo "::error::No release tag found"; exit 1; }
+            if [ -n "$INPUT_REF" ]; then
+              # Re-run for an existing tag: build and publish it.
+              TAG="$INPUT_REF"
+            else
+              # Normal path: tag the merged release commit. The version comes
+              # from the manifest on main, which the release PR just bumped.
+              # Adapt the grep to the ecosystem (see ecosystems.md for
+              # manifest paths: Cargo.toml, package.json, pyproject.toml).
+              MANIFEST_VER="..."  # e.g. $(grep -m1 '^version = ' Cargo.toml | cut -d'"' -f2)
+              [ -n "$MANIFEST_VER" ] || { echo "::error::No version in manifest"; exit 1; }
+              TAG="v$MANIFEST_VER"
+              if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+                echo "Tag $TAG already exists; building it."
+              else
+                git config user.name "github-actions[bot]"
+                git config user.email "actions@users.noreply.github.com"
+                git tag -a "$TAG" -m "Release $TAG"
+                # Tag-only push: allowed by branch protection (which guards branches, not tags).
+                git push origin "refs/tags/$TAG"
+              fi
+            fi
             echo "ref=$TAG" >> "$GITHUB_OUTPUT"
             echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
             echo "publish=true" >> "$GITHUB_OUTPUT"
@@ -408,6 +442,16 @@ jobs:
           files: dist/*
 ```
 
+### Why `new-tag` opens a PR instead of pushing to `main`
+
+The skill's own contract requires branch protection with a required status
+check (`Check (just check)`). A workflow run cannot satisfy that check for its
+own push — the check runs on the pushed commit, which does not exist yet — so
+any `git push origin HEAD:main` from the release job fails with `GH006:
+Protected branch update failed`. The release PR goes through the normal gate
+(CI runs on the PR, the owner merges), and `target: tag` only pushes a tag,
+which branch protection does not guard.
+
 ### Artifact build (project-specific)
 
 Insert a build step or matrix in the `build` job, producing exactly what the
@@ -415,9 +459,9 @@ project ships — native binaries (commonly Linux x64, Windows x64, macOS arm64)
 a package, or nothing but notes. Pass `${{ needs.prepare.outputs.version }}` or
 `${{ needs.prepare.outputs.ref }}` to the build command.
 
-`actions/upload-artifact@v4` runs on every build:
-- When running `target: new-tag` or `target: tag`, artifacts are uploaded to the Actions run AND published to GitHub Releases.
-- When running `target: commit`, artifacts are uploaded to the Actions run for testing, and the GitHub Release step is skipped.
+`actions/upload-artifact@v4` runs on every build that is not skipped (`new-tag`
+always skips the build; it only opens the PR):
+- When running `target: tag`, artifacts are uploaded to the Actions run AND published to GitHub Releases.
 
 On a Forgejo+twin project, the Forgejo workflow's `build` job dispatches the
 twin's release workflow with `ref: ${{ needs.prepare.outputs.ref }}` rather

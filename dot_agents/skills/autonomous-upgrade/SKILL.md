@@ -43,8 +43,10 @@ flowchart TD
     D3 -->|green| E
     E --> F[Accumulate on main]
     F --> G[release workflow]
-    G -->|new-tag: cron or manual| H[CI gate -> just bump -> atomic tag push -> publish]
-    G -->|tag: manual| I[rebuild existing tag -> publish]
+    G -->|new-tag: cron or manual| H[CI gate -> just bump -> release PR]
+    H -->|owner merges| H2[main with bumped manifest]
+    H2 -->|tag: manual| I[tag HEAD -> build -> publish]
+    G -->|tag + ref: manual| I2[rebuild existing tag -> publish]
     G -->|commit: manual| J[test build -> Actions artifacts only]
 ```
 
@@ -83,8 +85,10 @@ These are not negotiable. Rationale is in `references/decisions.md`.
 5. **Split patch/minor from major**, so a breaking major cannot block routine merges.
 6. **Weekly releases only in maintenance mode.** Active development gets
    `workflow_dispatch` alone. The unified `release.yml` workflow provides 3
-   targets: `new-tag` (default/cron: CI gate + bump + tag + publish), `tag`
-   (rebuild existing tag), and `commit` (test build, Actions artifacts only).
+   targets: `new-tag` (default/cron: CI gate + bump + release PR — never a
+   direct push, which branch protection rejects), `tag` (tag the merged
+   release commit, or rebuild an existing tag when `ref` is given), and
+   `commit` (test build, Actions artifacts only).
 7. **Cheapest single-core runner for orchestration** (`ubuntu-slim` on GitHub, the
    owner's self-hosted label on Forgejo). Full runners only for `just check` and
    artifact builds.
@@ -94,7 +98,12 @@ These are not negotiable. Rationale is in `references/decisions.md`.
    (`cancel-in-progress: true`) for CI to safely cancel stale runs.
 10. **Verify action runtimes match the runner.** `using: node24` actions fail on
     lean images like Alpine. Prefer shell-only composites on self-hosted runners.
-11. **Push the version commit and its tag in one `git push`**, and never tag a
+11. **Never push the release to `main` from the workflow; open a PR.**
+    Branch protection (this skill's own contract, Rule 2 context) requires
+    `Check (just check)`, which no in-flight run can satisfy for its own
+    push (`GH006: Protected branch update failed`). `new-tag` opens a
+    `release/vX.Y.Z` PR; the owner merges it after CI is green; `tag` then
+    tags HEAD (tag pushes are not branch pushes) and publishes. Never tag a
     commit whose manifest still carries the old version.
 12. **Self-owned action refs get `nosemgrep`, third-party refs get SHA pins.**
     The `github-actions-mutable-action-tag` rule fires on every `uses: …@<tag>`;

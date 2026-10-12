@@ -15,15 +15,18 @@ agreed choices and any deviations in the PR description or conversation.
 3. **Release model** — weekly batch (maintenance mode: scheduled cron with
    `target: new-tag`) plus manual dispatch; manual dispatch only (active).
    The `release.yml` workflow provides 3 targets: `new-tag` (CI gate + bump +
-   tag + publish), `tag` (rebuild existing tag), and `commit` (test build, Actions
-   artifacts only). *Alternatives:* release on every merge, label-gated releases.
+   release PR, which the owner merges; never a direct push — branch protection
+   rejects it), `tag` (tag the merged commit, or rebuild an existing tag with
+   `ref`), and `commit` (test build, Actions artifacts only). *Alternatives:*
+   release on every merge, label-gated releases.
 4. **Version source of truth and manifest bump** — git tags, with
    [`ietf-tools/semver-action`](https://github.com/ietf-tools/semver-action)
    deriving the next version from Conventional Commits since the last tag.
    **Never** a hand-rolled calculation or a manually typed version. When running
    `new-tag`, `release.yml` updates the package manager's config file via the
-   package-agnostic `just bump <version>` recipe before committing and tagging
-   atomically on `main`. *Alternatives:* `release-plz`, `release-please`.
+   package-agnostic `just bump <version>` recipe, commits it on a
+   `release/vX.Y.Z` branch, and opens a PR. *Alternatives:* `release-plz`,
+   `release-please`.
 5. **Release artifacts** — build only what the project ships: for CLIs, commonly
    Linux x64 + Windows x64 + macOS arm64; notes-only otherwise. Confirm formats
    and publish targets (GitHub Releases, a registry, a Homebrew tap, a CDN). On

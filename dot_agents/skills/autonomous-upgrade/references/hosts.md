@@ -155,17 +155,23 @@ skips publishing. Set `timeout-minutes` on every job that blocks on another
 runner — the default is 6 hours and a hung twin dispatch holds the Forgejo runner
 for all of it.
 
-### Ordering: tag and commit atomically
+### Ordering: PR first, tag after merge (never push to `main`)
 
-Push the commit and the tag in **one** `git push`:
+Branch protection requires `Check (just check)`, which no in-flight run can
+satisfy for its own push — the check runs on the pushed commit, which does
+not exist yet. So `git push origin HEAD:main` from the release job always
+fails with `GH006: Protected branch update failed`, and worse, a combined
+`git push origin HEAD:main "refs/tags/$TAG"` lands the tag while the branch
+push is rejected, leaving a stray tag with no release (exactly the failure
+this section used to cause). The flow is:
 
-```bash
-git push origin HEAD:main "refs/tags/${NEXT_TAG}"
-```
+1. `new-tag`: bump the manifest, push a `release/vX.Y.Z` branch, open a PR.
+2. Owner merges after CI is green (the normal gate, on the PR).
+3. `tag`: tag the merged HEAD and push only the tag
+   (`git push origin "refs/tags/$TAG"` — tags are not branch pushes, so
+   protection does not block them), then build and publish.
 
-Two pushes can land the commit without its tag (or vice versa) if the second
-fails, leaving `main` permanently ahead of the last tag and the next version
-calculation wrong. Guard both failure modes first:
+Guard both failure modes before tagging:
 
 ```bash
 git diff --staged --quiet && { echo "::error::bump produced no change"; exit 1; }
