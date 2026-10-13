@@ -5,7 +5,7 @@ description: Sets up or maintains an autonomous dependency-update and release pi
 
 # Autonomous Upgrade
 
-Pipeline: **native upgrade (daily + 14d cooldown) → CI gate → auto-rebase → `release` (2 flows: prepare-release, publish)**.
+Pipeline: **native upgrade (daily + 14d cooldown) → CI gate → auto-rebase → `release` (gate all of CI → bump → tag → push → ship, one run)**.
 
 Host model:
 
@@ -43,10 +43,10 @@ flowchart TD
     D3 -->|green| E
     E --> F[Accumulate on main]
     F --> G[release workflow]
-    G -->|prepare-release: cron or manual| H[CI gate -> just bump -> release PR]
-    H -->|auto-merge| H2[main with bumped manifest]
-    H2 -->|PR merged| I[tag HEAD -> build -> publish]
-    G -->|publish + ref: manual| I2[rebuild existing tag -> publish]
+    G -->|cron or manual| H[gate: all of CI green?]
+    H -->|yes| H2[semver -> just bump -> commit + tag -> push]
+    H2 --> I[build -> publish release]
+    G -->|ref given| I2[rebuild existing tag -> publish]
 ```
 
 ## Reference files
@@ -83,12 +83,9 @@ These are not negotiable. Rationale is in `references/decisions.md`.
    native package managers (`bun update`, `cargo update`, `ncu`).
 5. **Split patch/minor from major**, so a breaking major cannot block routine merges.
 6. **Weekly releases only in maintenance mode.** Active development gets
-   `workflow_dispatch` alone. The unified `release.yml` workflow has 2 flows:
-   `prepare-release` (default/cron: CI gate + bump + release PR — never a
-   direct push, which branch protection rejects) and `publish` (tag merged
-   `main` and ship; fires automatically when the release PR merges, or
-   manually with `ref` to rebuild an old tag). A `dry-run` checkbox previews
-   either flow.
+   `workflow_dispatch` alone. The unified `release.yml` is one run: gate on
+   all of CI, then semver → bump → commit + tag → push → build → publish.
+   A `ref` input rebuilds an old tag; a `dry-run` checkbox previews the run.
 7. **Cheapest single-core runner for orchestration** (`ubuntu-slim` on GitHub, the
    owner's self-hosted label on Forgejo). Full runners only for `just check` and
    artifact builds.
@@ -98,13 +95,13 @@ These are not negotiable. Rationale is in `references/decisions.md`.
    (`cancel-in-progress: true`) for CI to safely cancel stale runs.
 10. **Verify action runtimes match the runner.** `using: node24` actions fail on
     lean images like Alpine. Prefer shell-only composites on self-hosted runners.
-11. **Never push the release to `main` from the workflow; open a PR.**
-    Branch protection (this skill's own contract, Rule 2 context) requires
-    `Check (just check)`, which no in-flight run can satisfy for its own
-    push (`GH006: Protected branch update failed`). `prepare-release` opens
-    a `release/vX.Y.Z` PR; auto-merge takes it once CI is green; merging
-    fires `publish`, which tags HEAD (tag pushes are not branch pushes)
-    and ships. Never tag a commit whose manifest still carries the old version.
+11. **The release pushes straight to `main`; branch protection keeps safety
+    rails only.** No required status checks (the release's own gate job calls
+    all of CI, which is stronger than any single PR rule). Protection keeps:
+    no force-push, no deletion, linear history. Push the bump commit first,
+    then the tag — if the tag push fails, the next run recovers by tagging
+    the existing commit. Never tag a commit whose manifest still carries the
+    old version. Never ship a version that is not ahead of the latest tag.
 12. **Self-owned action refs get `nosemgrep`, third-party refs get SHA pins.**
     The `github-actions-mutable-action-tag` rule fires on every `uses: …@<tag>`;
     on refs the owner controls on both ends (own Forgejo actions repo, own
@@ -125,7 +122,7 @@ A repo qualifies only if all of these hold:
 1. A root `justfile` with:
    - `check`: executes formatting, linting, tests, and static analysis.
    - `bump version`: updates the package manager's manifest (package-agnostic, see `references/ecosystems.md`).
-2. Branch protection requires exactly `"Check (just check)"`.
+2. Branch protection: safety rails only — no force-push, no deletion, linear history, and no required status checks (the release gates on all of CI itself).
 3. The package manager has a native cooldown gate, configured to 14 days
    (see `references/ecosystems.md`).
 4. The owner has stated the project mode.

@@ -155,29 +155,27 @@ skips publishing. Set `timeout-minutes` on every job that blocks on another
 runner — the default is 6 hours and a hung twin dispatch holds the Forgejo runner
 for all of it.
 
-### Ordering: PR first, tag after merge (never push to `main`)
+### Ordering: commit first, tag second (recoverable pushes)
 
-Branch protection requires `Check (just check)`, which no in-flight run can
-satisfy for its own push — the check runs on the pushed commit, which does
-not exist yet. So `git push origin HEAD:main` from the release job always
-fails with `GH006: Protected branch update failed`, and worse, a combined
-`git push origin HEAD:main "refs/tags/$TAG"` lands the tag while the branch
-push is rejected, leaving a stray tag with no release (exactly the failure
-this section used to cause). The flow is:
+Branch protection keeps safety rails only (no force-push, no deletion, linear
+history) with no required status checks, so the release pushes straight to
+`main`. Push the bump commit and the tag in two steps, commit first: if the
+tag push fails, the next run recovers by tagging the existing commit (the
+manifest already matches, so the bump is a no-op and the recovery branch
+fires). Never combine them into one push — a half-landed push leaves a stray
+tag with no release.
 
-1. `prepare-release`: bump the manifest, push a `release/vX.Y.Z` branch, open a PR.
-2. Auto-merge takes it once CI is green (the normal gate, on the PR).
-3. Merging fires `publish`: tag the merged HEAD and push only the tag
-   (`git push origin "refs/tags/$TAG"` — tags are not branch pushes, so
-   protection does not block them), then build and publish.
-
-Guard both failure modes before tagging:
+Guard both failure modes before pushing:
 
 ```bash
 git diff --staged --quiet && { echo "::error::bump produced no change"; exit 1; }
 git rev-parse -q --verify "refs/tags/${NEXT_TAG}" >/dev/null \
   && { echo "::error::tag ${NEXT_TAG} already exists"; exit 1; }
 ```
+
+And refuse to re-ship: fail if the calculated version is not ahead of the
+latest tag (`sort -V` comparison). Recovery from a half-landed push goes
+through the normal run (bump no-ops, tag fires), not through `ref`.
 
 ### `pull_request` + a twin = a secret-exfiltration path
 
@@ -192,9 +190,8 @@ it is a security tradeoff, not an oversight.
 ### Repair path after a partial release
 
 When a tag exists on Forgejo but the twin release never completed, **re-run
-`release` with `target: publish` and `ref` set to the existing tag. Do not run
-`target: prepare-release`** — that would bump to a new version instead of
-shipping the one that was already tagged.
+`release` with `ref` set to the existing tag**. That rebuilds and publishes
+exactly that tag with no bump.
 
 ### Observe the twin with `gh` — read-only, never write
 
@@ -229,6 +226,13 @@ generated output — it stays.)
 
 ## Branch protection
 
+Safety rails only: no force-push, no deletion, linear history — and no
+required status checks. The release gates on all of CI itself (via
+`workflow_call`), which is stronger than any single PR rule, and the bot
+pushes the bump straight to `main`. Required checks would force the whole
+flow through release PRs for zero gain (verified the hard way: `GH006`
+failures, stray tags, and a dead merge trigger).
+
 On **GitHub**, with `gh` (needs repo admin):
 
 ```bash
@@ -238,17 +242,12 @@ gh repo edit <owner>/<repo> \
   --enable-rebase-merge \
   --delete-branch-on-merge
 
-# Apply branch protection: strict 'Check (just check)' gate and linear history
+# Apply branch protection: safety rails, no required checks
 gh api -X PUT "repos/<owner>/<repo>/branches/main/protection" \
   -H "Accept: application/vnd.github+json" \
   --input - <<'EOF'
 {
-  "required_status_checks": {
-    "strict": true,
-    "contexts": [
-      "Check (just check)"
-    ]
-  },
+  "required_status_checks": null,
   "enforce_admins": false,
   "required_pull_request_reviews": null,
   "restrictions": null,
@@ -265,8 +264,6 @@ protection rules**, or:
 ```
 POST /api/v1/repos/{owner}/{repo}/branch_protections
 ```
-
-The context name must match the job's `name:` exactly — `"Check (just check)"`.
 
 **Settings check.** On GitHub, Settings → Actions → General → Workflow
 permissions must have *"Allow GitHub Actions to create and approve pull

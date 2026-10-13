@@ -12,21 +12,18 @@ agreed choices and any deviations in the PR description or conversation.
 2. **Project mode** — maintenance or active development.
    *Default:* active development. Determinates whether the release workflow gets
    an `on.schedule` cron at all.
-3. **Release model** — weekly batch (maintenance mode: scheduled cron running
-   `prepare-release`) plus manual dispatch; manual dispatch only (active).
-   The `release.yml` workflow has 2 flows: `prepare-release` (CI gate + bump +
-   release PR; never a direct push — branch protection rejects it) and
-   `publish` (fires automatically when the PR merges; manual `publish` with
-   `ref` rebuilds an old tag). *Alternatives:* release on every merge,
-   label-gated releases.
+3. **Release model** — weekly batch (maintenance mode: scheduled cron) plus
+   manual dispatch; manual dispatch only (active). The `release.yml` workflow
+   is one run: gate on all of CI, then bump → commit + tag → push → build →
+   publish. A `ref` input rebuilds an old tag. *Alternatives:* release on
+   every merge, label-gated releases.
 4. **Version source of truth and manifest bump** — git tags, with
    [`ietf-tools/semver-action`](https://github.com/ietf-tools/semver-action)
    deriving the next version from Conventional Commits since the last tag.
-   **Never** a hand-rolled calculation or a manually typed version. When running
-   `prepare-release`, `release.yml` updates the package manager's config file
-   via the package-agnostic `just bump <version>` recipe, commits it on a
-   `release/vX.Y.Z` branch, and opens a PR. *Alternatives:* `release-plz`,
-   `release-please`.
+   **Never** a hand-rolled calculation or a manually typed version. `release.yml`
+   updates the package manager's config file via the package-agnostic
+   `just bump <version>` recipe, commits and tags on `main` directly.
+   *Alternatives:* `release-plz`, `release-please`.
 5. **Release artifacts** — build only what the project ships: for CLIs, commonly
    Linux x64 + Windows x64 + macOS arm64; notes-only otherwise. Confirm formats
    and publish targets (GitHub Releases, a registry, a Homebrew tap, a CDN). On

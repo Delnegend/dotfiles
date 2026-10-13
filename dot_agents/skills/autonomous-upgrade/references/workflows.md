@@ -186,11 +186,10 @@ jobs:
 ## C. Auto-merge
 
 Exits in <10 seconds; no polling. No `fetch-metadata` step — that was
-Dependabot-specific. Two signals: the `dependencies` label (upgrade PRs) and
-the `release/` branch prefix (release PRs opened by `release.yml`).
+Dependabot-specific. The `dependencies` label is the signal.
 
 ```yaml
-name: Auto-merge dependencies and releases
+name: Auto-merge dependencies
 
 on:
   pull_request:
@@ -202,7 +201,7 @@ permissions:
 
 jobs:
   automerge:
-    if: contains(github.event.pull_request.labels.*.name, 'dependencies') || startsWith(github.event.pull_request.head.ref, 'release/')
+    if: contains(github.event.pull_request.labels.*.name, 'dependencies')
     runs-on: ubuntu-slim
     steps:
       - name: Enable auto-merge and rebase
@@ -229,24 +228,23 @@ Auto-merge only fires once `Check (just check)` is green on the PR head.
 
 ## D. Release / Build Artifacts (`release.yml`)
 
-Two flows in one workflow. Station 1 prepares the version; station 2 ships it.
-Merging the release PR fires station 2 automatically, so the happy path is
-zero clicks after the cron opens the PR.
-1. **`prepare-release`** *(Weekly Cron / Manual)* — calculates next SemVer from
-   commits, verifies CI is green, updates the manifest via `just bump`, and
-   opens/updates the release PR. No tag, no build. Never pushes to `main`
-   directly, because branch protection blocks it. Manifest-less repos (Go:
-   `just bump` is a no-op echo, versions live in git tags) skip the PR:
-   `prepare-release` tags HEAD directly and publishes.
-2. **`publish`** *(PR-merged trigger / Manual)* — tags merged `main` from the
-   manifest, then builds and publishes. Manual runs take an optional `ref`
-   to rebuild an existing tag; empty `ref` is the normal publish. The
-   `dry-run` checkbox previews either flow without changing anything.
+Solo-dev maintenance flow: one run, zero clicks on the happy path. The cron
+(or a manual run) gates on all of CI, then bumps, tags, pushes, builds, and
+ships. No release PR, no second run, no PAT.
+
+Branch protection keeps the safety rails (no force-push, no deletion, linear
+history) but requires no status checks, so the bot pushes the bump straight
+to `main`. The gate job is stronger than any PR rule: it calls all of
+`ci.yml` via `workflow_call`, so every check must pass before anything ships.
+
+Two inputs only: `ref` rebuilds an existing tag (no bump); `dry-run`
+previews the run without changing anything. Manifest-less repos (Go: `just
+bump` is a no-op echo) skip the bump/commit and tag HEAD directly.
 
 ### Mode-dependent trigger
 
-- **Maintenance mode:** scheduled weekly cron (`0 0 * * 0`, runs prepare-release) + `workflow_dispatch` + `pull_request: closed`.
-- **Active development:** `workflow_dispatch` + `pull_request: closed` (no `on.schedule`).
+- **Maintenance mode:** scheduled weekly cron (`0 0 * * 0`) + `workflow_dispatch`.
+- **Active development:** `workflow_dispatch` only (no `on.schedule`).
 
 ```yaml
 name: Release / Build Artifacts
@@ -254,30 +252,18 @@ name: Release / Build Artifacts
 on:
   workflow_dispatch:
     inputs:
-      target:
-        description: "prepare-release = bump the manifest and open the release PR. publish = tag, build, and ship (also runs automatically when the PR merges, so manual publish is only for rebuilds)."
-        required: true
-        type: choice
-        default: "prepare-release"
-        options:
-          - prepare-release  # Station 1: version, bump, open/update release PR. No tag, no build.
-          - publish          # Station 2: tag merged main (or rebuild ref), then build & ship.
       ref:
-        description: "publish only: rebuild this existing tag instead of tagging main. Leave empty for a normal publish."
+        description: "Rebuild this existing tag instead of shipping a new version. Leave empty for a normal release."
         required: false
         type: string
       dry-run:
-        description: "Preview only: print each action (bump, PR, tag, build, publish) without doing any of it."
+        description: "Preview only: print each action (gate, bump, tag, build, publish) without doing any of it."
         required: false
         type: boolean
         default: false
   # Maintenance mode adds:
   # schedule:
-  #   - cron: '0 0 * * 0' # Weekly: Sunday 00:00 UTC (runs prepare-release)
-  # Station 2 fires itself: merging the release PR tags, builds, and ships.
-  pull_request:
-    branches: [main]
-    types: [closed]
+  #   - cron: '0 0 * * 0' # Weekly: Sunday 00:00 UTC
 
 concurrency:
   group: release-main
@@ -285,15 +271,17 @@ concurrency:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
+  # Every CI job must pass before anything ships.
+  gate:
+    name: Gate (all of CI)
+    uses: ./.github/workflows/ci.yml
+
   prepare:
-    name: Prepare (bump, or resolve tag to build)
-    # Station 2's auto-path: only merged PRs get here. Closed without
-    # merging exits before any job runs; non-release PRs exit in resolve.
-    if: github.event_name != 'pull_request' || github.event.pull_request.merged == true
-    runs-on: ubuntu-latest   # Full runner for compiler/toolchain headroom during `just check`
+    name: Prepare (bump, tag, push)
+    needs: gate
+    runs-on: ubuntu-latest   # Full runner for compiler/toolchain headroom
     timeout-minutes: 30
     outputs:
       ref: ${{ steps.resolve.outputs.ref }}
@@ -306,16 +294,10 @@ jobs:
           token: ${{ github.token }}
           persist_credentials: true
           fetch-depth: 0   # Full git history for tags, commits, and semver-action
-          # Merge events check out main (the PR branch is already merged).
-          ref: ${{ github.event_name == 'pull_request' && 'main' || '' }}
       - uses: extractions/setup-just@v4
-      # Insert any language setup needed by `just check` (e.g. setup-go, setup-node)
+      # Insert any language setup needed by `just bump` (e.g. setup-go, setup-node)
 
-      # -----------------------------------------------------------------------
-      # prepare-release: semver -> CI gate -> bump -> open/update release PR
-      # -----------------------------------------------------------------------
       - name: Calculate Next SemVer
-        if: (inputs.target || 'prepare-release') == 'prepare-release'
         id: semver
         uses: ietf-tools/semver-action@v1
         with:
@@ -324,133 +306,67 @@ jobs:
           noNewCommitBehavior: silent
           noVersionBumpBehavior: patch
 
-      - name: CI Gate (verify code is green before bumping)
-        if: (inputs.target || 'prepare-release') == 'prepare-release' && steps.semver.outputs.bump != 'none'
-        # Single repo: runs `just check`
-        # Forgejo+twin: dispatches CI to twin and waits (see hosts.md)
-        run: just check
-
-      - name: Bump package manager version
-        if: (inputs.target || 'prepare-release') == 'prepare-release' && steps.semver.outputs.bump != 'none'
-        env:
-          NEXT_STRICT: ${{ steps.semver.outputs.nextStrict }}
-        run: |
-          set -euo pipefail
-          # Package-manager agnostic: delegates to `just bump` (see ecosystems.md)
-          just bump "$NEXT_STRICT"
-
-      - name: Commit and open release PR
-        if: (inputs.target || 'prepare-release') == 'prepare-release' && steps.semver.outputs.bump != 'none'
-        id: release-pr
-        env:
-          NEXT_TAG: ${{ steps.semver.outputs.next }}
-          GH_TOKEN: ${{ github.token }}
-          DRY_RUN: ${{ inputs.dry-run }}
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "actions@users.noreply.github.com"
-
-          # Stage all modified tracked files (manifests and lockfiles)
-          git add -u
-          if git diff --staged --quiet; then
-            # Idempotent re-run: the bump already landed. Nothing to do.
-            echo "Manifest already at $NEXT_TAG; nothing to bump."
-            echo "branch=release/$NEXT_TAG" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          git commit -m "chore(release): ${NEXT_TAG}"
-
-          BRANCH="release/${NEXT_TAG}"
-          if [ "$DRY_RUN" = "true" ]; then
-            echo "[dry-run] would push $BRANCH and open/update the release PR"
-            echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # Idempotent: reset the branch if a previous run left it behind,
-          # overwrite only the bot's own branch, reuse the open PR.
-          git checkout -B "$BRANCH"
-          git push --force-with-lease -u origin "$BRANCH"
-
-          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
-          if gh pr view "$BRANCH" >/dev/null 2>&1; then
-            echo "Release PR already open; updated the branch."
-          else
-            gh pr create --title "chore(release): ${NEXT_TAG}" \
-              --body "Automated version bump to \`${NEXT_TAG}\`. Merging this PR tags, builds, and ships \`${NEXT_TAG}\` automatically." \
-              --head "$BRANCH" --base main
-          fi
-        # Forgejo: replace the push + gh pr create with native AGit
-        # (see hosts.md): git push origin HEAD:refs/for/main
-        # -o topic="release/${NEXT_TAG}" -o force-push=true
-
-      # -----------------------------------------------------------------------
-      # Resolve outputs for Job 2 (build)
-      # -----------------------------------------------------------------------
-      - name: Resolve outputs
+      - name: Bump, tag, and push
         id: resolve
         env:
-          TARGET: ${{ inputs.target || 'prepare-release' }}
           INPUT_REF: ${{ inputs.ref }}
           DRY_RUN: ${{ inputs.dry-run }}
-          EVENT: ${{ github.event_name }}
-          MERGED_HEAD: ${{ github.event.pull_request.head.ref }}
           BUMP: ${{ steps.semver.outputs.bump }}
           CURRENT: ${{ steps.semver.outputs.current }}
           NEXT: ${{ steps.semver.outputs.next }}
           NEXT_STRICT: ${{ steps.semver.outputs.nextStrict }}
         run: |
           set -euo pipefail
-          # Station 2's auto-path: a merged release/* PR means publish.
-          # Any other merged PR (deps, features) is not a release: exit.
-          if [ "$EVENT" = "pull_request" ]; then
-            case "$MERGED_HEAD" in
-              release/*) TARGET="publish"; INPUT_REF=""; DRY_RUN="false";;
-              *) echo "Merged $MERGED_HEAD is not a release PR; nothing to publish."; echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0;;
-            esac
-          fi
-          # prepare-release only opens/updates the release PR (branch
-          # protection blocks a direct push to main). Nothing to build yet.
-          if [ "$TARGET" = "prepare-release" ]; then
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            if [ "$BUMP" = "none" ]; then
-              echo "No version bump needed (current: ${CURRENT:-none})."
-            elif [ "$DRY_RUN" = "true" ]; then
-              echo "[dry-run] would bump to $NEXT and open/update release/$NEXT"
-            else
-              echo "Release PR ready; merging it tags, builds, and ships."
-            fi
+          # Rebuild path: an explicit tag means ship exactly that, no bump.
+          if [ -n "$INPUT_REF" ]; then
+            echo "Rebuilding existing tag $INPUT_REF."
+            { echo "ref=$INPUT_REF"; echo "version=${INPUT_REF#v}"; echo "publish=true"; echo "skip=false"; } >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          # publish: tag merged main (or rebuild ref), then build it.
-          if [ -n "$INPUT_REF" ]; then
-            TAG="$INPUT_REF"
-            echo "Rebuilding existing tag $TAG."
-          else
-            # The version comes from the manifest on main, which the release
-            # PR just bumped. Adapt to the ecosystem (see ecosystems.md for
-            # manifest paths: Cargo.toml, package.json, pyproject.toml).
-            MANIFEST_VER="..."  # e.g. $(grep -m1 '^version = ' Cargo.toml | cut -d'"' -f2)
-            [ -n "$MANIFEST_VER" ] || { echo "::error::No version in manifest"; exit 1; }
-            TAG="v$MANIFEST_VER"
-            if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
-              echo "Tag $TAG already exists; building it."
-            elif [ "$DRY_RUN" = "true" ]; then
-              echo "[dry-run] would create tag $TAG, build it, and publish the release"
-            else
-              git config user.name "github-actions[bot]"
-              git config user.email "actions@users.noreply.github.com"
-              git tag -a "$TAG" -m "Release $TAG"
-              # Tag-only push: allowed by branch protection (which guards branches, not tags).
-              git push origin "refs/tags/$TAG"
+          # Nothing releasable since the last tag: clean exit, no noise.
+          if [ "$BUMP" = "none" ]; then
+            echo "No version bump needed (current: ${CURRENT:-none})."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Refuse to re-ship: NEXT must sort after the latest tag.
+          LATEST_TAG="$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1 || true)"
+          if [ -n "$LATEST_TAG" ]; then
+            if [ "$NEXT" = "$LATEST_TAG" ] || [ "$(printf '%s\n%s\n' "$NEXT" "$LATEST_TAG" | sort -V | head -n1)" = "$NEXT" ]; then
+              echo "::error::Calculated $NEXT is not ahead of latest tag $LATEST_TAG; nothing new to ship."
+              exit 1
             fi
           fi
           if [ "$DRY_RUN" = "true" ]; then
+            echo "[dry-run] would bump to $NEXT_STRICT, tag $NEXT, push, build, and publish"
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          { echo "ref=$TAG"; echo "version=${TAG#v}"; echo "publish=true"; echo "skip=false"; } >> "$GITHUB_OUTPUT"
+          git config user.name "github-actions[bot]"
+          git config user.email "actions@users.noreply.github.com"
+          # Package-manager agnostic: delegates to `just bump` (see ecosystems.md).
+          # Manifest-less repos (Go) skip this: no file to bump, tag HEAD directly.
+          just bump "$NEXT_STRICT"
+          git add -u
+          if git diff --staged --quiet; then
+            # Recovery: the bump already landed but tagging failed. Tag it.
+            # Adapt to the ecosystem (see ecosystems.md for manifest paths).
+            MANIFEST_VER="..."  # e.g. $(grep -m1 '^version = ' Cargo.toml | cut -d'"' -f2)
+            if [ "v$MANIFEST_VER" != "$NEXT" ]; then
+              echo "::error::bump produced no change, and manifest ($MANIFEST_VER) disagrees with calculated $NEXT_STRICT."
+              exit 1
+            fi
+            echo "Manifest already at $NEXT; tagging the existing commit."
+          else
+            git commit -m "chore(release): ${NEXT}"
+            # Push the commit first: if the tag push fails, the next run
+            # recovers via the branch above.
+            git push origin HEAD:main
+          fi
+          git rev-parse -q --verify "refs/tags/${NEXT}" >/dev/null && { echo "::error::tag ${NEXT} already exists"; exit 1; }
+          git tag -a "${NEXT}" -m "Release ${NEXT}"
+          git push origin "refs/tags/${NEXT}"
+          { echo "ref=$NEXT"; echo "version=$NEXT_STRICT"; echo "publish=true"; echo "skip=false"; } >> "$GITHUB_OUTPUT"
 
   build:
     name: Build & Release Artifacts
@@ -476,24 +392,12 @@ jobs:
           if-no-files-found: ignore
 
       - name: Publish Consolidated Release
-        if: needs.prepare.outputs.publish == 'true'
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.prepare.outputs.ref }}
           generate_release_notes: true
           files: dist/*
 ```
-
-### Why `prepare-release` opens a PR instead of pushing to `main`
-
-The skill's own contract requires branch protection with a required status
-check (`Check (just check)`). A workflow run cannot satisfy that check for its
-own push — the check runs on the pushed commit, which does not exist yet — so
-any `git push origin HEAD:main` from the release job fails with `GH006:
-Protected branch update failed`. The release PR goes through the normal gate
-(CI runs on the PR, auto-merge takes it), and merging fires `publish`
-automatically — which only pushes a tag, something branch protection does
-not guard.
 
 ### Artifact build (project-specific)
 
@@ -502,9 +406,9 @@ project ships — native binaries (commonly Linux x64, Windows x64, macOS arm64)
 a package, or nothing but notes. Pass `${{ needs.prepare.outputs.version }}` or
 `${{ needs.prepare.outputs.ref }}` to the build command.
 
-`actions/upload-artifact@v4` runs on every build that is not skipped
-(`prepare-release` always skips the build; it only opens/updates the PR):
-- `publish` (merge-triggered or manual) uploads to the Actions run AND publishes to GitHub Releases.
+`actions/upload-artifact@v4` runs on every build that is not skipped (skipped
+only when semver finds nothing releasable, or on a dry run):
+- Every build uploads to the Actions run AND publishes to GitHub Releases.
 
 On a Forgejo+twin project, the Forgejo workflow's `build` job dispatches the
 twin's release workflow with `ref: ${{ needs.prepare.outputs.ref }}` rather
