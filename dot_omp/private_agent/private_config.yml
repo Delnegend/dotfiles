@@ -1,10 +1,10 @@
 modelRoles:
   web: web/exa
-  vision: opencode-go/mimo-v2.6-flash:auto
+  vision: opencode-go/deepseek-v4.1-flash:auto
   default: opencode-go/deepseek-v4.1-flash
 symbolPreset: ascii
 composer:
-  shape: band
+  shape: claude
   tokenRate: true
 theme:
   dark: dark-terminal
