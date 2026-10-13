@@ -12,19 +12,19 @@ agreed choices and any deviations in the PR description or conversation.
 2. **Project mode** — maintenance or active development.
    *Default:* active development. Determinates whether the release workflow gets
    an `on.schedule` cron at all.
-3. **Release model** — weekly batch (maintenance mode: scheduled cron with
-   `target: new-tag`) plus manual dispatch; manual dispatch only (active).
-   The `release.yml` workflow provides 3 targets: `new-tag` (CI gate + bump +
-   release PR, which the owner merges; never a direct push — branch protection
-   rejects it), `tag` (tag the merged commit, or rebuild an existing tag with
-   `ref`), and `commit` (test build, Actions artifacts only). *Alternatives:*
-   release on every merge, label-gated releases.
+3. **Release model** — weekly batch (maintenance mode: scheduled cron running
+   `prepare-release`) plus manual dispatch; manual dispatch only (active).
+   The `release.yml` workflow has 2 flows: `prepare-release` (CI gate + bump +
+   release PR; never a direct push — branch protection rejects it) and
+   `publish` (fires automatically when the PR merges; manual `publish` with
+   `ref` rebuilds an old tag). *Alternatives:* release on every merge,
+   label-gated releases.
 4. **Version source of truth and manifest bump** — git tags, with
    [`ietf-tools/semver-action`](https://github.com/ietf-tools/semver-action)
    deriving the next version from Conventional Commits since the last tag.
    **Never** a hand-rolled calculation or a manually typed version. When running
-   `new-tag`, `release.yml` updates the package manager's config file via the
-   package-agnostic `just bump <version>` recipe, commits it on a
+   `prepare-release`, `release.yml` updates the package manager's config file
+   via the package-agnostic `just bump <version>` recipe, commits it on a
    `release/vX.Y.Z` branch, and opens a PR. *Alternatives:* `release-plz`,
    `release-please`.
 5. **Release artifacts** — build only what the project ships: for CLIs, commonly

@@ -165,9 +165,9 @@ fails with `GH006: Protected branch update failed`, and worse, a combined
 push is rejected, leaving a stray tag with no release (exactly the failure
 this section used to cause). The flow is:
 
-1. `new-tag`: bump the manifest, push a `release/vX.Y.Z` branch, open a PR.
-2. Owner merges after CI is green (the normal gate, on the PR).
-3. `tag`: tag the merged HEAD and push only the tag
+1. `prepare-release`: bump the manifest, push a `release/vX.Y.Z` branch, open a PR.
+2. Auto-merge takes it once CI is green (the normal gate, on the PR).
+3. Merging fires `publish`: tag the merged HEAD and push only the tag
    (`git push origin "refs/tags/$TAG"` — tags are not branch pushes, so
    protection does not block them), then build and publish.
 
@@ -192,8 +192,9 @@ it is a security tradeoff, not an oversight.
 ### Repair path after a partial release
 
 When a tag exists on Forgejo but the twin release never completed, **re-run
-`release` with `target: tag` and the existing tag. Do not run `target: new-tag`** —
-that would create a second tag for a version that was already released.
+`release` with `target: publish` and `ref` set to the existing tag. Do not run
+`target: prepare-release`** — that would bump to a new version instead of
+shipping the one that was already tagged.
 
 ### Observe the twin with `gh` — read-only, never write
 

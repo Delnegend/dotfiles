@@ -5,7 +5,7 @@ description: Sets up or maintains an autonomous dependency-update and release pi
 
 # Autonomous Upgrade
 
-Pipeline: **native upgrade (daily + 14d cooldown) → CI gate → auto-rebase → `release` (3 targets: new-tag, tag, commit)**.
+Pipeline: **native upgrade (daily + 14d cooldown) → CI gate → auto-rebase → `release` (2 flows: prepare-release, publish)**.
 
 Host model:
 
@@ -43,11 +43,10 @@ flowchart TD
     D3 -->|green| E
     E --> F[Accumulate on main]
     F --> G[release workflow]
-    G -->|new-tag: cron or manual| H[CI gate -> just bump -> release PR]
-    H -->|owner merges| H2[main with bumped manifest]
-    H2 -->|tag: manual| I[tag HEAD -> build -> publish]
-    G -->|tag + ref: manual| I2[rebuild existing tag -> publish]
-    G -->|commit: manual| J[test build -> Actions artifacts only]
+    G -->|prepare-release: cron or manual| H[CI gate -> just bump -> release PR]
+    H -->|auto-merge| H2[main with bumped manifest]
+    H2 -->|PR merged| I[tag HEAD -> build -> publish]
+    G -->|publish + ref: manual| I2[rebuild existing tag -> publish]
 ```
 
 ## Reference files
@@ -84,11 +83,12 @@ These are not negotiable. Rationale is in `references/decisions.md`.
    native package managers (`bun update`, `cargo update`, `ncu`).
 5. **Split patch/minor from major**, so a breaking major cannot block routine merges.
 6. **Weekly releases only in maintenance mode.** Active development gets
-   `workflow_dispatch` alone. The unified `release.yml` workflow provides 3
-   targets: `new-tag` (default/cron: CI gate + bump + release PR — never a
-   direct push, which branch protection rejects), `tag` (tag the merged
-   release commit, or rebuild an existing tag when `ref` is given), and
-   `commit` (test build, Actions artifacts only).
+   `workflow_dispatch` alone. The unified `release.yml` workflow has 2 flows:
+   `prepare-release` (default/cron: CI gate + bump + release PR — never a
+   direct push, which branch protection rejects) and `publish` (tag merged
+   `main` and ship; fires automatically when the release PR merges, or
+   manually with `ref` to rebuild an old tag). A `dry-run` checkbox previews
+   either flow.
 7. **Cheapest single-core runner for orchestration** (`ubuntu-slim` on GitHub, the
    owner's self-hosted label on Forgejo). Full runners only for `just check` and
    artifact builds.
@@ -101,10 +101,10 @@ These are not negotiable. Rationale is in `references/decisions.md`.
 11. **Never push the release to `main` from the workflow; open a PR.**
     Branch protection (this skill's own contract, Rule 2 context) requires
     `Check (just check)`, which no in-flight run can satisfy for its own
-    push (`GH006: Protected branch update failed`). `new-tag` opens a
-    `release/vX.Y.Z` PR; the owner merges it after CI is green; `tag` then
-    tags HEAD (tag pushes are not branch pushes) and publishes. Never tag a
-    commit whose manifest still carries the old version.
+    push (`GH006: Protected branch update failed`). `prepare-release` opens
+    a `release/vX.Y.Z` PR; auto-merge takes it once CI is green; merging
+    fires `publish`, which tags HEAD (tag pushes are not branch pushes)
+    and ships. Never tag a commit whose manifest still carries the old version.
 12. **Self-owned action refs get `nosemgrep`, third-party refs get SHA pins.**
     The `github-actions-mutable-action-tag` rule fires on every `uses: …@<tag>`;
     on refs the owner controls on both ends (own Forgejo actions repo, own
