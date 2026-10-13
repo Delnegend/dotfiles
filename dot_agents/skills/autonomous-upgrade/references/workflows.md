@@ -237,9 +237,11 @@ history) but requires no status checks, so the bot pushes the bump straight
 to `main`. The gate job is stronger than any PR rule: it calls all of
 `ci.yml` via `workflow_call`, so every check must pass before anything ships.
 
-Two inputs only: `ref` rebuilds an existing tag (no bump); `dry-run`
-previews the run without changing anything. Manifest-less repos (Go: `just
-bump` is a no-op echo) skip the bump/commit and tag HEAD directly.
+Two inputs only, one dispatch guide — **empty = ship, SHA = test, tag = rebuild**:
+`ref` empty ships a new version; a commit SHA test-builds it (artifacts upload,
+nothing publishes); a tag rebuilds and publishes it. `dry-run` previews any of
+the three without changing anything. Manifest-less repos (Go: `just bump` is a
+no-op echo) skip the bump/commit and tag HEAD directly.
 
 ### Mode-dependent trigger
 
@@ -253,7 +255,7 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: "Rebuild this existing tag instead of shipping a new version. Leave empty for a normal release."
+        description: "Empty = ship a new version. SHA = test-build it (no publish). Tag = rebuild it."
         required: false
         type: string
       dry-run:
@@ -317,7 +319,13 @@ jobs:
           NEXT_STRICT: ${{ steps.semver.outputs.nextStrict }}
         run: |
           set -euo pipefail
-          # Rebuild path: an explicit tag means ship exactly that, no bump.
+          # Dispatch guide: empty = ship, SHA = test, tag = rebuild.
+          # SHA check first: a SHA is also non-empty.
+          if echo "$INPUT_REF" | grep -qE '^[0-9a-f]{4,64}$'; then
+            echo "Test build against commit $INPUT_REF (will not publish)."
+            { echo "ref=$INPUT_REF"; echo "version=$INPUT_REF"; echo "publish=false"; echo "skip=false"; } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           if [ -n "$INPUT_REF" ]; then
             echo "Rebuilding existing tag $INPUT_REF."
             { echo "ref=$INPUT_REF"; echo "version=${INPUT_REF#v}"; echo "publish=true"; echo "skip=false"; } >> "$GITHUB_OUTPUT"
@@ -384,7 +392,7 @@ jobs:
       # Produces files in dist/ (or your artifact directory)
       # -----------------------------------------------------------------------
 
-      - name: Upload build artifacts (always kept in Actions run)
+      - name: Upload build artifacts (always kept in Actions run, including SHA test-builds)
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts-${{ needs.prepare.outputs.ref }}
@@ -392,6 +400,9 @@ jobs:
           if-no-files-found: ignore
 
       - name: Publish Consolidated Release
+        # SHA test-builds set publish=false: artifacts upload above, nothing ships.
+        # Container repos also gate login + push: push ${{ publish == 'true' }}, load ${{ publish != 'true' }}.
+        if: needs.prepare.outputs.publish == 'true'
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.prepare.outputs.ref }}

@@ -148,12 +148,30 @@ Dispatch across repos with a `repository_dispatch` event whose
  humans triggering a workflow on its own repo.
 
 Always pass `ref:` for a release dispatch so the twin builds the tag it was
-asked to, not whatever `main` happens to be. To run a test build against a commit
-without publishing a release, dispatch with `target: "commit"` (e.g. in the
-payload or inputs) so the twin uploads build artifacts to the Actions run and
-skips publishing. Set `timeout-minutes` on every job that blocks on another
+asked to, not whatever `main` happens to be. Also pass `target:` explicitly
+(`new-tag`, `tag`, or `commit`) — the twin routes on it, and its default
+(`new-tag`) rejects SHAs, so a test-build dispatch without `target: "commit"`
+fails validation. Set `timeout-minutes` on every job that blocks on another
 runner — the default is 6 hours and a hung twin dispatch holds the Forgejo runner
 for all of it.
+
+### Twin release flow (Forgejo side)
+
+Same single-run shape as single-host repos, split across the wire: the
+Forgejo `release` workflow gates (dispatch twin CI and wait), bumps, tags,
+and pushes — then dispatches the twin `release` workflow with `ref` + `target`
+to build and publish. Dispatch guide, shared everywhere: **empty = ship,
+SHA = test, tag = rebuild**.
+
+- Empty `ref`: semver → gate → bump → commit + tag → push → dispatch
+  `target: new-tag` with the new tag.
+- SHA `ref`: skip semver/bump/tag; dispatch `target: commit` with the SHA
+  (twin test-builds, uploads artifacts, publishes nothing).
+- Tag `ref`: skip semver/bump; dispatch `target: tag` with the tag (twin
+  rebuilds and publishes it).
+- `dry-run` previews the Forgejo side without pushing, tagging, or dispatching.
+- No cron on active-development twins (`workflow_dispatch` only); maintenance
+  twins add the Sunday schedule like single-host repos.
 
 ### Ordering: commit first, tag second (recoverable pushes)
 
