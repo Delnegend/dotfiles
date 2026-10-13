@@ -110,10 +110,17 @@ These are not negotiable. Rationale is in `references/decisions.md`.
     on YAML `uses:` lines by current Semgrep). Third-party refs keep the rule
     live — pin them to full SHAs instead.
 13. **No `${{ }}` interpolation inside `run:` blocks.** Move every workflow
-    context value (`inputs.*`, `steps.*.outputs.*`, `needs.*.outputs.*`,
-    `secrets.*`) into the step's `env:` block and reference `$VAR` in shell.
-    `if:`/`with:`/`env:` interpolation is fine — the injection sink is the shell.
-    Verified clean by scanning `run: |` blocks for `${{` before committing.
+   context value (`inputs.*`, `steps.*.outputs.*`, `needs.*.outputs.*`,
+   `secrets.*`) into the step's `env:` block and reference `$VAR` in shell.
+   `if:`/`with:`/`env:` interpolation is fine — the injection sink is the shell.
+   Verified clean by scanning `run: |` blocks for `${{` before committing.
+14. **Every `run:` step that uses `$VAR` declares `shell: bash`.** GitHub
+   defaults `run:` to PowerShell/cmd on `windows-latest`, where `$VAR` expands
+   to empty (verified: artefact shipped `error: target was empty` on the
+   Windows matrix leg). `${{ }}` interpolation used to mask this because
+   GitHub expands it pre-execution on every shell — rule 13 removes the mask,
+   so the shell must be explicit. Single-platform Linux repos are unaffected
+   but declare it anyway for copy-paste safety.
 
 ## Project contract
 
