@@ -13,6 +13,13 @@ LICENSE
 .config/environment.d/kde-dark.conf
 .config/fontconfig/**
 .config/kdeglobals
+.config/kwinrc
+.config/plasma-org.kde.plasma.desktop-appletsrc
+.config/plasmashellrc
+.config/konsolerc
+.config/gtk-3.0/**
+.config/gtk-4.0/**
+.config/kglobalshortcutsrc
 .justfile
 .Brewfile
 {{- end }}
@@ -25,6 +32,13 @@ LICENSE
 .config/fontconfig/**
 .config/systemd/**
 .config/kdeglobals
+.config/kwinrc
+.config/plasma-org.kde.plasma.desktop-appletsrc
+.config/plasmashellrc
+.config/konsolerc
+.config/gtk-3.0/**
+.config/gtk-4.0/**
+.config/kglobalshortcutsrc
 .bashrc_custom
 .tmux.conf
 {{- end }}

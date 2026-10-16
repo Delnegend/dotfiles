@@ -11,7 +11,13 @@ private_dot_ssh/              # → ~/.ssh/ (0700)
 dot_config/
   private_git/allowed_signers # → ~/.config/git/allowed_signers
   fontconfig/fonts.conf       # → ~/.config/fontconfig/fonts.conf (Linux)
-  kdeglobals                  # → ~/.config/kdeglobals
+  kdeglobals                  # → ~/.config/kdeglobals (private 0600, bazzite-only)
+  kwinrc                      # → ~/.config/kwinrc (private 0600, bazzite-only)
+  plasma-org.kde.plasma.desktop-appletsrc  # → panel/widgets/wallpaper (private 0600, bazzite-only)
+  plasmashellrc               # → ~/.config/plasmashellrc (private 0600, bazzite-only)
+  konsolerc                   # → ~/.config/konsolerc (private 0600, bazzite-only)
+  gtk-3.0/settings.ini, gtk-4.0/settings.ini  # → GTK theme (private 0600, bazzite-only)
+  kglobalshortcutsrc          # → keyboard shortcuts (private 0600, bazzite-only)
   environment.d/              # → ~/.config/environment.d/ (kde-dark.conf, linuxbrew.conf.tmpl, ssh.conf.tmpl)
   systemd/user/*              # → ~/.config/systemd/user/ (Linux)
 dot_bashrc_custom             # → ~/.bashrc_custom (sourced from ~/.bashrc, per-host case)

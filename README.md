@@ -33,6 +33,7 @@ chezmoi status    # what would change — expect clean
 - **[Setup](docs/setup.md)** — prerequisites, bootstrap per OS, daily use, adding files.
 - **[Secrets](docs/secrets.md)** — the agent token handoff and the guards that keep it local.
 - **[Layout](docs/layout.md)** — every managed file, its destination, and the setup scripts.
+- **[Sunshine](docs/sunshine.md)** — game stream host setup, KMS capture, and session recovery.
 
 ## License
 

@@ -12,11 +12,13 @@ fi
 # openrgb-off hash: {{ include "dot_config/systemd/user/openrgb-off.service" | sha256sum }}
 # rsrpc hash: {{ include "dot_config/systemd/user/rsrpc.service" | sha256sum }}
 # npiperelay hash: {{ include "dot_config/systemd/user/npiperelay.service" | sha256sum }}
+# sunshine hash: {{ include "dot_config/systemd/user/sunshine.service" | sha256sum }}
 # dotfiles-pull hash: {{ include "dot_config/systemd/user/dotfiles-pull.service" | sha256sum }}
 
 systemctl --user daemon-reload
 systemctl --user enable --now openrgb-off.service
 systemctl --user enable --now rsrpc.service
 systemctl --user enable --now npiperelay.service
+systemctl --user enable --now sunshine.service
 systemctl --user enable --now dotfiles-pull.timer
 {{- end -}}

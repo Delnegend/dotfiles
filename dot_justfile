@@ -53,6 +53,15 @@ _update-static:
 		echo "libjxl is already up to date ($LIBJXL_CURR_VER)"
 	fi
 
+# Start or stop remote-access services (Sunshine only; KDE RDP commented out).
+_remotes state:
+	just sunshine {{state}}
+	# just rdp {{state}}
+
+# Run kscreen-doctor against the KDE Wayland session (works over SSH too).
+_kscreen *args:
+	QT_QPA_PLATFORM=wayland WAYLAND_DISPLAY=wayland-0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus kscreen-doctor {{args}} 2>&1 || true
+
 sunshine state='start':
 	#!/usr/bin/bash
 
@@ -77,42 +86,44 @@ sunshine state='start':
 		exit 1
 	fi
 
-_rdp_kde state='start':
-	#!/usr/bin/bash
+# Disabled 2026-10-16: KRDP rejects all logins on FreeRDP 3.32 (SAM regression); using Sunshine.
+# rdp state='start':
+# 	#!/usr/bin/bash
+#
+# 	START_KEYWORDS=(start restart enable 1 on)
+# 	STOP_KEYWORDS=(stop disable 0 off)
+#
+# 	systemctl --user daemon-reload
+# 	if [[ " ${START_KEYWORDS[*]} " == *" {{state}} "* ]]; then
+# 		systemctl --user start app-org.kde.krdpserver.service
+# 		echo "app-org.kde.krdpserver.service is now STARTED"
+# 	elif [[ " ${STOP_KEYWORDS[*]} " == *" {{state}} "* ]]; then
+# 		systemctl --user stop app-org.kde.krdpserver.service
+# 		echo "app-org.kde.krdpserver.service is now STOPPED"
+# 	else
+# 		echo "Invalid state. Use 'start' or 'stop'."
+# 		exit 1
+# 	fi
 
-	START_KEYWORDS=(start restart enable 1 on)
-	STOP_KEYWORDS=(stop disable 0 off)
+# Disabled 2026-10-16: RDP unused; using Sunshine.
+# _rdp_gnome state='start':
+# 	#!/usr/bin/bash
+#
+# 	START_KEYWORDS=(start restart enable 1 on)
+# 	STOP_KEYWORDS=(stop disable 0 off)
+#
+# 	if [[ " ${START_KEYWORDS[*]} " == *" {{state}} "* ]]; then
+# 		sudo grdctl --system rdp enable 2>/dev/null
+# 		echo "GNOME Remote Login is now ENABLED"
+# 	elif [[ " ${STOP_KEYWORDS[*]} " == *" {{state}} "* ]]; then
+# 		sudo grdctl --system rdp disable 2>/dev/null
+# 		echo "GNOME Remote Login is now DISABLED"
+# 	else
+# 		echo "Invalid state. Use 'start' or 'stop'."
+# 		exit 1
+# 	fi
 
-	systemctl --user daemon-reload
-	if [[ " ${START_KEYWORDS[*]} " == *" {{state}} "* ]]; then
-		systemctl --user start app-org.kde.krdpserver.service
-		echo "app-org.kde.krdpserver.service is now STARTED"
-	elif [[ " ${STOP_KEYWORDS[*]} " == *" {{state}} "* ]]; then
-		systemctl --user stop app-org.kde.krdpserver.service
-		echo "app-org.kde.krdpserver.service is now STOPPED"
-	else
-		echo "Invalid state. Use 'start' or 'stop'."
-		exit 1
-	fi
-
-rdp state='start':
-	#!/usr/bin/bash
-
-	START_KEYWORDS=(start restart enable 1 on)
-	STOP_KEYWORDS=(stop disable 0 off)
-
-	if [[ " ${START_KEYWORDS[*]} " == *" {{state}} "* ]]; then
-		sudo grdctl --system rdp enable 2>/dev/null
-		echo "GNOME Remote Login is now ENABLED"
-	elif [[ " ${STOP_KEYWORDS[*]} " == *" {{state}} "* ]]; then
-		sudo grdctl --system rdp disable 2>/dev/null
-		echo "GNOME Remote Login is now DISABLED"
-	else
-		echo "Invalid state. Use 'start' or 'stop'."
-		exit 1
-	fi
-
-unlock:
+_unlock_gnome:
 	#!/usr/bin/bash
 	set -euo pipefail
 
@@ -162,7 +173,7 @@ unlock:
 
 alias _unlock := unlock
 
-_unlock_kde:
+unlock:
 	#!/usr/bin/bash
 	set -euo pipefail
 
@@ -204,28 +215,34 @@ _unlock_kde:
 	echo "Timed out waiting for session. Cleaned up." >&2
 	exit 1
 
-_fix-local-dimming_kde:
+fix-local-dimming:
 	#!/bin/bash
 	kscreen-doctor --dpms off && sleep 1 && kscreen-doctor --dpms on
 
-fix-local-dimming:
+_fix-local-dimming_gnome:
 	busctl --user set-property org.gnome.Mutter.DisplayConfig /org/gnome/Mutter/DisplayConfig org.gnome.Mutter.DisplayConfig PowerSaveMode i 1
 	sleep 1
 	busctl --user set-property org.gnome.Mutter.DisplayConfig /org/gnome/Mutter/DisplayConfig org.gnome.Mutter.DisplayConfig PowerSaveMode i 0
 
-_dp_kde:
-	QT_QPA_PLATFORM=wayland WAYLAND_DISPLAY=wayland-0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus kscreen-doctor output.DP-2.enable output.HDMI-A-1.disable 2>&1 || true
+# Switch to the physical monitor (DP-2 on, HDMI dummy off).
+[group("display")]
+dp: && (_remotes "start")
+	just _remotes stop
+	just _kscreen output.DP-2.enable output.HDMI-A-1.disable
 
-_dummy_kde:
-	QT_QPA_PLATFORM=wayland WAYLAND_DISPLAY=wayland-0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus kscreen-doctor output.HDMI-A-1.enable output.DP-2.disable 2>&1 || true
+# Switch to the HDMI dummy plug (for headless streaming).
+[group("display")]
+dummy: && (_remotes "start")
+	just _remotes stop
+	just _kscreen output.HDMI-A-1.enable output.DP-2.disable
 
-dp:
+_dp_gnome:
 	#!/usr/bin/bash
 	set -euo pipefail
 	BUS="org.gnome.Mutter.DisplayConfig"
 	OBJ="/org/gnome/Mutter/DisplayConfig"
 	CONFIG="[(0, 0, 1.0, uint32 0, true, [('DP-2', '2560x1440@199.999+vrr', {'color-mode': <uint32 1>})])]"
-	systemctl --user stop gnome-remote-desktop.service 2>/dev/null || true
+	# systemctl --user stop gnome-remote-desktop.service 2>/dev/null || true
 	busctl --user set-property "$BUS" "$OBJ" "$BUS" PowerSaveMode i 0 2>/dev/null || true
 	loginctl unlock-sessions 2>/dev/null || true
 
@@ -233,17 +250,17 @@ dp:
 		SERIAL=$(gdbus call --session --dest "$BUS" --object-path "$OBJ" --method "$BUS.GetCurrentState" 2>/dev/null | grep -oP '^\(uint32 \K\d+' || true)
 		if [[ -n "$SERIAL" ]] && gdbus call --session --dest "$BUS" --object-path "$OBJ" --method "$BUS.ApplyMonitorsConfig" "$SERIAL" 1 "$CONFIG" "{}" >/dev/null 2>&1; then
 			busctl --user set-property "$BUS" "$OBJ" "$BUS" PowerSaveMode i 0 2>/dev/null || true
-			systemctl --user start gnome-remote-desktop.service 2>/dev/null || true
+			# systemctl --user start gnome-remote-desktop.service 2>/dev/null || true
 			echo "Switched to DP-2 (physical monitor at 200Hz VRR + HDR)."
 			exit 0
 		fi
 		sleep 0.5
 	done
-	systemctl --user start gnome-remote-desktop.service 2>/dev/null || true
+	# systemctl --user start gnome-remote-desktop.service 2>/dev/null || true
 	echo "Failed to switch to DP-2." >&2
 	exit 1
 
-dummy res="1920x1200":
+_dummy_gnome res="1920x1200":
 	#!/usr/bin/bash
 	set -euo pipefail
 	BUS="org.gnome.Mutter.DisplayConfig"
@@ -266,36 +283,34 @@ dummy res="1920x1200":
 	esac
 
 	CONFIG="[(0, 0, 1.0, uint32 0, true, [('HDMI-1', '$MODE', {})])]"
-	systemctl --user stop gnome-remote-desktop.service 2>/dev/null || true
+	# systemctl --user stop gnome-remote-desktop.service 2>/dev/null || true
 	busctl --user set-property "$BUS" "$OBJ" "$BUS" PowerSaveMode i 0 2>/dev/null || true
 
 	for i in {1..5}; do
 		SERIAL=$(gdbus call --session --dest "$BUS" --object-path "$OBJ" --method "$BUS.GetCurrentState" 2>/dev/null | grep -oP '^\(uint32 \K\d+' || true)
 		if [[ -n "$SERIAL" ]] && gdbus call --session --dest "$BUS" --object-path "$OBJ" --method "$BUS.ApplyMonitorsConfig" "$SERIAL" 1 "$CONFIG" "{}" >/dev/null 2>&1; then
 			busctl --user set-property "$BUS" "$OBJ" "$BUS" PowerSaveMode i 0 2>/dev/null || true
-			systemctl --user start gnome-remote-desktop.service 2>/dev/null || true
+			# systemctl --user start gnome-remote-desktop.service 2>/dev/null || true
 			echo "Switched to HDMI-1 (dummy plug) at $MODE."
 			exit 0
 		fi
 		sleep 0.5
 	done
-	systemctl --user start gnome-remote-desktop.service 2>/dev/null || true
+	# systemctl --user start gnome-remote-desktop.service 2>/dev/null || true
 	echo "Failed to switch to HDMI-1." >&2
 	exit 1
-_toggle-hdmi-res:
-	#!/bin/bash
-	export QT_QPA_PLATFORM=wayland
-	export WAYLAND_DISPLAY=wayland-0
-	export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
 
-	just sunshine stop
-	CURRENT=$(kscreen-doctor --outputs 2>/dev/null | grep -oP '\d+x\d+(?=@\d+\.\d+\*)' | tail -1)
+# Flip the HDMI dummy plug between 1920x1080 and 1920x1200.
+[group("display")]
+toggle-hdmi-res: && (_remotes "start")
+	#!/bin/bash
+	just _remotes stop
+	CURRENT=$(just _kscreen --outputs | grep -oP '\d+x\d+(?=@\d+\.\d+\*)' | tail -1)
 	if [[ "$CURRENT" == "1920x1200" ]]; then
-		kscreen-doctor output.HDMI-A-1.mode.1920x1080@60.00
+		just _kscreen output.HDMI-A-1.mode.1920x1080@60
 	else
-		kscreen-doctor output.HDMI-A-1.mode.1920x1200@59.88
+		just _kscreen output.HDMI-A-1.mode.1920x1200@60
 	fi
-	just sunshine start
 
 _restart_plasma_shell:
 	systemctl --user restart plasma-plasmashell.service
