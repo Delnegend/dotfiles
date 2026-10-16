@@ -1,5 +1,6 @@
 [Unit]
 Description=Sunshine game stream host
+ConditionHost=bazzite
 ConditionPathExists=/home/linuxbrew/.linuxbrew/bin/sunshine
 PartOf=graphical-session.target
 After=graphical-session.target xdg-desktop-autostart.target xdg-desktop-portal.service
