@@ -22,7 +22,16 @@
           "MIKROTIK_PASSWORD": "{env:MIKROTIK_PASSWORD}",
           "MIKROTIK_API_SSL": "false"
         }
-      }
+    },
+    "openwiki": {
+      "type": "local",
+      "command": [
+        "bunx",
+        "openwiki",
+        "mcp",
+        "--host",
+        "omp"
+      ]
     }
   },
   "plugins": [
