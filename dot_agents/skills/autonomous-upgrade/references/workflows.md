@@ -36,8 +36,10 @@ jobs:
       - uses: actions/checkout@v7
 
       # Bun example. Swap the setup/update steps per ecosystem:
-      #   Cargo → dtolnay/rust-toolchain@stable (needs ≥1.100 for the cooldown),
-      #            then `cargo update` (reads .cargo/config.toml)
+      #   Cargo → dtolnay/rust-toolchain@stable, the enforcement check below
+      #            (uncomment), then `cargo update` gated on its output with
+      #            `if: steps.cargo-cooldown.outputs.enforced == 'true'`
+      #            (reads .cargo/config.toml)
       #   npm   → actions/setup-node@v4, then
       #            `npx npm-check-updates -u -t minor --cooldown 14d && npm install`
       - uses: oven-sh/setup-bun@v2
@@ -47,8 +49,28 @@ jobs:
       - name: Upgrade (cooldown enforced by bunfig.toml)
         run: bun update
 
+      # Cargo repos only: uncomment. `registry.global-min-publish-age` is
+      # stable from Cargo 1.100, and an older toolchain ignores the key
+      # silently. Upgrading anyway would pull versions with no quarantine at
+      # all, so skip instead of shipping that.
+      # - name: Check that Cargo can enforce the cooldown
+      #   id: cargo-cooldown
+      #   shell: bash
+      #   run: |
+      #     set -euo pipefail
+      #     version="$(cargo --version | awk '{print $2}')"
+      #     major="${version%%.*}"
+      #     minor="${version#*.}"; minor="${minor%%.*}"
+      #     if [ "$major" -eq 1 ] && [ "$minor" -lt 100 ]; then
+      #       echo "enforced=false" >> "$GITHUB_OUTPUT"
+      #       echo "::warning::cargo ${version} ignores registry.global-min-publish-age (stable from 1.100) — no Cargo upgrade was made, so nothing lands without the 14-day quarantine"
+      #     else
+      #       echo "enforced=true" >> "$GITHUB_OUTPUT"
+      #     fi
+
       - name: Detect whether anything changed
         id: diff
+        shell: bash
         run: |
           if git diff --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -56,20 +78,35 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Ensure the dependencies label exists
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh label create dependencies --force --color 0366d6 --description "Dependency updates"
+
       - name: Open upgrade PR
         if: steps.diff.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
           git config user.name  "github-actions[bot]"
           git config user.email "actions@users.noreply.github.com"
           git checkout -B deps/automatic
           git add -u
           git commit -m "chore(deps): upgrade dependencies"
           git push --force origin deps/automatic
-          gh pr create --fill --base main --head deps/automatic \
-            --title "chore(deps): upgrade dependencies" \
-            --body "Automated daily upgrade. Versions published less than 14 days ago were filtered out by the package manager."
+          # Update-or-create: the push above already updated the open PR when
+          # one exists, so only create when there is nothing to update.
+          # (The auto-merge workflow keys on the `dependencies` label.)
+          if gh pr view deps/automatic --json number >/dev/null 2>&1; then
+            echo "the push updated the existing upgrade PR"
+          else
+            gh pr create --base main --head deps/automatic \
+              --title "chore(deps): upgrade dependencies" \
+              --label dependencies \
+              --body "Automated daily upgrade. Versions published less than 14 days ago were filtered out by the package manager."
+          fi
 ```
 
 **Forgejo:** use native **AGit** (`refs/for/main`). Forgejo opens or updates
@@ -240,8 +277,10 @@ to `main`. The gate job is stronger than any PR rule: it calls all of
 Two inputs only, one dispatch guide — **empty = ship, SHA = test, tag = rebuild**:
 `ref` empty ships a new version; a commit SHA test-builds it (artifacts upload,
 nothing publishes); a tag rebuilds and publishes it. `dry-run` previews any of
-the three without changing anything. Manifest-less repos (Go: `just bump` is a
-no-op echo) skip the bump/commit and tag HEAD directly.
+the three without changing anything. A repo with no tags yet anchors `v0.0.0`
+at HEAD on the first real run, so the semver comparison has a base; a dry run
+on a tagless repo stops with a clear message instead. Manifest-less repos (Go:
+`just bump` is a no-op echo) skip the bump/commit and tag HEAD directly.
 
 ### Mode-dependent trigger
 
@@ -298,6 +337,29 @@ jobs:
           fetch-depth: 0   # Full git history for tags, commits, and semver-action
       - uses: extractions/setup-just@v4
       # Insert any language setup needed by `just bump` (e.g. setup-go, setup-node)
+
+      # `semver-action` compares against `fallbackTag`, and its compare call
+      # 404s when that tag does not exist yet. Anchor the first release at
+      # HEAD instead of requiring a hand-made tag. A dry run never mutates:
+      # on a tagless repo it stops with a clear message instead of a crash.
+      - name: Anchor the first release tag
+        env:
+          DRY_RUN: ${{ inputs.dry-run }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "$(git tag -l 'v[0-9]*')" ]; then
+            exit 0
+          fi
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "::error::no release tags yet — a real run anchors v0.0.0 at HEAD before calculating; there is nothing a dry run could release."
+            exit 1
+          fi
+          echo "no release tag yet — anchoring v0.0.0 at HEAD"
+          git -c user.name="github-actions[bot]" \
+              -c user.email="actions@users.noreply.github.com" \
+              tag -a v0.0.0 -m "Anchor tag for the first release calculation"
+          git push origin "refs/tags/v0.0.0"
 
       - name: Calculate Next SemVer
         id: semver
