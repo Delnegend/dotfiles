@@ -271,21 +271,11 @@ wallpaperplugin=org.kde.image
 immutability=1
 plugin=org.kde.plasma.icontasks
 
-[Containments][58][Applets][60]
-immutability=1
-plugin=org.kde.plasma.icontasks
-
-[Containments][58][Applets][60][Configuration][ConfigDialog]
-DialogHeight=630
-DialogWidth=810
-
-[Containments][58][Applets][60][Configuration][General]
-highlightWindows=true
-iconSpacing=3
-launchers=applications:org.kde.konsole.desktop,preferred://filemanager,preferred://browser
+[Containments][58][Applets][59][Configuration][General]
+launchers=applications:org.kde.konsole.desktop,preferred://browser,applications:steam.desktop,preferred://filemanager,applications:code.desktop
 
 [Containments][58][General]
-AppletOrder=60
+AppletOrder=59
 
 [Containments32Appletsts][23][Configuration][Appearance]
 autoFontAndSize=false
