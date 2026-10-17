@@ -63,6 +63,7 @@ fi
 # fully-qualified install auto-taps and auto-trusts its item, and running
 # `brew tap <tap>` first would try to load every formula in the tap and fail.
 "$BREW" trust --formula can1357/tap/omp
+"$BREW" trust --formula anomalyco/tap/opencode-v2
 
 pkgs=(
     "just:just"
@@ -71,6 +72,8 @@ pkgs=(
     "fzf:fzf"
     "ssh:openssh"
     "tmux:tmux"
+    "bun:bun"
+    "opencode:anomalyco/tap/opencode-v2"
     "omp:can1357/tap/omp"
 )
 
@@ -91,9 +94,13 @@ for entry in "${pkgs[@]}"; do
         done
     fi
 done
+if [ ! -d "$HOME/.hindsight/coding-agents" ] && command -v bunx &>/dev/null; then
+    echo "Staging Hindsight coding agents runtime..."
+    bunx @vectorize-io/hindsight-coding-agents update
+fi
 
 echo "Wiring bash..."
-# chezmoi manages ~/.bashrc_custom (dot_bashrc_custom); ensure ~/.bashrc sources it.
+# chezmoi manages ~/.bashrc_custom (dot_bashrc_custom.tmpl); ensure ~/.bashrc sources it.
 # Migrates the old cfg-system path if present.
 if grep -q 'source ~/dotfiles/cfg-system/bashrc_custom' "$HOME/.bashrc" 2>/dev/null; then
     sed -i 's|source ~/dotfiles/cfg-system/bashrc_custom|source ~/.bashrc_custom|' "$HOME/.bashrc"

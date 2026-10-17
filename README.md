@@ -12,7 +12,7 @@
 
 ```bash
 # 1. On a new machine, name it
-#    add a `case` branch in `dot_bashrc_custom` matching `$(hostname -s)`
+#    add a host branch in `dot_bashrc_custom.tmpl` matching `{{ .chezmoi.hostname }}`
 
 # 2. Bootstrap
 sh -c "$(curl -fsLS https://get.chezmoi.io)" -- -b "$HOME/.local/bin" init --apply Delnegend

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "servers": {
+      "playwright": {
+        "type": "local",
+        "command": [
+          "bunx",
+          "@playwright/mcp@latest",
+          "--cdp-endpoint",
+          "ws://localhost:9222"
+        ]
+      },
+      "mikrotik": {
+        "type": "local",
+        "command": [
+          "mikrotik-mcp",
+          "{env:MIKROTIK_IP_ADDRESS}"
+        ],
+        "environment": {
+          "MIKROTIK_USER": "{env:MIKROTIK_USER}",
+          "MIKROTIK_PASSWORD": "{env:MIKROTIK_PASSWORD}",
+          "MIKROTIK_API_SSL": "false"
+        }
+      }
+    }
+  },
+  "plugins": [
+    "{{ .chezmoi.homeDir }}/.hindsight/coding-agents"
+  ]
+}

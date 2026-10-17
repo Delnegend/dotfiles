@@ -34,8 +34,8 @@ chezmoi init --apply Delnegend
 # run_once/run_onchange scripts handle Homebrew, fonts, systemd, flatpak, udev automatically
 ```
 
-For a new machine, add a `case` branch in `dot_bashrc_custom` matching
-`$(hostname -s)` *or* extend `dot_config/environment.d/ssh.conf.tmpl`.
+For a new machine, add a branch in `dot_bashrc_custom.tmpl` matching
+`{{ .chezmoi.hostname }}` *or* extend `dot_config/environment.d/ssh.conf.tmpl`.
 
 ## Windows
 

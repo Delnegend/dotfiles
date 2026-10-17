@@ -20,14 +20,17 @@ dot_config/
   kglobalshortcutsrc          # → keyboard shortcuts (private 0600, bazzite-only)
   environment.d/              # → ~/.config/environment.d/ (kde-dark.conf, linuxbrew.conf.tmpl, ssh.conf.tmpl)
   systemd/user/*              # → ~/.config/systemd/user/ (Linux)
-dot_bashrc_custom             # → ~/.bashrc_custom (sourced from ~/.bashrc, per-host case)
+  opencode/opencode.json.tmpl # → ~/.config/opencode/opencode.json (MCP servers + Hindsight plugin)
+dot_bashrc_custom.tmpl        # → ~/.bashrc_custom (sourced from ~/.bashrc, per-host template)
 dot_tmux.conf                 # → ~/.tmux.conf (Linux; tmux installed via brew bootstrap)
 dot_Brewfile                  # → ~/Brewfile (Linux)
 dot_agents/                   # → ~/.agents (skills)
 dot_omp/private_agent/        # → ~/.omp/agent/ (0700)
   private_config.yml          #   oh-my-pi config (secrets via ${ENV} indirection)
   APPEND_SYSTEM.md             #   standing reply rules (plain language, conclusion first); appends to the built-in prompt
-  mcp.json.tmpl               #   per-host MCP servers (bazzite: mikrotik)
+  mcp.json.tmpl               #   MCP servers (playwright, mikrotik)
+dot_hindsight/                # → ~/.hindsight/
+  coding-agent.json           #   Hindsight server config (self-hosted endpoint + coding bank)
 dot_justfile                  # → ~/.justfile (general-purpose recipes + brew-dump)
 dot_var/app/...               # → ~/.var/app/... (Flatpak mpv/easyeffects, Linux)
 

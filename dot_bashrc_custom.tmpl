@@ -1,25 +1,27 @@
-case "$(hostname -s)" in
-    wsl)
-        export SSH_AUTH_SOCK=$HOME/.ssh/agent.sock
-        ;;
-    homelab)
-        alias k3s-check='sudo CONFIG=/usr/lib/modules/$(uname -r)/config k3s check-config'
-        alias sync='just sync'
-        command -v kubectl &>/dev/null && source <(kubectl completion bash)
-        ;;
-    bazzite)
-        if [ -f /usr/share/bazzite-cli/bling.sh ]; then
-            source /usr/share/bazzite-cli/bling.sh
-        fi
-        export SSH_AUTH_SOCK=/home/lava/.var/app/com.bitwarden.desktop/data/.bitwarden-ssh-agent.sock
-        export XMODIFIERS=@im=fcitx
-        export PATH=$PATH:/var/home/lava/bin/jdk-25.0.2+10-jre/bin/
-        ;;
-esac
+{{- if eq .chezmoi.hostname "wsl" }}
+export SSH_AUTH_SOCK=$HOME/.ssh/agent.sock
+{{- else if eq .chezmoi.hostname "homelab" }}
+alias k3s-check='sudo CONFIG=/usr/lib/modules/$(uname -r)/config k3s check-config'
+alias sync='just sync'
+command -v kubectl &>/dev/null && source <(kubectl completion bash)
+{{- else if eq .chezmoi.hostname "bazzite" }}
+if [ -f /usr/share/bazzite-cli/bling.sh ]; then
+    source /usr/share/bazzite-cli/bling.sh
+fi
+export SSH_AUTH_SOCK=/home/lava/.var/app/com.bitwarden.desktop/data/.bitwarden-ssh-agent.sock
+export XMODIFIERS=@im=fcitx
+export PATH=$PATH:/var/home/lava/bin/jdk-25.0.2+10-jre/bin/
+{{- end }}
 
 export DOCKER_HOST="unix://$XDG_RUNTIME_DIR/podman/podman.sock"
 [ -d "$HOME/.local/bin" ] && export PATH="$HOME/.local/bin:$PATH"
 [ -d "$HOME/.local/share/bin" ] && export PATH="$HOME/.local/share/bin:$PATH"
+
+if [ -f "$HOME/.omp/agent/.env" ]; then
+    set -a
+    . "$HOME/.omp/agent/.env"
+    set +a
+fi
 
 if [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
     if ! grep -qs 'brew shellenv' "$HOME/.profile" 2>/dev/null; then
@@ -35,6 +37,7 @@ alias j=just
 alias lg='lazygit'
 alias up='podman compose up'
 alias down='podman compose down'
+alias oc='opencode'
 
 if [ -f /run/.containerenv ]; then
     alias pm="flatpak-spawn --host podman"
