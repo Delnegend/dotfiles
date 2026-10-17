@@ -54,6 +54,7 @@ popupWidth=560
 [Containments][32][Applets][23][Configuration][Appearance]
 fontWeight=400
 showDate=false
+use24hFormat=0
 
 [Containments][32][Applets][23][Configuration][ConfigDialog]
 DialogHeight=630
@@ -150,25 +151,9 @@ DialogHeight=630
 DialogWidth=810
 
 [Containments][32][Applets][33][General]
-extraItems=org.kde.kdeconnect,org.kde.plasma.vault,org.kde.kscreen,org.kde.plasma.battery,org.kde.plasma.bluetooth,org.kde.plasma.brightness,org.kde.plasma.cameraindicator,org.kde.plasma.clipboard,org.kde.plasma.devicenotifier,org.kde.plasma.keyboardindicator,org.kde.plasma.keyboardlayout,org.kde.plasma.manage-inputmethod,org.kde.plasma.mediacontroller,org.kde.plasma.networkmanagement,org.kde.plasma.printmanager,org.kde.plasma.volume,org.kde.plasma.weather,org.kde.plasma.notifications
-hiddenItems=org.kde.plasma.notifications
+extraItems=org.kde.plasma.vault,org.kde.kscreen,org.kde.plasma.battery,org.kde.plasma.bluetooth,org.kde.plasma.brightness,org.kde.plasma.cameraindicator,org.kde.plasma.clipboard,org.kde.plasma.devicenotifier,org.kde.plasma.keyboardindicator,org.kde.plasma.keyboardlayout,org.kde.plasma.manage-inputmethod,org.kde.plasma.networkmanagement,org.kde.plasma.printmanager,org.kde.plasma.volume,org.kde.plasma.weather,org.kde.plasma.notifications,org.kde.plasma.mediacontroller,org.kde.kdeconnect
+hiddenItems=org.kde.plasma.notifications,org.kde.plasma.mediacontroller,org.kde.kdeconnect
 knownItems=org.kde.kdeconnect,org.kde.plasma.vault,org.kde.kscreen,org.kde.plasma.battery,org.kde.plasma.bluetooth,org.kde.plasma.brightness,org.kde.plasma.cameraindicator,org.kde.plasma.clipboard,org.kde.plasma.devicenotifier,org.kde.plasma.keyboardindicator,org.kde.plasma.keyboardlayout,org.kde.plasma.manage-inputmethod,org.kde.plasma.mediacontroller,org.kde.plasma.networkmanagement,org.kde.plasma.notifications,org.kde.plasma.printmanager,org.kde.plasma.volume,org.kde.plasma.weather
-
-[Containments][32][Applets][4]
-immutability=1
-plugin=org.kde.plasma.kickoff
-
-[Containments][32][Applets][4][Configuration]
-popupHeight=509
-popupWidth=689
-
-[Containments][32][Applets][4][Configuration][ConfigDialog]
-DialogHeight=630
-DialogWidth=810
-
-[Containments][32][Applets][4][Configuration][General]
-favoritesPortedToKAstats=true
-icon=distributor-logo-steamdeck
 
 [Containments][32][Applets][5]
 immutability=1
@@ -234,10 +219,6 @@ cpu/cpu9/usage=233,61,228
 highPrioritySensorIds=["cpu/cpu.*/usage"]
 totalSensors=["cpu/all/usage"]
 
-[Containments][32][Applets][55]
-immutability=1
-plugin=org.kde.plasma.marginsseparator
-
 [Containments][32][Applets][57]
 immutability=1
 plugin=org.kde.plasma.notifications
@@ -246,8 +227,36 @@ plugin=org.kde.plasma.notifications
 popupHeight=414
 popupWidth=324
 
+[Containments][32][Applets][67]
+immutability=1
+plugin=org.kde.plasma.kickoff
+
+[Containments][32][Applets][67][Configuration]
+popupHeight=509
+popupWidth=647
+
+[Containments][32][Applets][67][Configuration][ConfigDialog]
+DialogHeight=630
+DialogWidth=810
+
+[Containments][32][Applets][67][Configuration][General]
+favoritesPortedToKAstats=true
+icon=applications-all-symbolic
+systemFavorites=suspend\\,hibernate\\,reboot\\,shutdown
+
+[Containments][32][Applets][68]
+immutability=1
+plugin=com.himdek.kde.plasma.overview
+
+[Containments][32][Applets][68][Configuration][ConfigDialog]
+DialogHeight=630
+DialogWidth=810
+
+[Containments][32][Applets][68][Configuration][General]
+icon=bazzite-logo
+
 [Containments][32][General]
-AppletOrder=4;55;53;5;51;23;57;52;33
+AppletOrder=68;53;5;51;67;23;57;52;33
 
 [Containments][58]
 activityId=
@@ -273,6 +282,7 @@ DialogWidth=810
 [Containments][58][Applets][60][Configuration][General]
 highlightWindows=true
 iconSpacing=3
+launchers=applications:org.kde.konsole.desktop,preferred://filemanager,preferred://browser
 
 [Containments][58][General]
 AppletOrder=60

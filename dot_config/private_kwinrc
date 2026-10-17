@@ -7,16 +7,22 @@ Rows=1
 [EdgeBarrier]
 CornerBarrier=false
 
-[Effect-overview]
-BorderActivate=6
-
-[ElectricBorders]
-TopLeft=ApplicationLauncher
-
 [NightColor]
 Active=true
 Mode=Constant
 NightTemperature=4300
+
+[Tiling][06ea6da1-ca59-4c2e-8a7b-0138ec3d9946][5a204c5a-298c-4deb-a52a-49ebb5efee78]
+padding=4
+tiles={"layoutDirection":"horizontal","tiles":[{"width":0.25},{"width":0.5},{"width":0.25}]}
+
+[Tiling][18b4e58d-8310-4ff8-8e95-a189998ffd67][5a204c5a-298c-4deb-a52a-49ebb5efee78]
+padding=4
+tiles={"layoutDirection":"horizontal","tiles":[{"width":0.25},{"width":0.5},{"width":0.25}]}
+
+[Tiling][1b95e14b-cc81-47fa-acf2-57eee47e15e1][d4d47c23-7549-431d-b8ef-42d03e91e1a8]
+padding=4
+tiles={"layoutDirection":"horizontal","tiles":[{"width":0.25},{"width":0.5},{"width":0.25}]}
 
 [Tiling][ad16dd00-77fa-4736-9ef7-b5c4c560e18d][5a204c5a-298c-4deb-a52a-49ebb5efee78]
 padding=4
@@ -25,6 +31,9 @@ tiles={"layoutDirection":"horizontal","tiles":[{"width":0.25},{"width":0.5},{"wi
 [Tiling][ad16dd00-77fa-4736-9ef7-b5c4c560e18d][d4d47c23-7549-431d-b8ef-42d03e91e1a8]
 padding=4
 tiles={"layoutDirection":"horizontal","tiles":[{"width":0.25},{"width":0.5},{"width":0.25}]}
+
+[Wayland]
+InputMethod[$e]=/usr/share/applications/org.fcitx.Fcitx5.desktop
 
 [Windows]
 ElectricBorderDelay=0
