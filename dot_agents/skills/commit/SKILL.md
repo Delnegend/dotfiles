@@ -40,8 +40,23 @@ Do NOT use interactive commands like `git add -p` or `git add -i`. Instead, use 
   3. Run `git add <file>` to stage only the desired changes.
   4. Copy the backup file back to the workspace to restore the remaining unstaged changes.
 
-### 3. Generate Commit Message
-Write a structured commit message in the Conventional Commits style (`feat(...)`, `refactor(...)`, `fix(...)`, `docs(...)`, `chore(...)`, `style(...)`).
+### 3. Atomic Commits Rule
+When asked for **atomic commits** (or committing multiple changes/large refactors):
+- **Single responsibility:** Each commit represents exactly one logical change, fix, optimization, or refactor.
+- **Small size:** Prefer small commits touching a dozen lines of code or one file pair (implementation + test) rather than bundling unrelated or multi-layered edits into one commit.
+- **Co-locate behavior tests:** Keep tests in the same commit as the feature or fix they assert, so each commit is self-verifying.
+- **Independent compilation (`git bisect`-clean):** Every commit in the sequence must compile and pass tests on its own without breaking intermediate states.
+- **Split sequence example:**
+  1. Toolchain / build configuration (`.cargo/config.toml`, `rust-toolchain.toml`, `clippy.toml`)
+  2. Documentation updates
+  3. Small scoped bugfixes / refactors (e.g. one module or subsystem per commit)
+  4. Self-contained feature / optimization + its behavior test
+  5. Shared public API adjustments + caller updates
+  6. Dependency manifest edits / lockfile pruning
+  7. Benchmarks and task-runner gates
+
+### 4. Generate Commit Message
+Write a structured commit message in the Conventional Commits style (`feat(...)`, `refactor(...)`, `fix(...)`, `docs(...)`, `chore(...)`, `style(...)`, `perf(...)`, `bench(...)`, `build(...)`).
 
 **General Backticking Rule:**
 Rigorously apply backticks (\`) around all code-like elements, including:
@@ -58,15 +73,16 @@ Format:
 - <detailed bullet point 2>
 ```
 
-### 4. Execute the Commit
+### 5. Execute the Commit
 - Verify `git status` to ensure only the intended files are staged.
-- Run `git commit -m "<message>"` to commit the staged changes.
+- Sign the commit with `-S` using the SSH signing key configured in git.
+- Run `git commit -S -m "<message>"` to commit the staged changes.
 
-### 5. Clean Up Temporary Files
+### 6. Clean Up Temporary Files
 - Remove `/tmp/omp/` directory and all its contents: `rm -rf /tmp/omp/`
 - This prevents stale backup files from leaking into future sessions.
 
-### 6. Keep Responses Concise and Detailed
+### 7. Keep Responses Concise and Detailed
 - Keep response explanations and status updates concise but precise.
 - Do not hide the changes: list the exact files staged/committed and summarize key modifications clearly without omitting details.
 - Avoid unnecessary conversational filler, preambles, and postambles.
