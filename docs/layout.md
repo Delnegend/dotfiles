@@ -18,7 +18,7 @@ dot_config/
   konsolerc                   # → ~/.config/konsolerc (private 0600, bazzite-only)
   gtk-3.0/settings.ini, gtk-4.0/settings.ini  # → GTK theme (private 0600, bazzite-only)
   kglobalshortcutsrc          # → keyboard shortcuts (private 0600, bazzite-only)
-  environment.d/              # → ~/.config/environment.d/ (kde-dark.conf, linuxbrew.conf.tmpl, ssh.conf.tmpl)
+  environment.d/              # → ~/.config/environment.d/ (kde-dark.conf, ssh.conf.tmpl)
   systemd/user/*              # → ~/.config/systemd/user/ (Linux)
   opencode/opencode.json.tmpl # → ~/.config/opencode/opencode.json (MCP servers + Hindsight plugin)
 dot_bashrc_custom.tmpl        # → ~/.bashrc_custom (sourced from ~/.bashrc, per-host template)
