@@ -25,14 +25,27 @@ Copy and adapt this template for the repository root `README.md`. Keep the final
 Get running in less than 60 seconds:
 
 ```bash
-# 1. Install
-curl -fsSL https://get.<project>.dev | bash
+# 1. Install (Linux and macOS)
+brew install <owner>/tap/<formula>
 
-# 2. Start
-<project> init && <project> start
+# 2. Run
+<project> ...
 ```
 
-Visit `http://localhost:<port>` to verify.
+Visit `http://localhost:<port>` to verify (services), or `<project> --version` (CLIs).
+
+## Install Ladder
+
+The install step follows this order, topmost available wins. Never skip a rung
+for the sake of variety:
+
+1. **Homebrew tap** — `brew install <owner>/tap/<formula>`. The primary method
+   on Linux and macOS whenever a formula exists.
+2. **Latest-release asset** — resolve the asset from the latest release at
+   install time (API lookup by filename suffix). Never pin a version in the
+   command; a pinned URL rots on the next release.
+3. **Source build** — `cargo install`, `go install`, `go build` from a checkout.
+   Last resort only, and say so in one clause.
 
 ## Highlights
 
@@ -88,7 +101,7 @@ For component boundaries, internal pipelines, and design decisions, see **[Archi
 
 ## Customization Guidelines
 
-- **For CLI tools:** Quick Start should be `brew install <tool>` or `curl ... | bash` followed by `<tool> --help`.
+- **For CLI tools:** Quick Start is `brew install <owner>/tap/<formula>` (or the install ladder's fallback) followed by the primary command and a `--version` check.
 - **For Libraries / SDKs:** Replace "Common Options" with a 5-line code snippet showing `import` and standard invocation.
 - **For Containers / Services:** Quick Start should be `docker compose up -d` followed by `curl localhost:<port>/health`.
 - **For Dotfiles / Config Repos:** Quick Start should be the bootstrap one-liner followed by verification commands.

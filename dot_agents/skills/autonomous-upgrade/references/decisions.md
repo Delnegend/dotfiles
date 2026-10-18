@@ -77,7 +77,7 @@ per-application choice, not a permanent property.
 ### Transitioning to maintenance mode via `README.md` roadmap
 
 Active development projects track in-flight milestones in an optional `## Roadmap`
-section in the root `README.md` (structured per the `readme` skill). When all
+section in the root `README.md` (structured per the `docs` skill). When all
 milestones are checked `[x]` and feature work freezes, the project flips to
 **maintenance mode** (enabling the `on.schedule` weekly cron in `release.yml`).
 
