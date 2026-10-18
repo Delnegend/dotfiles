@@ -67,54 +67,58 @@ These are not negotiable. Rationale is in `references/decisions.md`.
 1. **Consult the owner before applying.** No universal CI/CD flow. Record agreed
    choices and deviations in the PR/conversation — never a committed decision file.
 2. **CI gate shape follows the host.** Single-host repos: one `just check`, no
-   build matrix. Forgejo+twin repos: the CI workflow runs `just check` **plus
-   the security scans in parallel** — Gitleaks (secrets), Semgrep (SAST),
-   Trivy (OS packages + misconfigurations), OSV-Scanner (deps). Security
-   scanning is a GitHub-runners-only concern: it runs on the twin, never on
-   self-hosted Forgejo (no Docker images, no registry egress, no runner
-   minutes there). Building artifacts is always the release workflow's job.
-3. **14-day cooldown, enforced by the package manager itself.** Never re-implement
+   build matrix, plus the shared scan workflow called as a job. Forgejo+twin
+   repos: the CI workflow runs `just check` **plus those same scans in
+   parallel**. Security scanning is a GitHub-runners-only concern: it runs on
+   the twin, never on self-hosted Forgejo (no Docker images, no registry
+   egress, no runner minutes there). Building artifacts is always the release
+   workflow's job.
+3. **Scans come from [Delnegend/actions](https://github.com/Delnegend/actions),
+   never hand-rolled.** Call `.github/workflows/scan.yml` pinned by SHA as a
+   job. Do not write `docker run` scan jobs per project: they drift, and a
+   shared gate is the only thing that keeps ten projects in agreement.
+4. **14-day cooldown, enforced by the package manager itself.** Never re-implement
    the age filter as a shell script — the tool's own gate also covers transitive
    dependencies. If an ecosystem has no native gate, that project does not get
    autonomous bumps.
-4. **Dependabot for GitHub Actions only.** On GitHub-hosted repos, Dependabot is
+5. **Dependabot for GitHub Actions only.** On GitHub-hosted repos, Dependabot is
    used exclusively for `package-ecosystem: "github-actions"` to keep workflow
    actions up to date, and nothing else. Code dependencies are upgraded through
    native package managers (`bun update`, `cargo update`, `ncu`).
-5. **Split patch/minor from major**, so a breaking major cannot block routine merges.
-6. **Weekly releases only in maintenance mode.** Active development gets
+6. **Split patch/minor from major**, so a breaking major cannot block routine merges.
+7. **Weekly releases only in maintenance mode.** Active development gets
    `workflow_dispatch` alone. The unified `release.yml` is one run: gate on
    all of CI, then semver → bump → commit + tag → push → build → publish.
    A `ref` input rebuilds an old tag; a `dry-run` checkbox previews the run.
-7. **Cheapest single-core runner for orchestration** (`ubuntu-slim` on GitHub, the
+8. **Cheapest single-core runner for orchestration** (`ubuntu-slim` on GitHub, the
    owner's self-hosted label on Forgejo). Full runners only for `just check` and
    artifact builds.
-8. **Rebase-only, linear history.** No squash, no merge commits.
-9. **Concurrency locks:** `release-main` (`cancel-in-progress: false`) for
+9. **Rebase-only, linear history.** No squash, no merge commits.
+10. **Concurrency locks:** `release-main` (`cancel-in-progress: false`) for
    releases; dynamic per-branch `${{ github.workflow }}-${{ github.ref }}`
    (`cancel-in-progress: true`) for CI to safely cancel stale runs.
-10. **Verify action runtimes match the runner.** `using: node24` actions fail on
+11. **Verify action runtimes match the runner.** `using: node24` actions fail on
     lean images like Alpine. Prefer shell-only composites on self-hosted runners.
-11. **The release pushes straight to `main`; branch protection keeps safety
+12. **The release pushes straight to `main`; branch protection keeps safety
     rails only.** No required status checks (the release's own gate job calls
     all of CI, which is stronger than any single PR rule). Protection keeps:
     no force-push, no deletion, linear history. Push the bump commit first,
     then the tag — if the tag push fails, the next run recovers by tagging
     the existing commit. Never tag a commit whose manifest still carries the
     old version. Never ship a version that is not ahead of the latest tag.
-12. **Self-owned action refs get `nosemgrep`, third-party refs get SHA pins.**
+13. **Self-owned action refs get `nosemgrep`, third-party refs get SHA pins.**
     The `github-actions-mutable-action-tag` rule fires on every `uses: …@<tag>`;
     on refs the owner controls on both ends (own Forgejo actions repo, own
     GitHub org) a tag can only be repointed by the owner, so suppress with a
     bare `# nosemgrep` comment (verified: the `rule-id` form is silently ignored
     on YAML `uses:` lines by current Semgrep). Third-party refs keep the rule
     live — pin them to full SHAs instead.
-13. **No `${{ }}` interpolation inside `run:` blocks.** Move every workflow
+14. **No `${{ }}` interpolation inside `run:` blocks.** Move every workflow
    context value (`inputs.*`, `steps.*.outputs.*`, `needs.*.outputs.*`,
    `secrets.*`) into the step's `env:` block and reference `$VAR` in shell.
    `if:`/`with:`/`env:` interpolation is fine — the injection sink is the shell.
    Verified clean by scanning `run: |` blocks for `${{` before committing.
-14. **Every `run:` step that uses `$VAR` declares `shell: bash`.** GitHub
+15. **Every `run:` step that uses `$VAR` declares `shell: bash`.** GitHub
    defaults `run:` to PowerShell/cmd on `windows-latest`, where `$VAR` expands
    to empty (verified: artefact shipped `error: target was empty` on the
    Windows matrix leg). `${{ }}` interpolation used to mask this because

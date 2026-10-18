@@ -36,8 +36,12 @@ agreed choices and any deviations in the PR description or conversation.
    Linux x64 + Windows x64 + macOS arm64; notes-only otherwise. Confirm formats
    and publish targets (GitHub Releases, a registry, a Homebrew tap, a CDN). On
    a Forgejo+twin project, artifacts publish from the twin.
-6. **CI gate** — one `just check` gate, no build matrix. *Default:* add only the
-   runtimes/services the check needs.
+6. **CI gate** — one `just check` gate, no build matrix, plus the shared
+   [scan workflow](https://github.com/Delnegend/actions) (Gitleaks, actionlint,
+   Semgrep, Trivy, OSV-Scanner) called as a job. Take the scans from there
+   rather than writing `docker run` jobs per project: they drift, and a shared
+   gate is the only thing that keeps ten projects in agreement. *Default:* add
+   only the runtimes/services the check needs.
 7. **Dependencies** — daily at 02:00 for code dependencies (via native package
    managers with native cooldown). On GitHub-hosted repos, Dependabot runs
    weekly for `package-ecosystem: "github-actions"` only.

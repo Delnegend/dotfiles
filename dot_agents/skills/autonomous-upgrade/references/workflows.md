@@ -187,19 +187,38 @@ jobs:
       # Insert any language setup needed by `just check` here (e.g. setup-go, setup-node)
       - name: Run verification
         run: just check
+
+  scan:
+    name: Scan
+    uses: Delnegend/actions/.github/workflows/scan.yml@<pin-sha> # v1
+    permissions:
+      contents: read
 ```
 
-The job `name:` must match the branch protection context exactly.
+Replace `<pin-sha>` with the full commit SHA that the scan workflow's `v1`
+resolves to, so the pin is immutable like every other action here.
+
+The scans come from the shared workflow rather than inline `docker run` jobs:
+Gitleaks, actionlint, Semgrep, Trivy and OSV-Scanner, each its own job so they
+run in parallel. Hand-rolling them per project is what let them drift apart.
+Two inputs exist for the cases that genuinely differ — `osv-config` for a
+project that quarantines an advisory, `trivy-scanners` when a project's Trivy
+scope is not `vuln,misconfig`. Drop OSV from `scans` when the project has no
+lockfile.
+
+The job `name:` on `check` must match the branch protection context exactly.
 
 ### B2. CI gate for Forgejo+twin repos (checks + security scans in parallel)
 
 Single-host repos use template B as-is. When the repo has a GitHub twin, the
 CI workflow (authored in the source repo's `.github/workflows/`, synced into
-the twin by the dispatch action) runs `just check` **plus the four security
-scans as parallel jobs** — each fetches the source from Forgejo at
-`inputs.ref` first. Security scanning is GitHub-runners-only: the scan jobs
-need Docker images and registry egress that self-hosted Forgejo runners
-typically lack.
+the twin by the dispatch action) runs `just check` **plus the security scans in
+parallel**. Security scanning is GitHub-runners-only: the scans need Docker
+images and registry egress that self-hosted Forgejo runners typically lack.
+
+The `check` job first fetches the source from Forgejo at `inputs.ref`. The
+scan jobs need no such step — they read the twin's own checkout, so template B's
+`scan` job is copied across unchanged:
 
 ```yaml
 jobs:
@@ -211,13 +230,7 @@ jobs:
       - name: Run checks
         run: just check
 
-  secret-scan: # Gitleaks — full history (fetch-depth: 0)
-  sast-scan: # Semgrep OSS --config=auto --error
-  trivy-scan: # Trivy fs, HIGH+CRITICAL only, --exit-code 1
-  osv-scan: # OSV-Scanner --recursive
-  # Each scan job: fetch source from Forgejo at inputs.ref, then one docker run.
-  # Self-owned action refs carry `# nosemgrep`; third-party refs are SHA-pinned.
-  # No ${{ }} interpolation inside run: blocks (env: first).
+  scan: # copied verbatim from template B
 ```
 
 ## C. Auto-merge
