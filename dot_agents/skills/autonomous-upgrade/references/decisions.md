@@ -24,6 +24,14 @@ agreed choices and any deviations in the PR description or conversation.
    updates the package manager's config file via the package-agnostic
    `just bump <version>` recipe, commits and tags on `main` directly.
    *Alternatives:* `release-plz`, `release-please`.
+   **Before the first release run, the repo needs one existing `v*` tag.** Draft
+   it at the root commit so the first release covers the whole history:
+   `git tag -a v0.0.0 "$(git rev-list --max-parents=0 HEAD)"`. Anchor it at the
+   root, not at `HEAD` — at `HEAD` the tag and branch point at the same commit,
+   so the compare range is empty and that run releases nothing.
+   `fallbackTag: v0.0.0` does not cover this gap: it supplies only a *name*, and
+   the action then asks the API to compare `v0.0.0...main`, which 404s while no
+   such tag exists on the server. Without a tag the run fails at the compare call.
 5. **Release artifacts** — build only what the project ships: for CLIs, commonly
    Linux x64 + Windows x64 + macOS arm64; notes-only otherwise. Confirm formats
    and publish targets (GitHub Releases, a registry, a Homebrew tap, a CDN). On
