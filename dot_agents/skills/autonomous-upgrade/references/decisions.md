@@ -32,10 +32,11 @@ agreed choices and any deviations in the PR description or conversation.
    `fallbackTag: v0.0.0` does not cover this gap: it supplies only a *name*, and
    the action then asks the API to compare `v0.0.0...main`, which 404s while no
    such tag exists on the server. Without a tag the run fails at the compare call.
-5. **Release artifacts** — build only what the project ships: for CLIs, commonly
-   Linux x64 + Windows x64 + macOS arm64; notes-only otherwise. Confirm formats
-   and publish targets (GitHub Releases, a registry, a Homebrew tap, a CDN). On
-   a Forgejo+twin project, artifacts publish from the twin.
+5. **Release artifacts** — prebuilt binaries for linux x64 only; every other
+   platform builds from source through the Homebrew tap. Confirm formats and
+   publish targets (GitHub Releases, the tap). Additional prebuilts need an
+   explicit recorded exception. On a Forgejo+twin project, artifacts publish
+   from the twin.
 6. **CI gate** — one `just check` gate, no build matrix, plus the shared
    [scan workflow](https://github.com/Delnegend/actions) (Gitleaks, actionlint,
    Semgrep, Trivy, OSV-Scanner) called as a job. Take the scans from there
@@ -99,3 +100,8 @@ milestones are checked `[x]` and feature work freezes, the project flips to
   CI runs use dynamic `group: ${{ github.workflow }}-${{ github.ref }}` with
   `cancel-in-progress: true` to cancel stale pushes on the same branch without
   interrupting runs on other branches or PRs.
+- **Rule 15 (prebuilts).** One prebuilt per release keeps the build matrix and
+  the release page small; Homebrew compiles every other platform from the
+  tagged source with the same toolchain CI gates. Exceptions exist only where
+  no source path reaches the user (a Windows-only executable) or the formula
+  already promises the asset.

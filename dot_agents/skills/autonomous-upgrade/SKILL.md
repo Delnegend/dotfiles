@@ -125,6 +125,11 @@ These are not negotiable. Rationale is in `references/decisions.md`.
    GitHub expands it pre-execution on every shell — rule 13 removes the mask,
    so the shell must be explicit. Single-platform Linux repos are unaffected
    but declare it anyway for copy-paste safety.
+15. **Homebrew is the install method; prebuilts only for linux x64.** Release
+    matrices build a prebuilt binary for linux x64 and nothing else; every
+    other platform installs by building from source through the Homebrew tap.
+    A project ships additional prebuilts only with an explicit recorded
+    exception naming what and why.
 
 ## Project contract
 
