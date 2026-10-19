@@ -305,7 +305,7 @@ _dummy_gnome res="1920x1200":
 toggle-hdmi-res: && (_remotes "start")
 	#!/bin/bash
 	just _remotes stop
-	CURRENT=$(just _kscreen --outputs | grep -oP '\d+x\d+(?=@\d+\.\d+\*)' | tail -1)
+	CURRENT=$(just _kscreen --outputs | grep -oP '\d+x\d+(?=@\d+\.\d+\*)' | head -1)
 	if [[ "$CURRENT" == "1920x1200" ]]; then
 		just _kscreen output.HDMI-A-1.mode.1920x1080@60
 	else

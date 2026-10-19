@@ -1,5 +1,6 @@
 {
   "serverMode": "self-hosted",
   "apiUrl": "https://hindsight.delnegend.com",
-  "bankId": "coding"
+  "bankId": "coding",
+  "codebaseSurvey": false
 }

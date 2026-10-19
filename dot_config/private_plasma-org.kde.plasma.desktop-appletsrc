@@ -52,8 +52,10 @@ popupHeight=451
 popupWidth=560
 
 [Containments][32][Applets][23][Configuration][Appearance]
+customDateFormat=ddd d MMM |
+dateDisplayFormat=BesideTime
+dateFormat=custom
 fontWeight=400
-showDate=false
 use24hFormat=0
 
 [Containments][32][Applets][23][Configuration][ConfigDialog]
@@ -124,6 +126,7 @@ immutability=1
 plugin=org.kde.plasma.volume
 
 [Containments][32][Applets][33][Applets][46][Configuration][General]
+currentTab=streams
 migrated=true
 
 [Containments][32][Applets][33][Applets][47]
