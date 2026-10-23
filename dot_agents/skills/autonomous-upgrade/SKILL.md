@@ -73,73 +73,75 @@ These are not negotiable. Rationale is in `references/decisions.md`.
    the twin, never on self-hosted Forgejo (no Docker images, no registry
    egress, no runner minutes there). Building artifacts is always the release
    workflow's job.
-3. **Scans come from [Delnegend/actions](https://github.com/Delnegend/actions),
-   never hand-rolled.** Call `.github/workflows/scan.yml` pinned by SHA as a
-   job. Do not write `docker run` scan jobs per project: they drift, and a
-   shared gate is the only thing that keeps ten projects in agreement.
-4. **14-day cooldown, enforced by the package manager itself.** Never re-implement
+3. **Prefer shared actions over caller knobs.** Build, packaging, and publishing
+   live in [Delnegend/actions](https://github.com/Delnegend/actions) pinned by SHA:
+   `resolve-release` decides and performs the release, `package-artifact` names
+   and uploads one archive (`<name>-<version>-<target>.<ext>`, always `dist/`),
+   `publish-release` owns the release body, `docker-build-push` owns the image
+   build. A per-repo `with:` input needs a recorded reason; the second caller
+   needing the same input means it belongs in the shared default instead.
+   Same for scans (rule 4): one shared configuration, `exclude` is the only knob.
+4. **Scans come from the shared bundle, never hand-rolled.** Call
+   `.github/workflows/scan.yml` pinned by SHA as a job. Do not write `docker run`
+   scan jobs per project: they drift, and a shared gate is the only thing that
+   keeps ten projects in agreement.
+5. **14-day cooldown, enforced by the package manager itself.** Never re-implement
    the age filter as a shell script — the tool's own gate also covers transitive
    dependencies. If an ecosystem has no native gate, that project does not get
    autonomous bumps.
-5. **Dependabot for GitHub Actions only.** On GitHub-hosted repos, Dependabot is
+6. **Dependabot for GitHub Actions only.** On GitHub-hosted repos, Dependabot is
    used exclusively for `package-ecosystem: "github-actions"` to keep workflow
    actions up to date, and nothing else. Code dependencies are upgraded through
    native package managers (`bun update`, `cargo update`, `ncu`).
-6. **Split patch/minor from major**, so a breaking major cannot block routine merges.
-7. **Weekly releases only in maintenance mode.** Active development gets
+7. **Split patch/minor from major**, so a breaking major cannot block routine merges.
+8. **Weekly releases only in maintenance mode.** Active development gets
    `workflow_dispatch` alone. The unified `release.yml` is one run: gate on
    all of CI, then semver → bump → commit + tag → push → build → publish.
    A `ref` input rebuilds an old tag; a `dry-run` checkbox previews the run.
-8. **Cheapest single-core runner for orchestration** (`ubuntu-slim` on GitHub, the
+9. **Cheapest single-core runner for orchestration** (`ubuntu-slim` on GitHub, the
    owner's self-hosted label on Forgejo). Full runners only for `just check` and
    artifact builds.
-9. **Rebase-only, linear history.** No squash, no merge commits.
-10. **Concurrency locks:** `release-main` (`cancel-in-progress: false`) for
+10. **Rebase-only, linear history.** No squash, no merge commits.
+11. **Concurrency locks:** `release-main` (`cancel-in-progress: false`) for
    releases; dynamic per-branch `${{ github.workflow }}-${{ github.ref }}`
    (`cancel-in-progress: true`) for CI to safely cancel stale runs.
-11. **Verify action runtimes match the runner.** `using: node24` actions fail on
-    lean images like Alpine. Prefer shell-only composites on self-hosted runners.
-12. **The release pushes straight to `main`; branch protection keeps safety
-    rails only.** No required status checks (the release's own gate job calls
-    all of CI, which is stronger than any single PR rule). Protection keeps:
-    no force-push, no deletion, linear history. Push the bump commit first,
-    then the tag — if the tag push fails, the next run recovers by tagging
-    the existing commit. Never tag a commit whose manifest still carries the
-    old version. Never ship a version that is not ahead of the latest tag.
-13. **Self-owned action refs get `nosemgrep`, third-party refs get SHA pins.**
-    The `github-actions-mutable-action-tag` rule fires on every `uses: …@<tag>`;
-    on refs the owner controls on both ends (own Forgejo actions repo, own
-    GitHub org) a tag can only be repointed by the owner, so suppress with a
-    bare `# nosemgrep` comment (verified: the `rule-id` form is silently ignored
-    on YAML `uses:` lines by current Semgrep). Third-party refs keep the rule
-    live — pin them to full SHAs instead.
-14. **No `${{ }}` interpolation inside `run:` blocks.** Move every workflow
+12. **Verify action runtimes match the runner.** `using: node24` actions fail on
+   lean images like Alpine. Prefer shell-only composites on self-hosted runners.
+13. **The release pushes straight to `main`; branch protection keeps safety
+   rails only.** No required status checks (the release's own gate job calls
+   all of CI, which is stronger than any single PR rule). Protection keeps:
+   no force-push, no deletion, linear history. Push the bump commit first,
+   then the tag — if the tag push fails, the next run recovers by tagging
+   the existing commit. Never tag a commit whose manifest still carries the
+   old version. Never ship a version that is not ahead of the latest tag.
+14. **Self-owned action refs get `nosemgrep`, third-party refs get SHA pins.**
+   The `github-actions-mutable-action-tag` rule fires on every `uses: …@<tag>`;
+   on refs the owner controls on both ends (own Forgejo actions repo, own
+   GitHub org) a tag can only be repointed by the owner, so suppress with a
+   bare `# nosemgrep` comment (verified: the `rule-id` form is silently ignored
+   on YAML `uses:` lines by current Semgrep). Third-party refs keep the rule
+   live — pin them to full SHAs instead.
+15. **No `${{ }}` interpolation inside `run:` blocks.** Move every workflow
    context value (`inputs.*`, `steps.*.outputs.*`, `needs.*.outputs.*`,
    `secrets.*`) into the step's `env:` block and reference `$VAR` in shell.
    `if:`/`with:`/`env:` interpolation is fine — the injection sink is the shell.
    Verified clean by scanning `run: |` blocks for `${{` before committing.
-15. **Every `run:` step that uses `$VAR` declares `shell: bash`.** GitHub
+16. **Every `run:` step that uses `$VAR` declares `shell: bash`.** GitHub
    defaults `run:` to PowerShell/cmd on `windows-latest`, where `$VAR` expands
    to empty (verified: artefact shipped `error: target was empty` on the
    Windows matrix leg). `${{ }}` interpolation used to mask this because
    GitHub expands it pre-execution on every shell — rule 13 removes the mask,
    so the shell must be explicit. Single-platform Linux repos are unaffected
    but declare it anyway for copy-paste safety.
-15. **Homebrew is the install method; prebuilts only for linux x64.** Release
-    matrices build a prebuilt binary for linux x64 and nothing else; every
-    other platform installs by building from source through the Homebrew tap.
-    A project ships additional prebuilts only with an explicit recorded
-    exception naming what and why.
 
 ## Project contract
 
 A repo qualifies only if all of these hold:
 
-1. A root `justfile` with:
-   - `check`: executes formatting, linting, tests, and static analysis.
-   - `bump version`: updates the package manager's manifest (package-agnostic, see `references/ecosystems.md`).
+1. A hidden root `.justfile` with:
+   - `check`: the single CI gate. Assert-only — format check, lint, vet, tests.
+     Never rewrites the tree (`cargo fmt --check` not `cargo fmt`, `gofmt -l`
+     not `go fmt`); a check that dirties the checkout is a bug.
+   - `version get` / `version bump <ver>`: the release action's version contract.
+     `get` prints `X.Y.Z`; `bump` rewrites the manifests, no commit, no tag.
 2. Branch protection: safety rails only — no force-push, no deletion, linear history, and no required status checks (the release gates on all of CI itself).
-3. The package manager has a native cooldown gate, configured to 14 days
-   (see `references/ecosystems.md`).
-4. The owner has stated the project mode.
-5. Release artifacts are decided and implemented; CI stays build-free.
