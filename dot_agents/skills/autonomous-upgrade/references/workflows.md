@@ -43,8 +43,6 @@ jobs:
       #   npm   → actions/setup-node@v4, then
       #            `npx npm-check-updates -u -t minor --cooldown 14d && npm install`
       - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
 
       - name: Upgrade (cooldown enforced by bunfig.toml)
         run: bun update
@@ -201,10 +199,12 @@ resolves to, so the pin is immutable like every other action here.
 The scans come from the shared workflow rather than inline `docker run` jobs:
 Gitleaks, actionlint, Semgrep, Trivy and OSV-Scanner, each its own job so they
 run in parallel. Hand-rolling them per project is what let them drift apart.
-Two inputs exist for the cases that genuinely differ — `osv-config` for a
-project that quarantines an advisory, `trivy-scanners` when a project's Trivy
-scope is not `vuln,misconfig`. Drop OSV from `scans` when the project has no
-lockfile.
+Every scan runs with one shared configuration: Trivy always uses the full
+`vuln,misconfig,secret` set, and a root `osv-scanner.toml` is picked up
+automatically as the OSV quarantine — no inputs needed. The only input is
+`exclude`, a space-separated opt-out (e.g. `exclude: osv`) for the rare case
+a scan genuinely does not apply. Repos without a lockfile need nothing: the
+OSV job detects that and skips with a notice.
 
 The job `name:` on `check` must match the branch protection context exactly.
 
@@ -372,11 +372,6 @@ jobs:
           ref: ${{ inputs.ref }}
           dry-run: ${{ inputs.dry-run }}
           gate-sha: ${{ github.sha }}
-          # A project with no version file: the version lives in the git tag
-          # alone, so the action tags HEAD and commits nothing. Omit both for
-          # a project with a manifest, where it bumps, commits and pushes.
-          manifest-path: Cargo.toml
-          bump-command: just bump
           semver-bump: ${{ steps.semver.outputs.bump }}
           semver-current: ${{ steps.semver.outputs.current }}
           semver-next: ${{ steps.semver.outputs.next }}
@@ -394,41 +389,50 @@ jobs:
           fetch-depth: 0
 
       # -----------------------------------------------------------------------
-      # Project-specific build step (binaries, packages, container images)
-      # Produces files in dist/ (or your artifact directory)
+      # Project-specific build step (binaries, packages, container images).
+      # Binaries go through package-artifact (one archive per target, named
+      # `<name>-<version>-<target>.<ext>`, always into `dist/`); container
+      # images go through docker-build-push (linux/amd64, registry cache).
       # -----------------------------------------------------------------------
 
-      - name: Upload build artifacts (always kept in Actions run, including SHA test-builds)
-        uses: actions/upload-artifact@v4
+      - name: Package artifact
+        uses: Delnegend/actions/package-artifact@<pin-sha> # v1
         with:
-          name: build-artifacts-${{ needs.prepare.outputs.ref }}
-          path: dist/
-          if-no-files-found: ignore
+          name: <project>
+          version: ${{ needs.prepare.outputs.version }}
+          target: <target-triple>
+          source: <path-to-binary>
 
-      - name: Publish Consolidated Release
-        # SHA test-builds set publish=false: artifacts upload above, nothing ships.
-        # Container repos also gate login + push: push ${{ publish == 'true' }}, load ${{ publish != 'true' }}.
-        if: needs.prepare.outputs.publish == 'true'
-        uses: softprops/action-gh-release@v3
+  publish:
+    name: Publish Consolidated Release
+    needs: [prepare, build]
+    if: needs.prepare.outputs.skip != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish release
+        uses: Delnegend/actions/publish-release@<pin-sha> # v1
         with:
-          tag_name: ${{ needs.prepare.outputs.ref }}
-          generate_release_notes: true
-          files: dist/*
+          ref: ${{ needs.prepare.outputs.ref }}
+          publish: ${{ needs.prepare.outputs.publish }}
+          # Container repos add image + version so the body is a pull snippet:
+          #   image: ghcr.io/<owner>/<repo>
+          #   version: ${{ needs.prepare.outputs.version }}
 ```
 
 ### Artifact build (project-specific)
 
 Insert a build step or matrix in the `build` job, producing exactly what the
 project ships — native binaries (commonly Linux x64, Windows x64, macOS arm64),
-a package, or nothing but notes. Pass `${{ needs.prepare.outputs.version }}` or
-`${{ needs.prepare.outputs.ref }}` to the build command.
+a container image, or nothing but notes. Pass `${{ needs.prepare.outputs.version }}`
+or `${{ needs.prepare.outputs.ref }}` to the build command.
 
-`actions/upload-artifact@v4` runs on every build that is not skipped (skipped
-only when semver finds nothing releasable, or on a dry run):
-- Every build uploads to the Actions run AND publishes to GitHub Releases.
+`package-artifact` uploads each archive to the Actions run under its release
+name; `publish-release` downloads them and publishes the GitHub release. Both
+run on every build that is not skipped (skipped only when semver finds nothing
+releasable, or on a dry run). The release body is templated in
+`publish-release`, never hand-written in the caller — install instructions
+belong in the repo's docs.
 
 On a Forgejo+twin project, the Forgejo workflow's `build` job dispatches the
 twin's release workflow with `ref: ${{ needs.prepare.outputs.ref }}` rather
 than publishing locally.
-
-The template above is notes-only, for a project with no build artifacts.
