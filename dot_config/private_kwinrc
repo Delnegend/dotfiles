@@ -12,6 +12,12 @@ Active=true
 Mode=Constant
 NightTemperature=4300
 
+[TabBox]
+DelayTime=0
+
+[TabBoxAlternative]
+DelayTime=0
+
 [Tiling][06ea6da1-ca59-4c2e-8a7b-0138ec3d9946][5a204c5a-298c-4deb-a52a-49ebb5efee78]
 padding=4
 tiles={"layoutDirection":"horizontal","tiles":[{"width":0.25},{"width":0.5},{"width":0.25}]}

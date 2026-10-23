@@ -126,7 +126,6 @@ immutability=1
 plugin=org.kde.plasma.volume
 
 [Containments][32][Applets][33][Applets][46][Configuration][General]
-currentTab=streams
 migrated=true
 
 [Containments][32][Applets][33][Applets][47]
@@ -176,7 +175,7 @@ plugin=org.kde.plasma.systemmonitor.cpucore
 
 [Containments][32][Applets][53][Configuration]
 CurrentPreset=org.kde.plasma.systemmonitor
-popupHeight=856
+popupHeight=676
 popupWidth=591
 
 [Containments][32][Applets][53][Configuration][Appearance]
