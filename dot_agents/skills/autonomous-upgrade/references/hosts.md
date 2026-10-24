@@ -231,12 +231,10 @@ without touching the twin's git state. Anything that would change the twin's
 files, branches, or tags is done on Forgejo and synced over — never pushed
 directly.
 
-> Live reference: `github.com/Vessel9457/emsui-agent` — a working twin.
-> Its `.github/workflows/` (authored in the Forgejo source's `.github/`,
-> synced by the dispatch step) shows the scan-job layout, `fj_repo` wiring,
-> and `nosemgrep`/SHA-pin conventions in production. Read it with `gh api
-> repos/Vessel9457/emsui-agent/contents/.github/workflows --jq` or a shallow
-> clone when grounding a new twin setup.
+> Reference: `Delnegend/actions/twin-checkout` handles Forgejo source checkouts on the twin.
+> Workflows on the twin are authored in the Forgejo source's `.github/workflows/` and synced
+> automatically by `dispatch-github` on every Forgejo run. All action refs on the twin are
+> pinned by full commit SHA with `# v1`.
 
 **Name no specific account in generated output.** The GitHub account hosting a twin is the owner's
 private arrangement and must never appear in committed workflow files, generated

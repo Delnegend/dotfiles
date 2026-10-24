@@ -116,13 +116,11 @@ These are not negotiable. Rationale is in `references/decisions.md`.
    then the tag — if the tag push fails, the next run recovers by tagging
    the existing commit. Never tag a commit whose manifest still carries the
    old version. Never ship a version that is not ahead of the latest tag.
-14. **Self-owned action refs get `nosemgrep`, third-party refs get SHA pins.**
-   The `github-actions-mutable-action-tag` rule fires on every `uses: …@<tag>`;
-   on refs the owner controls on both ends (own Forgejo actions repo, own
-   GitHub org) a tag can only be repointed by the owner, so suppress with a
-   bare `# nosemgrep` comment (verified: the `rule-id` form is silently ignored
-   on YAML `uses:` lines by current Semgrep). Third-party refs keep the rule
-   live — pin them to full SHAs instead.
+14. **All GitHub Actions refs are pinned by immutable SHA (`@<sha> # v1`).**
+    Never use mutable tags on GitHub; SHA pins require no `# nosemgrep` comments.
+    On self-hosted Forgejo runners where internal actions use version tags (e.g.
+    `https://git.delnegend.com/Delnegend/actions/...@v6`), suppress Semgrep's
+    mutable-tag rule with a trailing `# nosemgrep`.
 15. **No `${{ }}` interpolation inside `run:` blocks.** Move every workflow
    context value (`inputs.*`, `steps.*.outputs.*`, `needs.*.outputs.*`,
    `secrets.*`) into the step's `env:` block and reference `$VAR` in shell.

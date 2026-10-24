@@ -3,14 +3,13 @@
 Four workflow templates plus Dependabot for GitHub Actions. Path and runner label
 follow the host (see `hosts.md`); the substance does not change.
 
-## A. Dependency upgrade job
+## A. Dependency upgrade job (`deps.yml`)
 
-Runs daily, opens one PR with the upgraded manifest and lockfile. The cooldown
-has already filtered out too-new versions, so the PR only carries versions that
-passed quarantine. **No-op when nothing changed** — the common case.
+Runs daily via the shared `reusable-deps-update.yml` workflow, opening one PR
+with the upgraded manifest and lockfile behind the 14-day publish quarantine.
+Toolchains are opt-in (`cargo`, `bun`, `bun-dir`).
 
-Substitute the three Bun-specific lines for your ecosystem (see
-`ecosystems.md`).
+### GitHub Actions (reusable workflow)
 
 ```yaml
 name: Dependency updates
@@ -30,88 +29,31 @@ concurrency:
 
 jobs:
   update:
-    name: Upgrade dependencies
-    runs-on: ubuntu-slim
-    steps:
-      - uses: actions/checkout@v7
-
-      # Bun example. Swap the setup/update steps per ecosystem:
-      #   Cargo → dtolnay/rust-toolchain@stable, the enforcement check below
-      #            (uncomment), then `cargo update` gated on its output with
-      #            `if: steps.cargo-cooldown.outputs.enforced == 'true'`
-      #            (reads .cargo/config.toml)
-      #   npm   → actions/setup-node@v4, then
-      #            `npx npm-check-updates -u -t minor --cooldown 14d && npm install`
-      - uses: oven-sh/setup-bun@v2
-
-      - name: Upgrade (cooldown enforced by bunfig.toml)
-        run: bun update
-
-      # Cargo repos only: uncomment. `registry.global-min-publish-age` is
-      # stable from Cargo 1.100, and an older toolchain ignores the key
-      # silently. Upgrading anyway would pull versions with no quarantine at
-      # all, so skip instead of shipping that.
-      # - name: Check that Cargo can enforce the cooldown
-      #   id: cargo-cooldown
-      #   shell: bash
-      #   run: |
-      #     set -euo pipefail
-      #     version="$(cargo --version | awk '{print $2}')"
-      #     major="${version%%.*}"
-      #     minor="${version#*.}"; minor="${minor%%.*}"
-      #     if [ "$major" -eq 1 ] && [ "$minor" -lt 100 ]; then
-      #       echo "enforced=false" >> "$GITHUB_OUTPUT"
-      #       echo "::warning::cargo ${version} ignores registry.global-min-publish-age (stable from 1.100) — no Cargo upgrade was made, so nothing lands without the 14-day quarantine"
-      #     else
-      #       echo "enforced=true" >> "$GITHUB_OUTPUT"
-      #     fi
-
-      - name: Detect whether anything changed
-        id: diff
-        shell: bash
-        run: |
-          if git diff --quiet; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Ensure the dependencies label exists
-        if: steps.diff.outputs.changed == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh label create dependencies --force --color 0366d6 --description "Dependency updates"
-
-      - name: Open upgrade PR
-        if: steps.diff.outputs.changed == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          git config user.name  "github-actions[bot]"
-          git config user.email "actions@users.noreply.github.com"
-          git checkout -B deps/automatic
-          git add -u
-          git commit -m "chore(deps): upgrade dependencies"
-          git push --force origin deps/automatic
-          # Update-or-create: the push above already updated the open PR when
-          # one exists, so only create when there is nothing to update.
-          # (The auto-merge workflow keys on the `dependencies` label.)
-          if gh pr view deps/automatic --json number >/dev/null 2>&1; then
-            echo "the push updated the existing upgrade PR"
-          else
-            gh pr create --base main --head deps/automatic \
-              --title "chore(deps): upgrade dependencies" \
-              --label dependencies \
-              --body "Automated daily upgrade. Versions published less than 14 days ago were filtered out by the package manager."
-          fi
+    uses: Delnegend/actions/.github/workflows/reusable-deps-update.yml@<pin-sha> # v1
+    with:
+      cargo: true # opt in: cargo, bun, bun-dir
 ```
 
-**Forgejo:** use native **AGit** (`refs/for/main`). Forgejo opens or updates
-the Pull Request directly over Git transport — **zero CLI tools (`gh`/`fj`)
-and zero extra tokens needed**:
+### Forgejo (Native AGit)
+
+On native Forgejo instances, use **AGit** (`refs/for/main`) to open or update the
+PR directly over Git transport — zero extra CLI tools (`gh`/`fj`) and zero extra
+tokens needed:
 
 ```yaml
+name: Dependency updates
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: alpine
+    steps:
+      - uses: actions/checkout@v7
+      # ... run package manager update with cooldown ...
       - name: Open upgrade PR (Forgejo AGit)
         if: steps.diff.outputs.changed == 'true'
         run: |
@@ -121,7 +63,6 @@ and zero extra tokens needed**:
           git add -u
           git commit -m "chore(deps): upgrade dependencies" \
             -m "Automated daily upgrade. Versions published less than 14 days ago were filtered out by the package manager."
-          # AGit: pushes to virtual refs/for/main; Forgejo creates or updates the PR automatically
           git push origin HEAD:refs/for/main \
             -o topic="deps/automatic" \
             -o force-push=true
@@ -211,14 +152,9 @@ The job `name:` on `check` must match the branch protection context exactly.
 ### B2. CI gate for Forgejo+twin repos (checks + security scans in parallel)
 
 Single-host repos use template B as-is. When the repo has a GitHub twin, the
-CI workflow (authored in the source repo's `.github/workflows/`, synced into
-the twin by the dispatch action) runs `just check` **plus the security scans in
-parallel**. Security scanning is GitHub-runners-only: the scans need Docker
-images and registry egress that self-hosted Forgejo runners typically lack.
-
-The `check` job first fetches the source from Forgejo at `inputs.ref`. The
-scan jobs need no such step — they read the twin's own checkout, so template B's
-`scan` job is copied across unchanged:
+source is private on Forgejo while the twin on GitHub holds no source code.
+The `check` job fetches source using `Delnegend/actions/twin-checkout`, and
+the `scan` job calls the shared `scan.yml` bundle with `forgejo: true`:
 
 ```yaml
 jobs:
@@ -226,17 +162,32 @@ jobs:
     name: Check (just check)
     runs-on: ubuntu-latest
     steps:
-      # ... fetch source, language setup ...
+      - name: Fetch source from Forgejo
+        uses: Delnegend/actions/twin-checkout@<pin-sha> # v1
+        with:
+          token: ${{ secrets.FORGEJO }}
+          ref: ${{ inputs.ref || 'main' }}
+
+      # ... language setup (e.g. rust-toolchain, setup-just) ...
+
       - name: Run checks
         run: just check
 
-  scan: # copied verbatim from template B
+  scan:
+    name: Scan
+    uses: Delnegend/actions/.github/workflows/scan.yml@<pin-sha> # v1
+    with:
+      ref: ${{ inputs.ref || 'main' }}
+      forgejo: true
+    secrets:
+      forgejo_token: ${{ secrets.FORGEJO }}
+    permissions:
+      contents: read
 ```
 
-## C. Auto-merge
+## C. Auto-merge (`auto-merge.yml`)
 
-Exits in <10 seconds; no polling. No `fetch-metadata` step — that was
-Dependabot-specific. The `dependencies` label is the signal.
+### GitHub Actions (reusable workflow)
 
 ```yaml
 name: Auto-merge dependencies
@@ -251,30 +202,17 @@ permissions:
 
 jobs:
   automerge:
-    if: contains(github.event.pull_request.labels.*.name, 'dependencies')
-    runs-on: ubuntu-slim
-    steps:
-      - name: Enable auto-merge and rebase
-        run: gh pr merge --auto --rebase "$PR_URL"
-        env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ github.token }}
+    uses: Delnegend/actions/.github/workflows/reusable-auto-merge.yml@<pin-sha> # v1
 ```
 
-**Forgejo:** `fj` has **no `--auto` flag** (see `hosts.md`), so
-`gh pr merge --auto --rebase` has no direct translation. Two options:
+### Forgejo
 
-- Set auto-merge in the Forgejo instance UI, then the workflow only needs to
-  label the PR `dependencies`.
-- Or gate explicitly in the job. `fj pr status --wait` blocks until all checks
-  finish, then merge:
+`fj` has **no `--auto` flag** (see `hosts.md`). Either enable auto-merge in the Forgejo UI, or gate with `fj pr status --wait`:
 
-  ```bash
-  fj pr status "$PR_NUM" -H "$FORGEJO_HOST" --wait
-  fj pr merge "$PR_NUM" -H "$FORGEJO_HOST" --method rebase --delete
-  ```
-
-Auto-merge only fires once `Check (just check)` is green on the PR head.
+```bash
+fj pr status "$PR_NUM" -H "$FORGEJO_HOST" --wait
+fj pr merge "$PR_NUM" -H "$FORGEJO_HOST" --method rebase --delete
+```
 
 ## D. Release / Build Artifacts (`release.yml`)
 
