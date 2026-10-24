@@ -1,21 +1,13 @@
 tap "delnegend/tap", "https://github.com/Delnegend/homebrew-tap", trusted: true
 tap "can1357/tap", trusted: true
 tap "valkyrie00/bbrew", "https://github.com/Valkyrie00/homebrew-bbrew"
-# GitHub command-line tool
 brew "gh"
-# Coding agent with the IDE wired in
 brew "can1357/tap/omp"
-# Cross-shell prompt for astronauts
 brew "starship"
-# Diagnostic, instructional, and debugging tool for the Linux kernel
 brew "strace"
-# Shell extension to navigate your filesystem faster
 brew "zoxide"
-# Alternative Discord RPC server
 brew "delnegend/tap/rsrpc"
-# Driver and daemon for Segotep Ice Moon / Digital series AIO CPU coolers
 brew "delnegend/tap/segotep-digital", trusted: true
-# Modern TUI for managing Homebrew packages and casks on macOS and Linux
 brew "valkyrie00/bbrew/bbrew", trusted: true
 flatpak "com.bitwarden.desktop"
 flatpak "com.brave.Browser"

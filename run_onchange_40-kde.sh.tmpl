@@ -1,8 +1,7 @@
 {{- if eq .chezmoi.hostname "bazzite" -}}
 #!/bin/bash
 set -e
-# run_onchange: KDE/Qt BreezeDark flatpak overrides for GNOME (ex-.justfile `kde` recipe).
-# kdeglobals + kde-dark.conf are chezmoi-managed files; this only applies flatpak config.
+# Apply BreezeDark flatpak overrides.
 # kdeglobals hash: {{ include "dot_config/private_kdeglobals" | sha256sum }}
 
 mkdir -p ~/.local/share/flatpak/overrides

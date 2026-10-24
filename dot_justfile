@@ -53,10 +53,9 @@ _update-static:
 		echo "libjxl is already up to date ($LIBJXL_CURR_VER)"
 	fi
 
-# Start or stop remote-access services (Sunshine only; KDE RDP commented out).
+# Remote-access services.
 _remotes state:
 	just sunshine {{state}}
-	# just rdp {{state}}
 
 # Run kscreen-doctor against the KDE Wayland session (works over SSH too).
 _kscreen *args:
@@ -85,43 +84,6 @@ sunshine state='start':
 		echo "Invalid state. Use 'start' or 'stop'."
 		exit 1
 	fi
-
-# Disabled 2026-10-16: KRDP rejects all logins on FreeRDP 3.32 (SAM regression); using Sunshine.
-# rdp state='start':
-# 	#!/usr/bin/bash
-#
-# 	START_KEYWORDS=(start restart enable 1 on)
-# 	STOP_KEYWORDS=(stop disable 0 off)
-#
-# 	systemctl --user daemon-reload
-# 	if [[ " ${START_KEYWORDS[*]} " == *" {{state}} "* ]]; then
-# 		systemctl --user start app-org.kde.krdpserver.service
-# 		echo "app-org.kde.krdpserver.service is now STARTED"
-# 	elif [[ " ${STOP_KEYWORDS[*]} " == *" {{state}} "* ]]; then
-# 		systemctl --user stop app-org.kde.krdpserver.service
-# 		echo "app-org.kde.krdpserver.service is now STOPPED"
-# 	else
-# 		echo "Invalid state. Use 'start' or 'stop'."
-# 		exit 1
-# 	fi
-
-# Disabled 2026-10-16: RDP unused; using Sunshine.
-# _rdp_gnome state='start':
-# 	#!/usr/bin/bash
-#
-# 	START_KEYWORDS=(start restart enable 1 on)
-# 	STOP_KEYWORDS=(stop disable 0 off)
-#
-# 	if [[ " ${START_KEYWORDS[*]} " == *" {{state}} "* ]]; then
-# 		sudo grdctl --system rdp enable 2>/dev/null
-# 		echo "GNOME Remote Login is now ENABLED"
-# 	elif [[ " ${STOP_KEYWORDS[*]} " == *" {{state}} "* ]]; then
-# 		sudo grdctl --system rdp disable 2>/dev/null
-# 		echo "GNOME Remote Login is now DISABLED"
-# 	else
-# 		echo "Invalid state. Use 'start' or 'stop'."
-# 		exit 1
-# 	fi
 
 _unlock_gnome:
 	#!/usr/bin/bash

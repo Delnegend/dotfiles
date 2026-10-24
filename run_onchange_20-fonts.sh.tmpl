@@ -1,8 +1,7 @@
 {{- if eq .chezmoi.hostname "bazzite" -}}
 #!/bin/bash
 set -e
-# run_onchange: Iosevka Nerd Font + Noto Color Emoji (ex-.justfile `font` recipe).
-# Idempotent: skips downloads when fonts already exist.
+# Install Iosevka Nerd Font and Noto Color Emoji if not present.
 # fonts.conf hash: {{ include "dot_config/fontconfig/fonts.conf" | sha256sum }}
 
 if [ ! -f ~/.local/share/fonts/IosevkaNerdFont-Regular.ttf ]; then
