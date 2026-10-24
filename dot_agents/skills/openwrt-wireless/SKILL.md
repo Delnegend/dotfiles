@@ -12,19 +12,11 @@ deviations below are the exact failure modes seen in the wild.
 ## R1. Security: WPA2-PSK ONLY. No WPA3. Never `sae-mixed`.
 
 - Use `encryption 'psk2'` (WPA2-AES, CCMP) on every SSID. End of story.
-- **NEVER use `sae` (WPA3-only) or `sae-mixed`** on networks with any
-  non-bleeding-edge client:
-  - `sae` excludes all WPA2-only devices: every iPhone/iPad pre-iOS 13,
-    older Intel Macs, most IoT.
-  - OpenWrt 25.12 default `sae` config advertises GCMP-256+CCMP and breaks
-    association for some clients (Pixel 10/S23/S26, iPhone "password wrong"
-    reports) — openwrt/openwrt#21485, #21486.
-  - `sae-mixed` is the worst of both: common mixed-mode failures
-    (forum 179159) and older macOS cannot join mixed-mode SSIDs at all.
-  - 802.11r (FT) does NOT work with WPA3-SAE — no FT-over-SAE in hostapd.
-    So WPA3 SSIDs are always slow-roaming AND broken-prone.
-- If a WPA3 SSID is unavoidable: use `sae+ccmp` (single cipher workaround for
-  the 25.12 bug) and accept that roaming is full-reauth, no 802.11r.
+- **NEVER use `sae` (WPA3-only) or `sae-mixed`** on mixed-client networks:
+  - `sae` excludes legacy and IoT devices (older iOS, Intel Macs, IoT).
+  - `sae-mixed` causes common mixed-mode association failures across mobile and macOS clients.
+  - 802.11r (FT) does not work with WPA3-SAE in hostapd (slow roaming only).
+- If WPA3 is mandatory: use `sae+ccmp` and accept full-reauthentication roaming (no 802.11r).
 
 ## R2. Roaming: 802.11k + 802.11v + 802.11r ALL mandatory, every AP
 
@@ -61,12 +53,7 @@ Consequences of skipping any one of these (observed):
 - **Absolute rule: never configure a `mode 'mesh'` interface on any radio
   that also has AP VAPs.** Requires a dedicated radio (3+ band device) or a
   dedicated mesh-only device.
-- Why (verified): mesh+AP on one radio breaks — openwrt#17865 (mt7621,
-  24.10: "Create mesh on 2.4GHz, it works. Create an AP on the SAME radio,
-  now NEITHER comes up"), openwrt#19394, openwrt#21494 (filogic 25.12: after
-  `wifi reload` the AP VAPs silently go off-air — `Channel: 0` in iwinfo,
-  endless `hostapd: handle_probe_req: send failed`, clients see the SSID but
-  can never associate).
+- Why: mesh and AP on the same radio causes AP VAPs to go off-air (`Channel: 0` in iwinfo, probe request failures).
 - Prefer a **wired backhaul** (all APs on one L2 subnet). DAWN inter-AP
   discovery uses uMDNS over L2 and does NOT need mesh.
 - If a mesh already exists on an AP radio: remove it. Cleanup = delete the
@@ -158,18 +145,3 @@ bring-up order). Do not re-run `wifi reload`.
 Windows shell gotcha: do not put pipes inside quoted SSH grep patterns
 (PowerShell→ssh mangles them); use `grep -e a -e b` or `grep -c pattern file`.
 
-## References (verification trail)
-
-- openwrt/openwrt#17865 — mesh+AP same radio: neither comes up (24.10, mt7621)
-- openwrt/openwrt#19394 — 802.11s 5GHz mesh + AP not coming up
-- openwrt/openwrt#21494 — 25.12 filogic `handle_probe_req: send failed`
-- openwrt/openwrt#21485, #21486 — 25.12 `sae`/`sae-mixed` association failures
-- openwrt/openwrt#14824 — iPhone zombie link on mediatek/filogic
-- OpenWrt forum 179159 — "sae-mixed doesn't work always, but psk2"
-- OpenWrt forum 243520 — macOS SAE fails with `sae_password_file`
-- OpenWrt forum 215685 — iOS deauthenticated due to inactivity
-- Apple Platform Deployment "Wi-Fi roaming support in Apple devices" —
-  k/r/v matrix, roam thresholds
-- DAWN CONFIGURE.md (berlin-open-wireless-lab/DAWN) — `duration`,
-  `set_hostapd_nr`, `disassoc_nr_length` semantics
-- DD-WRT forum 336532 — 802.11r does not work with WPA3-SAE
