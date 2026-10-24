@@ -15,9 +15,11 @@ Host model:
 | Self-hosted Forgejo, no twin | Forgejo origin | none | `.forgejo/workflows/` |
 | Self-hosted Forgejo + GitHub twin | Forgejo origin | Throwaway public mirror, free runners only | `.forgejo/` + `.github/` (both authored here; see `hosts.md`) |
 
-Never author in the twin: it is regenerated from the source `.github/` on
-every dispatch, and hand edits are overwritten. Scan suppressions and pins
-live in the source `.github/`.
+**FORBIDDEN: Never commit or push directly to the twin GitHub repository.** All
+updates to the twin `.github/` workflows are automatically synchronized from
+the source Forgejo repository by `git.delnegend.com/Delnegend/actions/dispatch-github`
+on each Forgejo run. All changes belong strictly in the Forgejo source repository
+(`.github/` and `.forgejo/`).
 
 ## Do these three things first, in order
 
@@ -133,6 +135,10 @@ These are not negotiable. Rationale is in `references/decisions.md`.
    GitHub expands it pre-execution on every shell — rule 13 removes the mask,
    so the shell must be explicit. Single-platform Linux repos are unaffected
    but declare it anyway for copy-paste safety.
+17. **Never commit or push directly to the twin repository.** All commits and pushes
+    go strictly to the Forgejo source repository. The twin mirror on GitHub is
+    automatically updated by `git.delnegend.com/Delnegend/actions/dispatch-github`.
+    Pushing to the twin directly will cause conflicts and will be overwritten.
 
 ## Project contract
 

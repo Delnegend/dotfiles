@@ -123,9 +123,11 @@ regenerated from it on every dispatch.
 2. **Create one fine-grained PAT** (Contents + Actions read/write), store it
    as `GH_ACTIONS` on the Forgejo repo. Never commit the PAT.
 
-Nothing else is ever done on GitHub: no file edits, no branches, no tags. A
-wrong-looking twin is fixed with a source-repo change plus a dispatch.
-
+**FORBIDDEN: Never commit or push directly to the twin GitHub repository.**
+Nothing else is ever done on GitHub: no file edits, no branches, no tags, and
+no manual pushes. `git.delnegend.com/Delnegend/actions/dispatch-github` automatically
+synchronizes `.github/` from the Forgejo source repo on every dispatch. A wrong-looking
+twin is fixed with a source-repo change plus a dispatch.
 - The source repo carries `.forgejo/workflows/` (triggers) and
   `.github/workflows/` (the twin's workflows, authored here; only `.github/`
   is synced, `LICENSE`/`README` are kept; repos without `.github/` skip).
