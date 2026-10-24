@@ -463,9 +463,51 @@ jobs:
 
 ### D3. Hybrid releases (binaries + container image)
 
-For projects shipping both release archives and a container image, package binaries with `package-artifact`, build the image with `docker-build-push`, then pass `container: true` and `download: "true"` to `publish-release`:
+For projects shipping both release archives and a container image, build each
+output in its own job so they run in parallel — both `needs: prepare`, never
+chained through each other:
 
 ```yaml
+  build-binaries:
+    name: Build Release Binaries
+    needs: prepare
+    if: needs.prepare.outputs.skip != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+          fetch-depth: 0
+
+      # ... compile, then one package-artifact step per binary ...
+
+      - name: Package artifact
+        uses: Delnegend/actions/package-artifact@<pin-sha> # v1
+        with:
+          name: <project>
+          version: ${{ needs.prepare.outputs.version }}
+          target: <target-triple>
+          source: <path-to-binary>
+
+  build-container:
+    name: Build Container Image
+    needs: prepare
+    if: needs.prepare.outputs.skip != 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+
+      - name: Build and push image
+        uses: Delnegend/actions/docker-build-push@<pin-sha> # v1
+        with:
+          version: ${{ needs.prepare.outputs.version }}
+          publish: ${{ needs.prepare.outputs.publish }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
   publish:
     name: Publish Consolidated Release
     needs: [prepare, build-binaries, build-container]
@@ -477,16 +519,18 @@ For projects shipping both release archives and a container image, package binar
           ref: ${{ needs.prepare.outputs.ref }}
           publish: ${{ needs.prepare.outputs.publish }}
           container: true
-          download: "true"
+          download: true
           version: ${{ needs.prepare.outputs.version }}
 ```
 
 ### Artifact build (project-specific)
 
-Insert a build step or matrix in the `build` job, producing exactly what the
-project ships — native binaries (commonly Linux x64, Windows x64, macOS arm64),
-a container image, or nothing but notes. Pass `${{ needs.prepare.outputs.version }}`
-or `${{ needs.prepare.outputs.ref }}` to the build command.
+Independent outputs go in independent jobs (`build-binaries`,
+`build-container`, one per platform matrix leg), all `needs: prepare` so they
+run in parallel; `publish` fans in on all of them. A single `build` job is
+only for single-output projects — never chain independent builds serially in
+one job's steps. Pass `${{ needs.prepare.outputs.version }}` or
+`${{ needs.prepare.outputs.ref }}` to each build command.
 
 `package-artifact` uploads each archive to the Actions run under its release
 name; `publish-release` downloads them and publishes the GitHub release. Both
