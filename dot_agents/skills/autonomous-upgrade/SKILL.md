@@ -139,6 +139,10 @@ These are not negotiable. Rationale is in `references/decisions.md`.
     go strictly to the Forgejo source repository. The twin mirror on GitHub is
     automatically updated by `git.delnegend.com/Delnegend/actions/dispatch-github`.
     Pushing to the twin directly will cause conflicts and will be overwritten.
+18. **Standardize on `just version get` and `just version set <ver>`.** No top-level
+    `bump` recipe alias and no per-language version parsing in release workflows.
+    `version get` prints `X.Y.Z` (no `v`); `version set` rewrites manifest(s) to
+    the new version without committing or tagging.
 
 ## Project contract
 
