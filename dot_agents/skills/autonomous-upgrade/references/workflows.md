@@ -523,6 +523,26 @@ jobs:
           version: ${{ needs.prepare.outputs.version }}
 ```
 
+### D3. Hybrid releases (binaries + container image)
+
+For projects shipping both release archives and a container image, package binaries with `package-artifact`, build the image with `docker-build-push`, then pass `container: true` and `download: "true"` to `publish-release`:
+
+```yaml
+  publish:
+    name: Publish Consolidated Release
+    needs: [prepare, build-binaries, build-container]
+    if: needs.prepare.outputs.skip != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Delnegend/actions/publish-release@<pin-sha> # v1
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+          publish: ${{ needs.prepare.outputs.publish }}
+          container: true
+          download: "true"
+          version: ${{ needs.prepare.outputs.version }}
+```
+
 ### Artifact build (project-specific)
 
 Insert a build step or matrix in the `build` job, producing exactly what the
