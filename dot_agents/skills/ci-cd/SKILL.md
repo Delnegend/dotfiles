@@ -1,11 +1,11 @@
 ---
-name: autonomous-upgrade
-description: Sets up or maintains an autonomous dependency-update and release pipeline for a GitHub or Forgejo repository — native package-manager upgrades with a 2-week supply-chain cooldown, a single-gate 'just check' CI, instant auto-rebase, and weekly consolidated releases for maintenance-mode projects only. Always determines the project's host before applying anything.
+name: ci-cd
+description: Sets up or maintains the fleet CI/CD, security scan, and release pipeline for a GitHub or Forgejo repository — native package-manager upgrades with 14-day supply-chain quarantine, a single-gate 'just check' CI, instant auto-rebase, and weekly consolidated releases for maintenance-mode projects. Always determines the project's host before applying anything.
 ---
 
-# Autonomous Upgrade
+# CI/CD & Release Pipeline
 
-Pipeline: **native upgrade (daily + 14d cooldown) → CI gate → auto-rebase → `release` (gate all of CI → bump → tag → push → ship, one run)**.
+Pipeline: **native upgrade (daily + 14d cooldown) → CI gate → auto-rebase → `release` (gate all of CI → version set → commit + tag → push → ship, one run)**.
 
 Host model:
 
