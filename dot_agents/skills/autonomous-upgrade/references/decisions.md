@@ -84,24 +84,9 @@ milestones are checked `[x]` and feature work freezes, the project flips to
 
 ## Why the hard rules exist
 
-- **Rule 3 (cooldown).** Compromised releases are usually detected and yanked
-  within hours or days. A 14-day quarantine would have blocked the March 2026
-  npm supply-chain attacks outright. The gate must come from the package manager
-  because only the resolver knows about transitive versions.
-- **Rule 6 (no cron when active).** See the project-mode table above.
-- **Rule 4 (Dependabot scope).** Package managers handle their own libraries via
-  native commands and cooldown gates. On GitHub repos, Dependabot is retained
-  exclusively for `github-actions` because native tools cannot update workflow
-  actions.
-- **Rule 7 (single-core runners).** Every job that does not build artifacts is
-  I/O-bound orchestration; running it on a multi-core runner is waste.
-- **Rule 9 (concurrency locks).** Releases serialize on `group: release-main`
-  with `cancel-in-progress: false` so overlapping runs never race on tag creation.
-  CI runs use dynamic `group: ${{ github.workflow }}-${{ github.ref }}` with
-  `cancel-in-progress: true` to cancel stale pushes on the same branch without
-  interrupting runs on other branches or PRs.
-- **Rule 15 (prebuilts).** One prebuilt per release keeps the build matrix and
-  the release page small; Homebrew compiles every other platform from the
-  tagged source with the same toolchain CI gates. Exceptions exist only where
-  no source path reaches the user (a Windows-only executable) or the formula
-  already promises the asset.
+- **Rule 5 (cooldown).** Compromised packages are usually yanked within days. The gate must come from the package manager because only its resolver evaluates transitive dependencies.
+- **Rule 6 (Dependabot scope).** Native package managers handle their own libraries. Dependabot is scoped exclusively to `github-actions`.
+- **Rule 8 (no cron when active).** Scheduled weekly releases belong only in maintenance mode; active development releases on manual dispatch to avoid shipping unfinished work.
+- **Rule 9 (single-core runners).** Workflow orchestration is I/O-bound; multi-core runners are reserved for builds.
+- **Rule 11 (concurrency locks).** `release-main` (`cancel-in-progress: false`) prevents races on tag creation; dynamic per-branch CI locks cancel stale runs safely.
+- **Rule 18 (version get/set).** Standard `just version get` and `just version set <ver>` contract eliminates ad-hoc per-language parsing scripts in release workflows.

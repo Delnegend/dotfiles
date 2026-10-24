@@ -46,8 +46,7 @@ version.
 
 ## Cargo
 
-Stabilized in **Cargo 1.100** (2026-08-28) — stable channel, no `-Z`, no
-nightly toolchain. Two keys, and **both matter**:
+Supported in stable **Cargo >= 1.100** (no `-Z`, no nightly toolchain). Two keys, and **both matter**:
 
 - `[registry] global-min-publish-age` — the window. Accepts an integer plus
   `seconds`/`minutes`/`hours`/`days`/`weeks`/`months`, or `"0"` for no limit.
@@ -128,14 +127,14 @@ The workflow executes `just version set "$NEXT_STRICT"`, then stages all modifie
 tracked files (`git add -u`). It doesn't need to know which files were edited.
 ### Recipes per ecosystem
 
-| Ecosystem | Manifest file(s) | `justfile` recipe |
+| Ecosystem | Manifest file(s) | `version set` recipe implementation |
 |---|---|---|
-| **Bun / Node** | `package.json`, lockfile | `bump version:`<br>`    npm version --no-git-tag-version {{version}}` |
-| **Cargo (single crate)** | `Cargo.toml`, `Cargo.lock` | `bump version:`<br>`    cargo set-version {{version}}`<br>*(or `sed -i -E '0,/^version = ".*"/s//version = "{{version}}"/' Cargo.toml && cargo check`)* |
-| **Cargo (workspace)** | `Cargo.toml`, `Cargo.lock` | `bump version:`<br>`    sed -i -E '0,/^version = ".*"/s//version = "{{version}}"/' Cargo.toml`<br>`    sed -i -E '/name = "<crate-prefix>/ { n; s/version = ".*"/version = "{{version}}"/; }' Cargo.lock` |
-| **Python (uv)** | `pyproject.toml` | `bump version:`<br>`    uv version {{version}}` |
-| **Python (poetry)** | `pyproject.toml` | `bump version:`<br>`    poetry version {{version}}` |
-| **Go** | Git tags only (or constant) | `bump version:`<br>`    @echo "Go versions are tracked via git tags"`<br>*(or update constant in `internal/version/version.go`)* |
+| **Bun / Node** | `package.json`, lockfile | `npm version --no-git-tag-version {{ver}}` |
+| **Cargo (single crate)** | `Cargo.toml`, `Cargo.lock` | `sed -i -E '0,/^version = ".*"/s//version = "{{ver}}"/' Cargo.toml && cargo check` |
+| **Cargo (workspace)** | `Cargo.toml`, `Cargo.lock` | `sed -i -E '0,/^version = ".*"/s//version = "{{ver}}"/' Cargo.toml && cargo update -w` |
+| **Python (uv)** | `pyproject.toml` | `uv version {{ver}}` |
+| **Python (poetry)** | `pyproject.toml` | `poetry version {{ver}}` |
+| **Go / Tag-only** | Git tags only (or `VERSION`) | `printf '%s\n' "{{ver}}" > VERSION` |
 
 The workflow runs `git diff --staged --quiet` immediately after the recipe. If
 `just version set` failed to modify any file, the workflow halts with an error rather
