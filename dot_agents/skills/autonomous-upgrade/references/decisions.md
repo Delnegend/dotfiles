@@ -22,7 +22,7 @@ agreed choices and any deviations in the PR description or conversation.
    deriving the next version from Conventional Commits since the last tag.
    **Never** a hand-rolled calculation or a manually typed version. `release.yml`
    updates the package manager's config file via the package-agnostic
-   `just bump <version>` recipe, commits and tags on `main` directly.
+   `just version set <version>` recipe, commits and tags on `main` directly.
    *Alternatives:* `release-plz`, `release-please`.
    **Before the first release run, the repo needs one existing `v*` tag.** Draft
    it at the root commit so the first release covers the whole history:

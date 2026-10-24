@@ -113,19 +113,19 @@ Go and uv/pip have no built-in age filter. Options, in order of preference:
 Do not quietly ship a no-op cooldown. If an ecosystem has no native gate, say
 so and let the owner choose.
 
-## Package-manager-agnostic version bumping (`just bump`)
+## Package-manager-agnostic version contract (`just version get/set`)
 
-To keep the `bump-version` workflow independent of manifest formats (`Cargo.toml`,
-`package.json`, `pyproject.toml`, etc.), repos define a `bump` recipe in their
-root `justfile`:
+To keep release workflows independent of manifest formats (`Cargo.toml`,
+`package.json`, `pyproject.toml`, etc.), repos define a `version` recipe in their
+root `.justfile` supporting `get` and `set`:
 
 ```bash
-just bump <version>    # e.g. just bump 1.2.3 (without the 'v' prefix)
+just version get          # prints X.Y.Z (no 'v')
+just version set <version> # rewrites manifest(s) to X.Y.Z, no commit/tag
 ```
 
-The workflow executes `just bump "$NEXT_STRICT"`, then stages all modified
+The workflow executes `just version set "$NEXT_STRICT"`, then stages all modified
 tracked files (`git add -u`). It doesn't need to know which files were edited.
-
 ### Recipes per ecosystem
 
 | Ecosystem | Manifest file(s) | `justfile` recipe |
@@ -138,5 +138,5 @@ tracked files (`git add -u`). It doesn't need to know which files were edited.
 | **Go** | Git tags only (or constant) | `bump version:`<br>`    @echo "Go versions are tracked via git tags"`<br>*(or update constant in `internal/version/version.go`)* |
 
 The workflow runs `git diff --staged --quiet` immediately after the recipe. If
-`just bump` failed to modify any file, the workflow halts with an error rather
+`just version set` failed to modify any file, the workflow halts with an error rather
 than pushing a commit that claims a version bump without touching anything.

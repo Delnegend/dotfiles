@@ -46,7 +46,7 @@ flowchart TD
     E --> F[Accumulate on main]
     F --> G[release workflow]
     G -->|cron or manual| H[gate: all of CI green?]
-    H -->|yes| H2[semver -> just bump -> commit + tag -> push]
+    H -->|yes| H2[semver -> just version set -> commit + tag -> push]
     H2 --> I[build -> publish release]
     G -->|ref given| I2[rebuild existing tag -> publish]
 ```
@@ -148,6 +148,6 @@ A repo qualifies only if all of these hold:
    - `check`: the single CI gate. Assert-only — format check, lint, vet, tests.
      Never rewrites the tree (`cargo fmt --check` not `cargo fmt`, `gofmt -l`
      not `go fmt`); a check that dirties the checkout is a bug.
-   - `version get` / `version bump <ver>`: the release action's version contract.
-     `get` prints `X.Y.Z`; `bump` rewrites the manifests, no commit, no tag.
+   - `version get` / `version set <ver>`: the release action's version contract.
+     `get` prints `X.Y.Z`; `set` rewrites the manifests, no commit, no tag.
 2. Branch protection: safety rails only — no force-push, no deletion, linear history, and no required status checks (the release gates on all of CI itself).

@@ -293,7 +293,7 @@ nothing publishes); a tag rebuilds and publishes it. `dry-run` previews any of
 the three without changing anything. A repo with no tags yet anchors `v0.0.0`
 at HEAD on the first real run, so the semver comparison has a base; a dry run
 on a tagless repo stops with a clear message instead. Manifest-less repos (Go:
-`just bump` is a no-op echo) skip the bump/commit and tag HEAD directly.
+`just version set` is a no-op echo) skip the bump/commit and tag HEAD directly.
 
 ### Mode-dependent trigger
 
@@ -349,7 +349,7 @@ jobs:
           persist_credentials: true
           fetch-depth: 0   # Full git history for tags, commits, and semver-action
       - uses: extractions/setup-just@v4
-      # Insert any language setup needed by `just bump` (e.g. setup-go, setup-node)
+      # Insert any language setup needed by `just version set` (e.g. setup-go, setup-node)
 
       # The repo needs one existing `v*` tag before this workflow can run: see
       # checklist item 4 in decisions.md. Confirm it at setup time, not here.
