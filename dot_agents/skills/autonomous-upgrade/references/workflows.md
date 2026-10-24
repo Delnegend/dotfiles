@@ -414,9 +414,113 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.ref }}
           publish: ${{ needs.prepare.outputs.publish }}
-          # Container repos add image + version so the body is a pull snippet:
-          #   image: ghcr.io/<owner>/<repo>
-          #   version: ${{ needs.prepare.outputs.version }}
+```
+
+### D2. Container release workflow (`release.yml`)
+
+For repositories that publish a container image to GitHub Container Registry (GHCR):
+
+```yaml
+name: Release / Build Artifacts
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Empty = ship a new version. SHA = test-build it (no publish). Tag = rebuild it."
+        required: false
+        type: string
+      dry-run:
+        description: "Preview only: print each action without mutating."
+        required: false
+        type: boolean
+        default: false
+  # Maintenance mode adds:
+  # schedule:
+  #   - cron: '0 0 * * 0' # Weekly: Sunday 00:00 UTC
+
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  gate:
+    name: Gate (all of CI)
+    uses: ./.github/workflows/ci.yml
+
+  prepare:
+    name: Prepare (bump, tag, push)
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      ref: ${{ steps.resolve.outputs.ref }}
+      version: ${{ steps.resolve.outputs.version }}
+      publish: ${{ steps.resolve.outputs.publish }}
+      skip: ${{ steps.resolve.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          token: ${{ github.token }}
+          persist_credentials: true
+          fetch-depth: 0
+      - uses: extractions/setup-just@v4
+
+      - name: Calculate Next SemVer
+        id: semver
+        uses: ietf-tools/semver-action@v1
+        with:
+          token: ${{ github.token }}
+          fallbackTag: v0.0.0
+          noNewCommitBehavior: silent
+          noVersionBumpBehavior: patch
+
+      - name: Bump, tag, and push
+        id: resolve
+        uses: Delnegend/actions/resolve-release@<pin-sha> # v1
+        with:
+          ref: ${{ inputs.ref }}
+          dry-run: ${{ inputs.dry-run }}
+          gate-sha: ${{ github.sha }}
+          semver-bump: ${{ steps.semver.outputs.bump }}
+          semver-current: ${{ steps.semver.outputs.current }}
+          semver-next: ${{ steps.semver.outputs.next }}
+          semver-next-strict: ${{ steps.semver.outputs.nextStrict }}
+
+  build:
+    name: Build & Release Artifacts
+    needs: prepare
+    if: needs.prepare.outputs.skip != 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+
+      - name: Build and push image
+        uses: Delnegend/actions/docker-build-push@<pin-sha> # v1
+        with:
+          version: ${{ needs.prepare.outputs.version }}
+          publish: ${{ needs.prepare.outputs.publish }}
+
+  publish:
+    name: Publish Consolidated Release
+    needs: [prepare, build]
+    if: needs.prepare.outputs.skip != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish release
+        uses: Delnegend/actions/publish-release@<pin-sha> # v1
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+          publish: ${{ needs.prepare.outputs.publish }}
+          container: true
+          version: ${{ needs.prepare.outputs.version }}
 ```
 
 ### Artifact build (project-specific)
