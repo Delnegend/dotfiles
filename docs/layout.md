@@ -40,6 +40,7 @@ run_onchange_20-fonts.sh.tmpl # Iosevka + Noto Color Emoji + fc-cache
 run_onchange_30-systemd.sh.tmpl # daemon-reload + enable units (scoped by ConditionPathExists/ConditionHost in units)
 run_onchange_40-kde.sh.tmpl   # flatpak overrides for BreezeDark
 run_onchange_50-udev.sh.tmpl  # 99-disable-ncq-s4510.rules → /etc/udev (sudo)
+run_onchange_60-modprobe.sh.tmpl # hid_apple.conf → /etc/modprobe.d (sudo)
 
 # Repo-only (ignored via .chezmoiignore, never applied)
 README.md  AGENTS.md  LICENSE

@@ -1,0 +1,13 @@
+{{- if eq .chezmoi.hostname "bazzite" -}}
+#!/bin/bash
+set -e
+# Install modprobe config for Apple keyboard fnmode.
+
+sudo mkdir -p /etc/modprobe.d
+sudo tee /etc/modprobe.d/hid_apple.conf > /dev/null <<'EOF'
+options hid_apple fnmode=2
+EOF
+if [ -w /sys/module/hid_apple/parameters/fnmode ]; then
+    echo 2 | sudo tee /sys/module/hid_apple/parameters/fnmode > /dev/null
+fi
+{{- end }}
