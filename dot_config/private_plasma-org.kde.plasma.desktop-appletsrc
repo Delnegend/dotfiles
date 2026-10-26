@@ -175,7 +175,7 @@ plugin=org.kde.plasma.systemmonitor.cpucore
 
 [Containments][32][Applets][53][Configuration]
 CurrentPreset=org.kde.plasma.systemmonitor
-popupHeight=676
+popupHeight=856
 popupWidth=591
 
 [Containments][32][Applets][53][Configuration][Appearance]
