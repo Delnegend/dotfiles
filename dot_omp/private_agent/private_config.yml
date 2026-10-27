@@ -1,7 +1,7 @@
 modelRoles:
   web: web/exa
   vision: opencode-go/deepseek-v4.1-flash:auto
-  default: opencode-go/deepseek-v4.1-flash
+  default: bifrost/opencode-zen/deepseek-v4.1-flash-free
 symbolPreset: ascii
 composer:
   shape: claude
