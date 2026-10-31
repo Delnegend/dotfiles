@@ -1,6 +1,11 @@
 {
   "$schema": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json",
   "mcpServers": {
+    "integrated-browser-mcp": {
+      "command": "node",
+      "args": [{{ printf "%s/.integrated-browser-mcp/mcp-server.mjs" .chezmoi.homeDir | toJson }}],
+      "enabled": true
+    },
     "playwright": {
       "command": "bunx",
       "args": ["@playwright/mcp@latest", "--cdp-endpoint", "ws://localhost:9222"],
