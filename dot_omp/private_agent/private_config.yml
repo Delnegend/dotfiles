@@ -33,7 +33,7 @@ display:
 error:
   notify: "on"
 memory:
-  backend: hindsight
+  backend: "off"
 providers:
   autoThinkingMaxEffort: xhigh
 power:
@@ -42,11 +42,6 @@ terminal:
   showProgress: true
 showHardwareCursor: true
 externalThinking: false
-hindsight:
-  apiUrl: https://hindsight.delnegend.com
-  apiToken: "${HINDSIGHT_API_TOKEN}"
-  bankId: coding
-  scoping: global
 autolearn:
   enabled: true
 secrets:
