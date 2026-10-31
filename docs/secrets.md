@@ -8,6 +8,8 @@ Secrets never live in this repo — each machine carries its own secret files.
   `layers/4-workloads/apps/mempalace/secrets.enc.yaml`; do not commit it.
   Both agents connect to `https://mempalace.delnegend.com/mcp` over Tailscale.
   `omp` loads the file at startup; `~/.bashrc_custom` exports it for OpenCode.
+  Set `X-MemPalace-Wing` in each client's MemPalace server settings to select
+  the wing used for recall and explicit saves; the header is not access control.
   Coding agents save only selected facts explicitly; they do not automatically
   save whole conversations. Never save credentials or other secrets.
 - Guards: `.gitignore` excludes `.env`/`private_.env`; `.chezmoiignore` prevents
