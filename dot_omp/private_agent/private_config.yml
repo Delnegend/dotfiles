@@ -1,7 +1,7 @@
 modelRoles:
-  web: web/exa
+  web: web/kagi
   vision: opencode-go/deepseek-v4.1-flash:auto
-  default: bifrost/opencode-zen/deepseek-v4.1-flash-free
+  default: openai-codex/gpt-6.1-terra:high
 symbolPreset: ascii
 composer:
   shape: claude
@@ -33,7 +33,7 @@ display:
 error:
   notify: "on"
 memory:
-  backend: "off"
+  backend: hindsight
 providers:
   autoThinkingMaxEffort: xhigh
 power:
@@ -42,6 +42,11 @@ terminal:
   showProgress: true
 showHardwareCursor: true
 externalThinking: false
+hindsight:
+  apiUrl: https://hindsight.delnegend.com
+  apiToken: "${HINDSIGHT_API_TOKEN}"
+  bankId: coding
+  scoping: global
 autolearn:
   enabled: true
 secrets:
@@ -52,3 +57,5 @@ bashInterceptor:
   enabled: false
 browser:
   enabled: false
+codexResets:
+  autoRedeem: "no"
