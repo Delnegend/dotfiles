@@ -21,6 +21,7 @@ dot_config/
   environment.d/              # → ~/.config/environment.d/ (kde-dark.conf, ssh.conf.tmpl)
   systemd/user/*              # → ~/.config/systemd/user/ (Linux)
   opencode/opencode.json.tmpl # → ~/.config/opencode/opencode.json (MCP servers + MemPalace)
+  opencode/private_cli.json   # → ~/.config/opencode/cli.json (0600, TUI settings; verbosity: low)
 dot_bashrc_custom.tmpl        # → ~/.bashrc_custom (sourced from ~/.bashrc, per-host template)
 dot_tmux.conf                 # → ~/.tmux.conf (Linux; tmux installed via brew bootstrap)
 dot_Brewfile                  # → ~/Brewfile (Linux)
