@@ -1,4 +1,4 @@
-# Local secret consumed via ${HINDSIGHT_API_TOKEN} indirection — chezmoi must never overwrite it
+# Local secrets consumed via environment indirection — chezmoi must never overwrite them
 .omp/agent/.env
 
 # Non-chezmoi repo files (helpers — not home targets)

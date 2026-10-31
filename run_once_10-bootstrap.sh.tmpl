@@ -96,10 +96,6 @@ for entry in "${pkgs[@]}"; do
     fi
 done
 
-if [ ! -d "$HOME/.hindsight/coding-agents" ] && command -v bunx &>/dev/null; then
-    echo "Staging Hindsight coding agents runtime..."
-    bunx @vectorize-io/hindsight-coding-agents update
-fi
 if command -v bun &>/dev/null; then
     echo "Installing openwiki globally..."
     bun add -g openwiki

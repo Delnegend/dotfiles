@@ -42,6 +42,14 @@
           "MIKROTIK_API_SSL": "false"
         }
       },
+      "mempalace": {
+        "type": "remote",
+        "url": "https://mempalace.delnegend.com/mcp",
+        "oauth": false,
+        "headers": {
+          "Authorization": "Bearer {env:MEMPALACE_MCP_HTTP_TOKEN}"
+        }
+      },
       "openwiki": {
         "type": "local",
         "command": [
@@ -55,7 +63,7 @@
     }
   },
   "plugins": [
-    "{{ .chezmoi.homeDir }}/.hindsight/coding-agents",
+    "{{ .chezmoi.homeDir }}/.config/opencode/mempalace",
     "opencode-models-discovery@2.1.0"
   ]
 }

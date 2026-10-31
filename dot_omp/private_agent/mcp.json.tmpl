@@ -19,6 +19,14 @@
       "command": "bunx",
       "args": ["openwiki", "mcp", "--host", "omp"],
       "enabled": true
+    },
+    "mempalace": {
+      "type": "http",
+      "url": "https://mempalace.delnegend.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ${MEMPALACE_MCP_HTTP_TOKEN}"
+      },
+      "enabled": true
     }
   }
 }
