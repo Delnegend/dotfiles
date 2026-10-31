@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=WinBox
+Comment=Manage MikroTik routers
+Exec=/home/linuxbrew/.linuxbrew/bin/winbox
+Icon=mikrotik-winbox
+Terminal=false
+Categories=Network;

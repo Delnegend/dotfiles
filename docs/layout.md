@@ -25,6 +25,7 @@ dot_bashrc_custom.tmpl        # → ~/.bashrc_custom (sourced from ~/.bashrc, pe
 dot_tmux.conf                 # → ~/.tmux.conf (Linux; tmux installed via brew bootstrap)
 dot_Brewfile                  # → ~/Brewfile (Linux)
 dot_agents/                   # → ~/.agents (skills)
+dot_local/share/              # → ~/.local/share/ (bazzite-only WinBox launcher and official icon)
 dot_omp/private_agent/        # → ~/.omp/agent/ (0700)
   private_config.yml          #   oh-my-pi config (secrets via ${ENV} indirection)
   APPEND_SYSTEM.md             #   standing reply rules (plain language, conclusion first); appends to the built-in prompt

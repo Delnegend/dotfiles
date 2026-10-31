@@ -21,6 +21,8 @@ LICENSE
 .config/gtk-4.0/**
 .config/kglobalshortcutsrc
 .justfile
+.local/share/applications/mikrotik-winbox.desktop
+.local/share/pixmaps/mikrotik-winbox.png
 .Brewfile
 {{- end }}
 
