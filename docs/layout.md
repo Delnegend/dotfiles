@@ -36,7 +36,7 @@ dot_var/app/...               # → ~/.var/app/... (Flatpak mpv/easyeffects, Lin
 
 # Setup scripts (Linux-gated via {{ if eq .chezmoi.os "linux" }})
 run_once_10-bootstrap.sh.tmpl # Homebrew + base packages + ~/.bashrc wiring
-run_onchange_20-fonts.sh.tmpl # Iosevka + Noto Color Emoji + fc-cache
+run_onchange_20-fonts.sh.tmpl # Iosevka + JetBrains Mono Nerd Fonts + Noto Color Emoji + fc-cache
 run_onchange_30-systemd.sh.tmpl # daemon-reload + enable units (scoped by ConditionPathExists/ConditionHost in units)
 run_onchange_40-kde.sh.tmpl   # flatpak overrides for BreezeDark
 run_onchange_50-udev.sh.tmpl  # 99-disable-ncq-s4510.rules → /etc/udev (sudo)
