@@ -9,6 +9,9 @@
 .env
 private_.env
 
+# Local hardware notes
+docs/tpm2-luks.md
+
 # Windows
 Thumbs.db
 desktop.ini
