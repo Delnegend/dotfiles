@@ -27,11 +27,12 @@ dot_tmux.conf                 # → ~/.tmux.conf (Linux; tmux installed via brew
 dot_Brewfile                  # → ~/Brewfile (Linux)
 dot_agents/                   # → ~/.agents (skills)
 dot_local/share/              # → ~/.local/share/ (bazzite-only WinBox launcher and official icon)
+scripts/executable_l4d2-download.py # → ~/scripts/l4d2-download.py (Steam Workshop maps into local L4D2 addons; accepts URLs or IDs)
 dot_omp/private_agent/        # → ~/.omp/agent/ (0700)
   private_config.yml          #   oh-my-pi config (secrets via ${ENV} indirection)
   APPEND_SYSTEM.md             #   standing reply rules (plain language, conclusion first); appends to the built-in prompt
   mcp.json.tmpl               #   MCP servers (playwright, mikrotik, MemPalace)
-dot_justfile                  # → ~/.justfile (general-purpose recipes + brew-dump)
+dot_justfile.tmpl             # → ~/.justfile (bazzite recipes, including l4d2-download)
 dot_var/app/...               # → ~/.var/app/... (Flatpak mpv/easyeffects, Linux)
 
 # Setup scripts (Linux-gated via {{ if eq .chezmoi.os "linux" }})

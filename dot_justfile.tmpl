@@ -3,6 +3,13 @@ REPO := justfile_directory()
 _default:
 	just --choose
 
+{{- if eq .chezmoi.hostname "bazzite" }}
+# Download Steam Workshop maps to the local L4D2 addons folder.
+[positional-arguments]
+l4d2-download +items:
+	@~/scripts/l4d2-download.py "$@"
+{{- end }}
+
 _ensure-ssh-permissions:
 	sudo chmod 700 ~/.ssh
 	sudo chmod 600 ~/.ssh/*
@@ -12,8 +19,8 @@ _ensure-ssh-permissions:
 
 _transcode codec input:
 	#!/bin/bash
-	codec="{{ codec }}"
-	input="{{ input }}"
+	codec="{{ "{{" }} codec }}"
+	input="{{ "{{" }} input }}"
 
 	echo "Transcoding file '$input' to codec '$codec'..."
 	if [[ $codec == "avif" ]]; then
@@ -55,11 +62,11 @@ _update-static:
 
 # Remote-access services.
 _remotes state:
-	just sunshine {{state}}
+	just sunshine {{ "{{" }}state}}
 
 # Run kscreen-doctor against the KDE Wayland session (works over SSH too).
 _kscreen *args:
-	QT_QPA_PLATFORM=wayland WAYLAND_DISPLAY=wayland-0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus kscreen-doctor {{args}} 2>&1 || true
+	QT_QPA_PLATFORM=wayland WAYLAND_DISPLAY=wayland-0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus kscreen-doctor {{ "{{" }}args}} 2>&1 || true
 
 sunshine state='start':
 	#!/usr/bin/bash
@@ -74,10 +81,10 @@ sunshine state='start':
 	START_KEYWORDS=(start restart enable 1 on)
 	STOP_KEYWORDS=(stop disable 0 off)
 
-	if [[ " ${START_KEYWORDS[*]} " == *" {{state}} "* ]]; then
+	if [[ " ${START_KEYWORDS[*]} " == *" {{ "{{" }}state}} "* ]]; then
 		systemctl --user start sunshine
 		echo "Sunshine is now STARTED"
-	elif [[ " ${STOP_KEYWORDS[*]} " == *" {{state}} "* ]]; then
+	elif [[ " ${STOP_KEYWORDS[*]} " == *" {{ "{{" }}state}} "* ]]; then
 		systemctl --user stop sunshine
 		echo "Sunshine is now STOPPED"
 	else
@@ -228,7 +235,7 @@ _dummy_gnome res="1920x1200":
 	BUS="org.gnome.Mutter.DisplayConfig"
 	OBJ="/org/gnome/Mutter/DisplayConfig"
 
-	case "{{ res }}" in
+	case "{{ "{{" }} res }}" in
 		1080|1920x1080)
 			MODE="1920x1080@60.000"
 			;;
@@ -239,7 +246,7 @@ _dummy_gnome res="1920x1200":
 			MODE="3840x2160@59.982"
 			;;
 		*)
-			echo "Unknown resolution: {{ res }}. Use '1920x1200' (default), '1920x1080', or '4k'." >&2
+			echo "Unknown resolution: {{ "{{" }} res }}. Use '1920x1200' (default), '1920x1080', or '4k'." >&2
 			exit 1
 			;;
 	esac
