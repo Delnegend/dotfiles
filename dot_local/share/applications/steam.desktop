@@ -1,0 +1,53 @@
+[Desktop Entry]
+Actions=Store;Community;Library;Servers;Screenshots;News;Settings;BigPicture;Friends;
+Categories=Network;FileTransfer;Game;
+Comment=Application for managing and playing games on Steam
+Exec=env http_proxy=http://127.0.0.1:18118 https_proxy=http://127.0.0.1:18118 no_proxy=localhost,127.0.0.1,steamloopback.host /usr/bin/bazzite-steam %U
+Icon=steam
+MimeType=x-scheme-handler/steam;x-scheme-handler/steamlink;
+Name=Steam
+NoDisplay=false
+Path=
+PrefersNonDefaultGPU=true
+StartupNotify=true
+Terminal=false
+TerminalOptions=
+Type=Application
+X-KDE-SubstituteUID=false
+X-KDE-Username=
+
+[Desktop Action BigPicture]
+Exec=env http_proxy=http://127.0.0.1:18118 https_proxy=http://127.0.0.1:18118 no_proxy=localhost,127.0.0.1,steamloopback.host /usr/bin/bazzite-steam steam://open/bigpicture
+Name=Big Picture
+
+[Desktop Action Community]
+Exec=env http_proxy=http://127.0.0.1:18118 https_proxy=http://127.0.0.1:18118 no_proxy=localhost,127.0.0.1,steamloopback.host /usr/bin/bazzite-steam steam://url/CommunityHome/
+Name=Community
+
+[Desktop Action Friends]
+Exec=env http_proxy=http://127.0.0.1:18118 https_proxy=http://127.0.0.1:18118 no_proxy=localhost,127.0.0.1,steamloopback.host /usr/bin/bazzite-steam steam://open/friends
+Name=Friends
+
+[Desktop Action Library]
+Exec=env http_proxy=http://127.0.0.1:18118 https_proxy=http://127.0.0.1:18118 no_proxy=localhost,127.0.0.1,steamloopback.host /usr/bin/bazzite-steam steam://open/games
+Name=Library
+
+[Desktop Action News]
+Exec=env http_proxy=http://127.0.0.1:18118 https_proxy=http://127.0.0.1:18118 no_proxy=localhost,127.0.0.1,steamloopback.host /usr/bin/bazzite-steam steam://openurl/https://store.steampowered.com/news
+Name=News
+
+[Desktop Action Screenshots]
+Exec=env http_proxy=http://127.0.0.1:18118 https_proxy=http://127.0.0.1:18118 no_proxy=localhost,127.0.0.1,steamloopback.host /usr/bin/bazzite-steam steam://open/screenshots
+Name=Screenshots
+
+[Desktop Action Servers]
+Exec=env http_proxy=http://127.0.0.1:18118 https_proxy=http://127.0.0.1:18118 no_proxy=localhost,127.0.0.1,steamloopback.host /usr/bin/bazzite-steam steam://open/servers
+Name=Servers
+
+[Desktop Action Settings]
+Exec=env http_proxy=http://127.0.0.1:18118 https_proxy=http://127.0.0.1:18118 no_proxy=localhost,127.0.0.1,steamloopback.host /usr/bin/bazzite-steam steam://open/settings
+Name=Settings
+
+[Desktop Action Store]
+Exec=env http_proxy=http://127.0.0.1:18118 https_proxy=http://127.0.0.1:18118 no_proxy=localhost,127.0.0.1,steamloopback.host /usr/bin/bazzite-steam steam://store
+Name=Store

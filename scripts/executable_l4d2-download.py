@@ -17,21 +17,21 @@ import urllib.request
 DEFAULT_ADDONS_DIR = "/var/u01/SteamLibrary/steamapps/common/Left 4 Dead 2/left4dead2/addons"
 MAX_DEPTH = 5
 
-# SOCKS proxy for ISP-filtered Steam hosts (byedpi service, port 1080 on the
-# node LB). Direct first; curl retries through the proxy only on failure.
-PROXY_URL = os.getenv("BYEDPI_PROXY", "socks5h://192.168.2.10:1080")
+# HTTP proxy for ISP-filtered Steam hosts. Direct first; curl retries through
+# the local Homebrew dpi-proxy service only on failure.
+PROXY_URL = os.getenv("DPI_PROXY_URL", "http://127.0.0.1:18118")
 
 
 def fetch_bytes(url, data=None, headers=None, timeout=10):
-    """GET/POST bytes, direct first, via the SOCKS proxy on failure."""
+    """GET/POST bytes, direct first, via the HTTP proxy on failure."""
     req = urllib.request.Request(url, data=data, headers=headers or {})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             return resp.read(), dict(resp.headers)
     except Exception as direct_err:
         cmd = [
-            "curl", "-sS", "--fail-with-body", "--socks5-hostname", PROXY_URL,
-            "--max-time", str(timeout), "-D", "-", "-o", "-",
+            "curl", "-sS", "--fail-with-body", "--noproxy", "", "--proxy", PROXY_URL,
+            "--suppress-connect-headers", "--max-time", str(timeout), "-D", "-", "-o", "-",
         ]
         for k, v in (headers or {}).items():
             cmd += ["-H", f"{k}: {v}"]
@@ -272,9 +272,9 @@ def stream_response(resp, tmp_path, total_size):
 
 
 def download_via_proxy(url, tmp_path, expected_size, timeout=600):
-    """Stream the URL through the SOCKS proxy with curl; returns bytes or raises."""
+    """Stream the URL through the HTTP proxy with curl; returns bytes or raises."""
     proc = subprocess.Popen(
-        ["curl", "-sS", "--fail-with-body", "--socks5-hostname", PROXY_URL,
+        ["curl", "-sS", "--fail-with-body", "--noproxy", "", "--proxy", PROXY_URL,
          "--max-time", str(timeout), "-H", "User-Agent: Valve/Steam", url],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
     )

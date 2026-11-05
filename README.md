@@ -27,6 +27,7 @@ chezmoi status    # what would change; expect clean
 - **Secrets pull their weight**: SSH keys, signing keys and agent tokens stay on the machine (nothing sensitive is ever committed).
 - **One-shot setup, quiet maintenance**: `run_once_*` scripts set the machine up; `run_onchange_*` scripts re-run only when their inputs change.
 - **Machine-aware by default**: `wsl`, `homelab` (`core`), `bazzite` and new hosts each get their own branch instead of commented-out blocks.
+- **Steam downloads on Bazzite**: the Homebrew `dpi-proxy` service listens on `127.0.0.1:18118` for Steam's web and download connections.
 
 ## Documentation
 

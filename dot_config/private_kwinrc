@@ -42,8 +42,12 @@ tiles={"layoutDirection":"horizontal","tiles":[{"width":0.25},{"width":0.5},{"wi
 padding=4
 tiles={"layoutDirection":"horizontal","tiles":[{"width":0.25},{"width":0.5},{"width":0.25}]}
 
+[Tiling][d3cef80d-6549-4c63-b8b5-7ce2519d1ec9][d4d47c23-7549-431d-b8ef-42d03e91e1a8]
+padding=4
+tiles={"layoutDirection":"horizontal","tiles":[{"width":0.25},{"width":0.5},{"width":0.25}]}
+
 [Wayland]
-InputMethod[$e]=
+InputMethod[$e]=/usr/share/applications/org.fcitx.Fcitx5.desktop
 
 [Windows]
 ElectricBorderDelay=0

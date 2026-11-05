@@ -137,7 +137,7 @@ ColorSchemeHash=465905853f7b01f63a484474722a441d99e2a157
 XftAntialias=true
 XftHintStyle=hintslight
 XftSubPixel=none
-fixed=Iosevka Nerd Font,11,-1,5,300,0,0,0,0,0,0,0,0,0,0,1,Light,0,0
+fixed=Iosevka Nerd Font,12,-1,5,400,0,0,0,0,0,0,0,0,0,0,1,,0,0
 
 [KDE]
 LookAndFeelPackage=com.valve.vapor.desktop

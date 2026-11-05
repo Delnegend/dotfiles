@@ -22,6 +22,7 @@ LICENSE
 .config/kglobalshortcutsrc
 .justfile
 .local/share/applications/mikrotik-winbox.desktop
+.local/share/applications/steam.desktop
 .local/share/pixmaps/mikrotik-winbox.png
 .Brewfile
 {{- end }}
