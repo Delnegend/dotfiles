@@ -1,6 +1,6 @@
 ---
 name: ci-cd
-description: Sets up or maintains the fleet CI/CD, security scan, and release pipeline for a GitHub or Forgejo repository — native package-manager upgrades with 14-day supply-chain quarantine, a single-gate 'just check' CI, instant auto-rebase, and weekly consolidated releases for maintenance-mode projects. Always determines the project's host before applying anything.
+description: Sets up or maintains the fleet CI/CD, security scan, and release pipeline for a GitHub or Forgejo repository: native package-manager upgrades with 14-day supply-chain quarantine, a single-gate 'just check' CI, instant auto-rebase, and weekly consolidated releases for maintenance-mode projects. Always determines the project's host before applying anything.
 ---
 
 # CI/CD & Release Pipeline
@@ -25,8 +25,8 @@ on each Forgejo run. All changes belong strictly in the Forgejo source repositor
 
 | # | Gate | Why it blocks everything after |
 |---|---|---|
-| 1 | **Locate the host** — `git remote -v` | Decides `.github/` vs `.forgejo/`, runner labels, `gh` vs native AGit, and whether a GitHub twin exists |
-| 2 | **Ask the project mode** — maintenance or active | Decides whether `release.yml` gets `on.schedule` (active projects track milestones in an optional roadmap) |
+| 1 | **Locate the host**: `git remote -v` | Decides `.github/` vs `.forgejo/`, runner labels, `gh` vs native AGit, and whether a GitHub twin exists |
+| 2 | **Ask the project mode**: maintenance or active | Decides whether `release.yml` gets `on.schedule` (active projects track milestones in an optional roadmap) |
 | 3 | **Consult the owner** on the checklist in `references/decisions.md` | The rest are baselines to adapt, not mandates |
 
 Never assume github.com. Never write a weekly cron for a project under active
@@ -57,7 +57,7 @@ Read the file for the task at hand; do not read all four.
 
 | File | Read when |
 |---|---|
-| `references/decisions.md` | The customization checklist — host, release model, artifacts, runner budget |
+| `references/decisions.md` | The customization checklist: host, release model, artifacts, runner budget |
 | `references/hosts.md` | Writing any workflow: GitHub vs Forgejo differences, the twin-repository pattern, branch protection |
 | `references/ecosystems.md` | Setting the 14-day cooldown, or choosing whether an ecosystem qualifies at all |
 | `references/workflows.md` | The four YAML templates: deps, CI, auto-merge, release |
@@ -67,7 +67,7 @@ Read the file for the task at hand; do not read all four.
 These are not negotiable. Rationale is in `references/decisions.md`.
 
 1. **Consult the owner before applying.** No universal CI/CD flow. Record agreed
-   choices and deviations in the PR/conversation — never a committed decision file.
+   choices and deviations in the PR/conversation; never a committed decision file.
 2. **CI gate shape follows the host.** Single-host repos: one `just check`, no
    build matrix, plus the shared scan workflow called as a job. Forgejo+twin
    repos: the CI workflow runs `just check` **plus those same scans in
@@ -88,7 +88,7 @@ These are not negotiable. Rationale is in `references/decisions.md`.
    scan jobs per project: they drift, and a shared gate is the only thing that
    keeps ten projects in agreement.
 5. **14-day cooldown, enforced by the package manager itself.** Never re-implement
-   the age filter as a shell script — the tool's own gate also covers transitive
+   the age filter as a shell script; the tool's own gate also covers transitive
    dependencies. If an ecosystem has no native gate, that project does not get
    autonomous bumps.
 6. **Dependabot for GitHub Actions only.** On GitHub-hosted repos, Dependabot is
@@ -113,7 +113,7 @@ These are not negotiable. Rationale is in `references/decisions.md`.
    rails only.** No required status checks (the release's own gate job calls
    all of CI, which is stronger than any single PR rule). Protection keeps:
    no force-push, no deletion, linear history. Push the bump commit first,
-   then the tag — if the tag push fails, the next run recovers by tagging
+   then the tag; if the tag push fails, the next run recovers by tagging
    the existing commit. Never tag a commit whose manifest still carries the
    old version. Never ship a version that is not ahead of the latest tag.
 14. **All GitHub Actions refs are pinned by immutable SHA (`@<sha> # v1`).**
@@ -124,13 +124,13 @@ These are not negotiable. Rationale is in `references/decisions.md`.
 15. **No `${{ }}` interpolation inside `run:` blocks.** Move every workflow
    context value (`inputs.*`, `steps.*.outputs.*`, `needs.*.outputs.*`,
    `secrets.*`) into the step's `env:` block and reference `$VAR` in shell.
-   `if:`/`with:`/`env:` interpolation is fine — the injection sink is the shell.
+   `if:`/`with:`/`env:` interpolation is fine; the injection sink is the shell.
    Verified clean by scanning `run: |` blocks for `${{` before committing.
 16. **Every `run:` step that uses `$VAR` declares `shell: bash`.** GitHub
    defaults `run:` to PowerShell/cmd on `windows-latest`, where `$VAR` expands
    to empty (verified: artefact shipped `error: target was empty` on the
    Windows matrix leg). `${{ }}` interpolation used to mask this because
-   GitHub expands it pre-execution on every shell — rule 13 removes the mask,
+   GitHub expands it pre-execution on every shell; rule 13 removes the mask,
    so the shell must be explicit. Single-platform Linux repos are unaffected
    but declare it anyway for copy-paste safety.
 17. **Never commit or push directly to the twin repository.** All commits and pushes
@@ -147,9 +147,9 @@ These are not negotiable. Rationale is in `references/decisions.md`.
 A repo qualifies only if all of these hold:
 
 1. A hidden root `.justfile` with:
-   - `check`: the single CI gate. Assert-only — format check, lint, vet, tests.
+   - `check`: the single CI gate. Assert-only: format check, lint, vet, tests.
      Never rewrites the tree (`cargo fmt --check` not `cargo fmt`, `gofmt -l`
      not `go fmt`); a check that dirties the checkout is a bug.
    - `version get` / `version set <ver>`: the release action's version contract.
      `get` prints `X.Y.Z`; `set` rewrites the manifests, no commit, no tag.
-2. Branch protection: safety rails only — no force-push, no deletion, linear history, and no required status checks (the release gates on all of CI itself).
+2. Branch protection: safety rails only: no force-push, no deletion, linear history, and no required status checks (the release gates on all of CI itself).

@@ -7,7 +7,7 @@ scripts handle setup. It is public.
 
 ## Prerequisites
 
-- **chezmoi** `>=2.40` — install via the one-liner below if not yet present.
+- **chezmoi** `>=2.40`; install via the one-liner below if not yet present.
 - **Git** (+ OpenSSH on Windows).
 
 ## Linux
@@ -57,7 +57,7 @@ For a new machine, add a branch in `dot_bashrc_custom.tmpl` matching
     ```
 
 Linux-only files (systemd units, fontconfig, Flatpak `dot_var/`,
-`dot_Brewfile`, `dot_bashrc_custom`) also land on Windows — harmless by
+`dot_Brewfile`, `dot_bashrc_custom`) also land on Windows; harmless by
 design.
 
 ## Daily use

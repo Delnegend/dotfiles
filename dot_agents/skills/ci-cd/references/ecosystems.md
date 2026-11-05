@@ -11,14 +11,14 @@ uncovered.
 |---|---|---|
 | **Bun** | `bun update` | `bunfig.toml` → `[install] minimumReleaseAge = 1209600` (seconds) |
 | **Cargo** ≥1.100 | `cargo update` | `.cargo/config.toml` → `[registry] global-min-publish-age = "14 days"` |
-| **npm** | `npx npm-check-updates -u -t minor` | no config file — pass `--cooldown 14d` on the command line |
+| **npm** | `npx npm-check-updates -u -t minor` | no config file; pass `--cooldown 14d` on the command line |
 | **pnpm** | `pnpm update` | `pnpm-workspace.yaml` → `minimumReleaseAge: 20160` (**minutes**) |
-| **Go** | `go get -u ./...` | **no native gate** — skip autonomous bumps |
-| **uv / pip** | `uv lock --upgrade` | **no native gate** — skip autonomous bumps |
+| **Go** | `go get -u ./...` | **no native gate**: skip autonomous bumps |
+| **uv / pip** | `uv lock --upgrade` | **no native gate**: skip autonomous bumps |
 
 ## The units trap
 
-Getting the unit wrong **silently disables the cooldown** — no error, just an
+Getting the unit wrong **silently disables the cooldown**; no error, just an
 unquarantined supply chain.
 
 | Tool | Unit | 14 days |
@@ -48,10 +48,10 @@ version.
 
 Supported in stable **Cargo >= 1.100** (no `-Z`, no nightly toolchain). Two keys, and **both matter**:
 
-- `[registry] global-min-publish-age` — the window. Accepts an integer plus
+- `[registry] global-min-publish-age`: the window. Accepts an integer plus
   `seconds`/`minutes`/`hours`/`days`/`weeks`/`months`, or `"0"` for no limit.
   **Default is `"0"`**, so this must be set explicitly.
-- `[resolver] incompatible-publish-age` — what to do with a too-new version.
+- `[resolver] incompatible-publish-age`: what to do with a too-new version.
   Defaults to `"deny"` (skip it unless already in `Cargo.lock`), which is what
   you want. `"allow"` disables the quarantine entirely.
 
@@ -63,7 +63,7 @@ global-min-publish-age = "14 days"
 
 [resolver]
 # "deny" (the default) skips too-new versions unless already in Cargo.lock.
-# Do NOT set this to "allow" — that disables the cooldown.
+# Do NOT set this to "allow"; that disables the cooldown.
 incompatible-publish-age = "deny"
 ```
 
@@ -79,7 +79,7 @@ version requirements and is **not** covered by the gate.
 
 Cargo warns on older toolchains (`warning: ignoring
 registry.global-min-publish-age without -Zmin-publish-age`), which means the
-cooldown is *not* applying — a runner below 1.100 upgrades unprotected.
+cooldown is *not* applying; a runner below 1.100 upgrades unprotected.
 
 ## npm
 
@@ -97,7 +97,7 @@ it upgrades to the highest minor/patch version that has passed quarantine.
 
 ```yaml
 # pnpm-workspace.yaml
-minimumReleaseAge: 20160   # minutes — 14 days
+minimumReleaseAge: 20160   # minutes: 14 days
 ```
 
 ## Ecosystems with no native gate
@@ -105,7 +105,7 @@ minimumReleaseAge: 20160   # minutes — 14 days
 Go and uv/pip have no built-in age filter. Options, in order of preference:
 
 1. Skip autonomous dependency bumps for that project entirely.
-2. Renovate, which has a cross-ecosystem `minimumReleaseAge` — but adds a
+2. Renovate, which has a cross-ecosystem `minimumReleaseAge`; but adds a
    service to the stack.
 3. A hand-rolled script (discouraged: misses transitive versions).
 

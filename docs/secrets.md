@@ -1,6 +1,6 @@
 # Secrets
 
-Secrets never live in this repo — each machine carries its own secret files.
+Secrets never live in this repo; each machine carries its own secret files.
 
 - **MemPalace token (omp.sh and OpenCode):** set `MEMPALACE_MCP_HTTP_TOKEN=<token>`
   in `~/.omp/agent/.env` and restrict it with `chmod 600 ~/.omp/agent/.env`.

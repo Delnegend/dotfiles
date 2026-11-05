@@ -37,7 +37,7 @@ jobs:
 ### Forgejo (Native AGit)
 
 On native Forgejo instances, use **AGit** (`refs/for/main`) to open or update the
-PR directly over Git transport — zero extra CLI tools (`gh`/`fj`) and zero extra
+PR directly over Git transport; zero extra CLI tools (`gh`/`fj`) and zero extra
 tokens needed:
 
 ```yaml
@@ -142,7 +142,7 @@ Gitleaks, actionlint, Semgrep, Trivy and OSV-Scanner, each its own job so they
 run in parallel. Hand-rolling them per project is what let them drift apart.
 Every scan runs with one shared configuration: Trivy always uses the full
 `vuln,misconfig,secret` set, and a root `osv-scanner.toml` is picked up
-automatically as the OSV quarantine — no inputs needed. The only input is
+automatically as the OSV quarantine; no inputs needed. The only input is
 `exclude`, a space-separated opt-out (e.g. `exclude: osv`) for the rare case
 a scan genuinely does not apply. Repos without a lockfile need nothing: the
 OSV job detects that and skips with a notice.
@@ -225,7 +225,7 @@ history) but requires no status checks, so the bot pushes the bump straight
 to `main`. The gate job is stronger than any PR rule: it calls all of
 `ci.yml` via `workflow_call`, so every check must pass before anything ships.
 
-Two inputs only, one dispatch guide — **empty = ship, SHA = test, tag = rebuild**:
+Two inputs only, one dispatch guide: **empty = ship, SHA = test, tag = rebuild**:
 `ref` empty ships a new version; a commit SHA test-builds it (artifacts upload,
 nothing publishes); a tag rebuilds and publishes it. `dry-run` previews any of
 the three without changing anything. A repo with no tags yet anchors `v0.0.0`
@@ -464,7 +464,7 @@ jobs:
 ### D3. Hybrid releases (binaries + container image)
 
 For projects shipping both release archives and a container image, build each
-output in its own job so they run in parallel — both `needs: prepare`, never
+output in its own job so they run in parallel; both `needs: prepare`, never
 chained through each other:
 
 ```yaml
@@ -528,7 +528,7 @@ chained through each other:
 Independent outputs go in independent jobs (`build-binaries`,
 `build-container`, one per platform matrix leg), all `needs: prepare` so they
 run in parallel; `publish` fans in on all of them. A single `build` job is
-only for single-output projects — never chain independent builds serially in
+only for single-output projects; never chain independent builds serially in
 one job's steps. Pass `${{ needs.prepare.outputs.version }}` or
 `${{ needs.prepare.outputs.ref }}` to each build command.
 
@@ -536,7 +536,7 @@ one job's steps. Pass `${{ needs.prepare.outputs.version }}` or
 name; `publish-release` downloads them and publishes the GitHub release. Both
 run on every build that is not skipped (skipped only when semver finds nothing
 releasable, or on a dry run). The release body is templated in
-`publish-release`, never hand-written in the caller — install instructions
+`publish-release`, never hand-written in the caller; install instructions
 belong in the repo's docs.
 
 On a Forgejo+twin project, the Forgejo workflow's `build` job dispatches the

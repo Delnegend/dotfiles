@@ -6,18 +6,18 @@ agreed choices and any deviations in the PR description or conversation.
 
 ## Checklist
 
-1. **Host** — github.com, self-hosted Forgejo, or Forgejo + a GitHub twin.
+1. **Host**: github.com, self-hosted Forgejo, or Forgejo + a GitHub twin.
    *Default:* whatever `git remote -v` says. Determines workflow directory,
    runner labels, and PR creation (`gh` vs native AGit).
-2. **Project mode** — maintenance or active development.
+2. **Project mode**: maintenance or active development.
    *Default:* active development. Determinates whether the release workflow gets
    an `on.schedule` cron at all.
-3. **Release model** — weekly batch (maintenance mode: scheduled cron) plus
+3. **Release model**: weekly batch (maintenance mode: scheduled cron) plus
    manual dispatch; manual dispatch only (active). The `release.yml` workflow
    is one run: gate on all of CI, then bump → commit + tag → push → build →
    publish. A `ref` input rebuilds an old tag. *Alternatives:* release on
    every merge, label-gated releases.
-4. **Version source of truth and manifest bump** — git tags, with
+4. **Version source of truth and manifest bump**: git tags, with
    [`ietf-tools/semver-action`](https://github.com/ietf-tools/semver-action)
    deriving the next version from Conventional Commits since the last tag.
    **Never** a hand-rolled calculation or a manually typed version. `release.yml`
@@ -27,32 +27,32 @@ agreed choices and any deviations in the PR description or conversation.
    **Before the first release run, the repo needs one existing `v*` tag.** Draft
    it at the root commit so the first release covers the whole history:
    `git tag -a v0.0.0 "$(git rev-list --max-parents=0 HEAD)"`. Anchor it at the
-   root, not at `HEAD` — at `HEAD` the tag and branch point at the same commit,
+   root, not at `HEAD`; at `HEAD` the tag and branch point at the same commit,
    so the compare range is empty and that run releases nothing.
    `fallbackTag: v0.0.0` does not cover this gap: it supplies only a *name*, and
    the action then asks the API to compare `v0.0.0...main`, which 404s while no
    such tag exists on the server. Without a tag the run fails at the compare call.
-5. **Release artifacts** — prebuilt binaries for linux x64 only; every other
+5. **Release artifacts**: prebuilt binaries for linux x64 only; every other
    platform builds from source through the Homebrew tap. Confirm formats and
    publish targets (GitHub Releases, the tap). Additional prebuilts need an
    explicit recorded exception. On a Forgejo+twin project, artifacts publish
    from the twin.
-6. **CI gate** — one `just check` gate, no build matrix, plus the shared
+6. **CI gate**: one `just check` gate, no build matrix, plus the shared
    [scan workflow](https://github.com/Delnegend/actions) (Gitleaks, actionlint,
    Semgrep, Trivy, OSV-Scanner) called as a job. Take the scans from there
    rather than writing `docker run` jobs per project: they drift, and a shared
    gate is the only thing that keeps ten projects in agreement. *Default:* add
    only the runtimes/services the check needs.
-7. **Dependencies** — daily at 02:00 for code dependencies (via native package
+7. **Dependencies**: daily at 02:00 for code dependencies (via native package
    managers with native cooldown). On GitHub-hosted repos, Dependabot runs
    weekly for `package-ecosystem: "github-actions"` only.
-8. **Security & config** — rebase-only, linear history, required
+8. **Security & config**: rebase-only, linear history, required
    `Check (just check)`. Prefer the built-in token for same-repo automation; a
    fine-grained PAT or GitHub App only for cross-repo dispatch to a twin. Avoid
    polling loops.
-9. **Downstream sync** — event-driven when a token is acceptable, otherwise a
+9. **Downstream sync**: event-driven when a token is acceptable, otherwise a
    short-interval poll that pushes directly. *Confirm the acceptable latency.*
-10. **Runner budget** — cheapest single-core label for orchestration, platform
+10. **Runner budget**: cheapest single-core label for orchestration, platform
     runners only for artifact builds.
 
 ## Project mode: maintenance vs active

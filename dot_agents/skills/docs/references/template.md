@@ -39,19 +39,19 @@ Visit `http://localhost:<port>` to verify (services), or `<project> --version` (
 The install step follows this order, topmost available wins. Never skip a rung
 for the sake of variety:
 
-1. **Homebrew tap** — `brew install <owner>/tap/<formula>`. The primary method
+1. **Homebrew tap**: `brew install <owner>/tap/<formula>`. The primary method
    on Linux and macOS whenever a formula exists.
-2. **Latest-release asset** — resolve the asset from the latest release at
+2. **Latest-release asset**: resolve the asset from the latest release at
    install time (API lookup by filename suffix). Never pin a version in the
    command; a pinned URL rots on the next release.
-3. **Source build** — `cargo install`, `go install`, `go build` from a checkout.
+3. **Source build**: `cargo install`, `go install`, `go build` from a checkout.
    Last resort only, and say so in one clause.
 
 ## Highlights
 
-- **<Outcome 1>** — <Plain-language benefit, e.g. "Instant startup under 15ms with low memory footprint.">
-- **<Outcome 2>** — <Concrete capability, e.g. "Zero configuration with sensible production defaults.">
-- **<Outcome 3>** — <Reliability or ease, e.g. "Single static binary with no external runtime dependencies.">
+- **<Outcome 1>**: <Plain-language benefit, e.g. "Instant startup under 15ms with low memory footprint.">
+- **<Outcome 2>**: <Concrete capability, e.g. "Zero configuration with sensible production defaults.">
+- **<Outcome 3>**: <Reliability or ease, e.g. "Single static binary with no external runtime dependencies.">
 
 ## Common Options
 
@@ -81,16 +81,16 @@ For component boundaries, internal pipelines, and design decisions, see **[Archi
 ## Roadmap
 
 <!-- Optional: for active projects. Omit once in maintenance mode. -->
-- [x] **<Shipped milestone>** — <Brief description of what landed.>
-- [ ] **<In-flight milestone>** — <Current focus before next tag.>
-- [ ] **<Final milestone>** — <Feature-freeze criteria to cut over to maintenance mode.>
+- [x] **<Shipped milestone>**: <Brief description of what landed.>
+- [ ] **<In-flight milestone>**: <Current focus before next tag.>
+- [ ] **<Final milestone>**: <Feature-freeze criteria to cut over to maintenance mode.>
 
 ## Documentation
 
-- **[Configuration](docs/configuration.md)** — Environment variables, settings schema, and flag reference.
-- **[Architecture](docs/architecture.md)** — System boundaries, data structures, and invariants.
-- **[Deployment](docs/deployment.md)** — Docker Compose, systemd service units, and production guidelines.
-- **[Development](docs/development.md)** — Build steps, running tests, and contribution workflow.
+- **[Configuration](docs/configuration.md)**: Environment variables, settings schema, and flag reference.
+- **[Architecture](docs/architecture.md)**: System boundaries, data structures, and invariants.
+- **[Deployment](docs/deployment.md)**: Docker Compose, systemd service units, and production guidelines.
+- **[Development](docs/development.md)**: Build steps, running tests, and contribution workflow.
 
 ## License
 

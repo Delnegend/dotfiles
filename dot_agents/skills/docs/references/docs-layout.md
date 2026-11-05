@@ -16,8 +16,8 @@ documented here beyond one link: they are defined once in
 [Delnegend/actions](https://github.com/Delnegend/actions/blob/main/README.md)
 (full reference in
 [docs/configuration.md](https://github.com/Delnegend/actions/blob/main/docs/configuration.md)).
-Project docs state only the project-specific facts — what it builds, what each
-archive holds, any installer of its own — and link out for the rest.
+Project docs state only the project-specific facts: what it builds, what each
+archive holds, any installer of its own; and link out for the rest.
 
 ---
 
@@ -32,7 +32,7 @@ project would be nonsense. This is the whole rule for project-specific docs:
   "troubleshooting" list that fits any CLI.
 
 When two projects need the same section, the section belongs in the shared
-template or the shared action's docs — not in both projects.
+template or the shared action's docs, not in both projects.
 
 ---
 
@@ -97,7 +97,7 @@ Use when documenting system design, data flows, invariants, or component boundar
 
 Constraints: under 120 lines. Overview in 2–4 sentences, one Mermaid diagram,
 3–6 component bullets, 2–5 invariants. Every section must explain a decision a
-reader cannot get from reading the code — no file listings, no symbol
+reader cannot get from reading the code: no file listings, no symbol
 inventories. Extra sections take the variation test.
 
 ````markdown
@@ -171,7 +171,7 @@ brew upgrade <project>
 Use when describing contributor prerequisites, build steps, test suites, and linting.
 
 Constraints: under 120 lines. Opens with Prerequisites (exact toolchain and
-versions, `just`, OS notes) — a build that needs something unlisted is a doc
+versions, `just`, OS notes); a build that needs something unlisted is a doc
 bug. Build & test through the repo's gate command (`just check` or
 equivalent). Release procedure is one link to Delnegend/actions plus the
 repo's bump command, never a restated pipeline.

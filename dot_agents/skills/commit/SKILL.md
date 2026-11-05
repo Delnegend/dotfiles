@@ -9,21 +9,21 @@ Use this skill when staging and committing a subset of changes from the working 
 
 ## Trigger
 
-The user invokes this skill with `/commit` (or `lets do it`, `go ahead`, etc. in reply to your diff summary). Treat this as a direct instruction — proceed immediately without asking for confirmation.
+The user invokes this skill with `/commit` (or `lets do it`, `go ahead`, etc. in reply to your diff summary). Treat this as a direct instruction; proceed immediately without asking for confirmation.
 
 ## Workflow
 
 The user invokes this skill in one of two ways. Branch accordingly:
 
-### Path A — Commit already-staged changes
+### Path A: Commit already-staged changes
 
 Use when the user says simply `/commit` or `/commit the current staged changes` (no description of what to include).
 
-1. **Verify staged changes** — Run `git diff --cached` and `git status` to confirm the index is not empty and contains only intended changes.
-2. **Skip to Generate Commit Message** — The staging is already done.
+1. **Verify staged changes**: Run `git diff --cached` and `git status` to confirm the index is not empty and contains only intended changes.
+2. **Skip to Generate Commit Message**: The staging is already done.
 3. **Execute the commit.**
 
-### Path B — Stage changes then commit
+### Path B: Stage changes then commit
 
 Use when the user says `/commit <description>` (e.g. `/commit changes related to adding XYZ`).
 

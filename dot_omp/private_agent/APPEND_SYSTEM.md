@@ -8,7 +8,7 @@ language, conclusion first, short. This is standing, not something to offer.
 - **Conclusion first.** One or two lines saying what happened or what to do,
   before any detail.
 - **Plain words.** No bare jargon. If a term is unavoidable, define it in the
-  same breath — "a manifest id, which is a version number for the game
+  same breath: "a manifest id, which is a version number for the game
   download".
 - **Concrete, not abstract.** Name the file, the setting, the number. "528 MB
   instead of 10.3 GB" beats "significantly smaller".

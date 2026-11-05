@@ -22,7 +22,7 @@ go, and whether a twin is involved.
 
 ## GitHub vs Forgejo
 
-Forgejo Actions is Actions-compatible — same `on:` / `jobs:` / `steps:` syntax.
+Forgejo Actions is Actions-compatible: same `on:` / `jobs:` / `steps:` syntax.
 The differences that actually bite:
 
 | | GitHub | Forgejo (self-hosted) |
@@ -36,7 +36,7 @@ The differences that actually bite:
 | Dependabot | `.github/dependabot.yml` (`github-actions` only) | none (not supported) |
 
 Never write `ubuntu-slim` into a Forgejo workflow unless that label is actually
-registered on the instance — the job will sit queued forever.
+registered on the instance; the job will sit queued forever.
 
 `actions/checkout` and `actions/setup-*` may need to be swapped for
 `<forgejo-host>/actions/checkout@vN` if the runner cannot reach github.com.
@@ -49,7 +49,7 @@ Dependabot is never configured for code dependencies.
 
 A lean self-hosted runner label (`alpine`, and many small container images)
 typically ships only `gh`/`jq`/`git`/`curl`/`bash`. **Every `using: node24`
-or `using: node20` action fails there** — including `actions/checkout`,
+or `using: node20` action fails there**, including `actions/checkout`,
 `actions/setup-*`, and Forgejo's own mirror at
 `data.forgejo.org/actions/checkout`. The job dies at the first step with a
 missing-runtime error, which reads like a network problem but is not.
@@ -151,17 +151,17 @@ Dispatch across repos with a `repository_dispatch` event whose
 
 Always pass `ref:` for a release dispatch so the twin builds the tag it was
 asked to, not whatever `main` happens to be. Also pass `target:` explicitly
-(`new-tag`, `tag`, or `commit`) — the twin routes on it, and its default
+(`new-tag`, `tag`, or `commit`); the twin routes on it, and its default
 (`new-tag`) rejects SHAs, so a test-build dispatch without `target: "commit"`
 fails validation. Set `timeout-minutes` on every job that blocks on another
-runner — the default is 6 hours and a hung twin dispatch holds the Forgejo runner
+runner; the default is 6 hours and a hung twin dispatch holds the Forgejo runner
 for all of it.
 
 ### Twin release flow (Forgejo side)
 
 Same single-run shape as single-host repos, split across the wire: the
 Forgejo `release` workflow gates (dispatch twin CI and wait), bumps, tags,
-and pushes — then dispatches the twin `release` workflow with `ref` + `target`
+and pushes, then dispatches the twin `release` workflow with `ref` + `target`
 to build and publish. Dispatch guide, shared everywhere: **empty = ship,
 SHA = test, tag = rebuild**.
 
@@ -182,7 +182,7 @@ history) with no required status checks, so the release pushes straight to
 `main`. Push the bump commit and the tag in two steps, commit first: if the
 tag push fails, the next run recovers by tagging the existing commit (the
 manifest already matches, so the bump is a no-op and the recovery branch
-fires). Never combine them into one push — a half-landed push leaves a stray
+fires). Never combine them into one push; a half-landed push leaves a stray
 tag with no release.
 
 Guard both failure modes before pushing:
@@ -204,7 +204,7 @@ safe on GitHub. Dispatching that event to a twin **does** fan untrusted code
 into a secret-bearing run on the other side, where the twin's own trigger rules
 do apply. On a private repo where forks are unlikely this is accepted; if the
 repo is public, gate the dispatch on `github.event.pull_request.head.repo.full_name
-== github.repository` or drop the `pull_request` trigger. Record the decision —
+== github.repository` or drop the `pull_request` trigger. Record the decision :
 it is a security tradeoff, not an oversight.
 
 ### Repair path after a partial release
@@ -213,7 +213,7 @@ When a tag exists on Forgejo but the twin release never completed, **re-run
 `release` with `ref` set to the existing tag**. That rebuilds and publishes
 exactly that tag with no bump.
 
-### Observe the twin with `gh` — read-only, never write
+### Observe the twin with `gh`: read-only, never write
 
 The twin is inspected from the Forgejo-side checkout with the `gh` CLI (any
 read token works; the `GH_ACTIONS` PAT is fine). These are the only twin-side
@@ -228,7 +228,7 @@ gh run rerun --failed --repo <twin> <run-id>              # retry transient fail
 
 `gh run rerun` is the single sanctioned write: it re-executes an existing run
 without touching the twin's git state. Anything that would change the twin's
-files, branches, or tags is done on Forgejo and synced over — never pushed
+files, branches, or tags is done on Forgejo and synced over, never pushed
 directly.
 
 > Reference: `Delnegend/actions/twin-checkout` handles Forgejo source checkouts on the twin.
@@ -240,11 +240,11 @@ directly.
 private arrangement and must never appear in committed workflow files, generated
 docs, or summaries. Refer to it as "the GitHub twin" and let the owner supply
 `owner/repo` at apply time. (The curated reference above is skill content, not
-generated output — it stays.)
+generated output; it stays.)
 
 ## Branch protection
 
-Safety rails only: no force-push, no deletion, linear history — and no
+Safety rails only: no force-push, no deletion, linear history, and no
 required status checks. The release gates on all of CI itself (via
 `workflow_call`), which is stronger than any single PR rule, and the bot
 pushes the bump straight to `main`. Required checks would force the whole

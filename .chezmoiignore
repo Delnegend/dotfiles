@@ -1,7 +1,7 @@
-# Local secrets consumed via environment indirection — chezmoi must never overwrite them
+# Local secrets consumed via environment indirection; chezmoi must never overwrite them
 .omp/agent/.env
 
-# Non-chezmoi repo files (helpers — not home targets)
+# Non-chezmoi repo files (helpers; not home targets)
 README.md
 AGENTS.md
 LICENSE
@@ -26,7 +26,7 @@ LICENSE
 .Brewfile
 {{- end }}
 
-# Linux-only items — excluded on non-Linux machines.
+# Linux-only items: excluded on non-Linux machines.
 # Per-host scoping of systemd units lives in the units themselves
 # (ConditionPathExists=/ConditionHost=), not here.
 {{- if ne .chezmoi.os "linux" }}
