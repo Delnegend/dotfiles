@@ -46,3 +46,9 @@ Host git.delnegend.com
 {{- else }}
 	IdentityAgent ${SSH_AUTH_SOCK}
 {{- end }}
+
+Host bazzite
+	HostName bazzite
+	User lava
+	IdentityFile ~/.ssh/lava.pub
+	IdentityAgent //./pipe/openssh-ssh-agent
