@@ -24,7 +24,6 @@ dot_config/
   opencode/private_cli.json   # → ~/.config/opencode/cli.json (0600, TUI theme, diffs, sidebar, verbosity)
 dot_bashrc_custom.tmpl        # → ~/.bashrc_custom (sourced from ~/.bashrc, per-host template)
 dot_tmux.conf                 # → ~/.tmux.conf (Linux; tmux installed via brew bootstrap)
-dot_Brewfile                  # → ~/.Brewfile (Linux)
 dot_agents/                   # → ~/.agents (skills)
 dot_local/share/              # → ~/.local/share/ (bazzite-only Steam and WinBox launchers, WinBox icon)
 scripts/executable_l4d2-download.py # → ~/scripts/l4d2-download.py (Steam Workshop maps; retries through local dpi-proxy at 127.0.0.1:18118, configurable with DPI_PROXY_URL)

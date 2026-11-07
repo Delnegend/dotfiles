@@ -4,7 +4,7 @@ Sunshine game stream host configuration and recovery on Bazzite (KDE Plasma 6, W
 
 ## Architecture
 
-- **Systemd unit:** `dot_config/systemd/user/sunshine.service` binds to `graphical-session.target` (`PartOf=` and `WantedBy=`), orders after `xdg-desktop-autostart.target` and `xdg-desktop-portal.service`, delays 2 seconds (`ExecStartPre=/bin/sleep 2`), and includes fallback `Environment=WAYLAND_DISPLAY=wayland-0` and `DISPLAY=:0`.
+- **Systemd unit:** Managed via Homebrew (`brew services`). The developer service unit is `app-dev.lizardbyte.app.Sunshine.service` (aliased as `sunshine.service`), orders after `graphical-session.target`, delays 5 seconds (`ExecStartPre=/bin/sleep 5`), and auto-starts on login.
 - **Capture backend:** `~/.config/sunshine/sunshine.conf` sets `capture = kms` for direct GPU framebuffer capture from `/dev/dri/card1`.
 - **Permissions:** Requires `cap_sys_admin+ep` on `/home/linuxbrew/.linuxbrew/Cellar/sunshine/<version>/bin/sunshine` so the DRM worker thread can read scanout buffers.
 
