@@ -1,7 +1,7 @@
 modelRoles:
   web: web/kagi
   vision: opencode-go/deepseek-v4.1-flash:auto
-  default: openai-codex/gpt-6.1-terra:high
+  default: google-antigravity/gemini-3.8-flash:medium
 symbolPreset: ascii
 composer:
   shape: claude
@@ -9,7 +9,7 @@ composer:
 theme:
   dark: dark-terminal
   light: light
-setupVersion: 2
+setupVersion: 3
 github:
   enabled: true
 defaultThinkingLevel: auto
@@ -27,7 +27,7 @@ tui:
 display:
   cacheMissMarker: false
   shimmer: classic
-  hideToolActivity: false
+  hideToolActivity: true
   showTokenUsage: false
   collapseCompacted: true
 error:
@@ -54,3 +54,9 @@ browser:
   enabled: false
 codexResets:
   autoRedeem: "no"
+goal:
+  enabled: true
+update:
+  auto: true
+extensionRenderers:
+  transcriptPresenters: false
