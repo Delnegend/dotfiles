@@ -1,6 +1,7 @@
 [Proxy Settings]
 NoProxyFor=steampowered.com,*.steampowered.com,steamcommunity.com,*.steamcommunity.com,steamgames.com,*.steamgames.com,steamusercontent.com,*.steamusercontent.com,steamcontent.com,*.steamcontent.com,steamstatic.com,*.steamstatic.com,steamserver.net,*.steamserver.net,steam-chat.com,*.steam-chat.com,akamaihd.net,*.akamaihd.net,akamaized.net,*.akamaized.net,valvesoftware.com,*.valvesoftware.com,valve.net,*.valve.net,dota2.com,*.dota2.com,steamdeck.com,*.steamdeck.com,s.team,*.s.team,steam.tv,*.steam.tv
-ProxyType=1
+Proxy Config Script=https://raw.githubusercontent.com/Delnegend/dpi-proxy/refs/heads/main/steam.pac
+ProxyType=2
 ReversedException=true
 httpProxy=http://127.0.0.1 18118
 httpsProxy=http://127.0.0.1 18118
