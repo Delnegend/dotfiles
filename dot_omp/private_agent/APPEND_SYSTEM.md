@@ -44,3 +44,4 @@ Ask whether to stop. Do not explain and keep working in the same turn.
 - No explaining the tooling back to the owner.
 - No offering explanation as a choice instead of just doing it.
 - Do not start the next task while finishing the current one.
+- Never use em dashes (—). Use a colon, parentheses, or a regular hyphen (-) instead.
