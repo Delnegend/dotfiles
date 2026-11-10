@@ -20,9 +20,24 @@ _ensure_sunshine_cap:
 _start_sunshine:
 	brew services start sunshine
 
+# Ensure the HDMI dummy plug has the 1920x1200 mode registered in KWin.
+_ensure_dummy_mode:
+	#!/usr/bin/bash
+	if ! just _kscreen --outputs | grep -q "1920x1200"; then
+		just _kscreen output.HDMI-A-1.addCustomMode.1920.1200.60000.full
+	fi
+
 # Run kscreen-doctor against the KDE Wayland session (works over SSH too).
 _kscreen *args:
-	QT_QPA_PLATFORM=wayland WAYLAND_DISPLAY=wayland-0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus kscreen-doctor {{ "{{" }}args}} 2>&1 || true
+	#!/usr/bin/bash
+	WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-$(systemctl --user show-environment 2>/dev/null | sed -n 's/^WAYLAND_DISPLAY=//p')}"
+	if [[ -z "$WAYLAND_DISPLAY" ]]; then
+		WAYLAND_DISPLAY=$(find /run/user/$(id -u) -maxdepth 1 -name "wayland-*" -type s -printf "%f\n" 2>/dev/null | head -n 1)
+	fi
+	QT_QPA_PLATFORM=wayland \
+	WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-0}" \
+	DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus" \
+	kscreen-doctor {{ "{{" }}args}} 2>&1 || true
 
 _unlock_gnome:
 	#!/usr/bin/bash
@@ -133,9 +148,9 @@ dp: _ensure_sunshine_cap && _start_sunshine
 
 # Switch to the HDMI dummy plug (for headless streaming).
 [group("display")]
-dummy: _ensure_sunshine_cap && _start_sunshine
+dummy: _ensure_sunshine_cap _ensure_dummy_mode && _start_sunshine
 	brew services stop sunshine
-	just _kscreen output.HDMI-A-1.enable output.DP-2.disable
+	just _kscreen output.HDMI-A-1.enable output.HDMI-A-1.mode.1920x1200@60 output.DP-2.disable
 
 _dp_gnome:
 	#!/usr/bin/bash
@@ -203,11 +218,11 @@ _dummy_gnome res="1920x1200":
 
 # Flip the HDMI dummy plug between 1920x1080 and 1920x1200.
 [group("display")]
-toggle-hdmi-res: && _start_sunshine
+toggle-hdmi-res: _ensure_dummy_mode && _start_sunshine
 	#!/bin/bash
 	brew services stop sunshine
-	CURRENT=$(just _kscreen --outputs | grep -oP '\d+x\d+(?=@\d+\.\d+\*)' | head -1)
-	if [[ "$CURRENT" == "2560x1440" ]]; then
+	CURRENT=$(just _kscreen --outputs | grep -A 15 "HDMI-A-1" | grep -oP '\d+x\d+(?=@\d+\.\d+\*)' | head -1)
+	if [[ "$CURRENT" == "1920x1200" ]]; then
 		just _kscreen output.HDMI-A-1.mode.1920x1080@60
 	else
 		just _kscreen output.HDMI-A-1.mode.1920x1200@60
