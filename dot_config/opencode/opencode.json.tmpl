@@ -1,6 +1,22 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "providers": {
+    "zero-g": {
+      "name": "Zero G",
+      "env": ["ZERO_G_TOKEN"],
+      "package": "@opencode/ai/providers/openai-compatible",
+      "settings": {
+        "baseURL": "https://ai.delnegend.com/v1",
+        "modelsDiscovery": {
+          "enabled": true,
+          "smartModelName": true,
+          "cache": {
+            "enabled": true,
+            "ttlSeconds": 86400
+          }
+        }
+      }
+    },
     "bazzite": {
       "name": "Bazzite llama.cpp",
       "package": "@opencode/ai/providers/openai-compatible",

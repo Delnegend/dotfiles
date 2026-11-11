@@ -20,7 +20,7 @@ _ensure_sunshine_cap:
 _start_sunshine:
 	brew services start sunshine
 
-# Ensure the HDMI dummy plug has the 1920x1200 mode registered in KWin.
+	# Ensure the HDMI dummy plug has the 1920x1200 mode registered in KWin.
 _ensure_dummy_mode:
 	#!/usr/bin/bash
 	if ! just _kscreen --outputs | grep -q "1920x1200"; then

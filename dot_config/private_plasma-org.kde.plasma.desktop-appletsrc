@@ -67,7 +67,7 @@ DialogWidth=810
 activityId=
 formfactor=0
 immutability=1
-lastScreen=-1
+lastScreen=0
 location=0
 plugin=org.kde.plasma.systemtray
 popupHeight=432
@@ -100,7 +100,7 @@ plugin=org.kde.plasma.devicenotifier
 
 [Containments][32][Applets][33][Applets][40]
 immutability=1
-plugin=org.kde.plasma.keyboardindicator
+plugin=org.kde.plasma.dwellclicker
 
 [Containments][32][Applets][33][Applets][41]
 immutability=1
@@ -154,9 +154,9 @@ DialogHeight=630
 DialogWidth=810
 
 [Containments][32][Applets][33][General]
-extraItems=org.kde.plasma.vault,org.kde.kscreen,org.kde.plasma.battery,org.kde.plasma.bluetooth,org.kde.plasma.brightness,org.kde.plasma.cameraindicator,org.kde.plasma.clipboard,org.kde.plasma.devicenotifier,org.kde.plasma.keyboardindicator,org.kde.plasma.keyboardlayout,org.kde.plasma.manage-inputmethod,org.kde.plasma.networkmanagement,org.kde.plasma.printmanager,org.kde.plasma.volume,org.kde.plasma.weather,org.kde.plasma.notifications,org.kde.plasma.mediacontroller,org.kde.kdeconnect
+extraItems=org.kde.plasma.vault,org.kde.kscreen,org.kde.plasma.battery,org.kde.plasma.bluetooth,org.kde.plasma.brightness,org.kde.plasma.cameraindicator,org.kde.plasma.clipboard,org.kde.plasma.devicenotifier,org.kde.plasma.keyboardindicator,org.kde.plasma.keyboardlayout,org.kde.plasma.manage-inputmethod,org.kde.plasma.networkmanagement,org.kde.plasma.printmanager,org.kde.plasma.volume,org.kde.plasma.weather,org.kde.plasma.notifications,org.kde.plasma.mediacontroller,org.kde.kdeconnect,org.kde.plasma.dwellclicker
 hiddenItems=org.kde.plasma.notifications,org.kde.plasma.mediacontroller,org.kde.kdeconnect
-knownItems=org.kde.kdeconnect,org.kde.plasma.vault,org.kde.kscreen,org.kde.plasma.battery,org.kde.plasma.bluetooth,org.kde.plasma.brightness,org.kde.plasma.cameraindicator,org.kde.plasma.clipboard,org.kde.plasma.devicenotifier,org.kde.plasma.keyboardindicator,org.kde.plasma.keyboardlayout,org.kde.plasma.manage-inputmethod,org.kde.plasma.mediacontroller,org.kde.plasma.networkmanagement,org.kde.plasma.notifications,org.kde.plasma.printmanager,org.kde.plasma.volume,org.kde.plasma.weather
+knownItems=org.kde.kdeconnect,org.kde.plasma.vault,org.kde.kscreen,org.kde.plasma.battery,org.kde.plasma.bluetooth,org.kde.plasma.brightness,org.kde.plasma.cameraindicator,org.kde.plasma.clipboard,org.kde.plasma.devicenotifier,org.kde.plasma.keyboardindicator,org.kde.plasma.keyboardlayout,org.kde.plasma.manage-inputmethod,org.kde.plasma.mediacontroller,org.kde.plasma.networkmanagement,org.kde.plasma.notifications,org.kde.plasma.printmanager,org.kde.plasma.volume,org.kde.plasma.weather,org.kde.plasma.dwellclicker
 
 [Containments][32][Applets][5]
 immutability=1
@@ -247,19 +247,8 @@ favoritesPortedToKAstats=true
 icon=applications-all-symbolic
 systemFavorites=suspend\\,hibernate\\,reboot\\,shutdown
 
-[Containments][32][Applets][68]
-immutability=1
-plugin=com.himdek.kde.plasma.overview
-
-[Containments][32][Applets][68][Configuration][ConfigDialog]
-DialogHeight=630
-DialogWidth=810
-
-[Containments][32][Applets][68][Configuration][General]
-icon=bazzite-logo
-
 [Containments][32][General]
-AppletOrder=68;53;5;51;67;23;57;52;33
+AppletOrder=53;5;51;67;23;57;52;33
 
 [Containments][58]
 activityId=

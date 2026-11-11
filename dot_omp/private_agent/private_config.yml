@@ -1,7 +1,6 @@
 modelRoles:
   web: web/kagi
-  vision: opencode-go/deepseek-v4.1-flash:auto
-  default: google-antigravity/gemini-3.8-flash:medium
+  default: zero-g/codex/gpt-6.1-terra:medium
 symbolPreset: ascii
 composer:
   shape: claude
@@ -53,7 +52,8 @@ bashInterceptor:
 browser:
   enabled: false
 codexResets:
-  autoRedeem: "no"
+  autoRedeem5h: "no"
+  autoRedeemWeekly: "no"
 goal:
   enabled: true
 update:

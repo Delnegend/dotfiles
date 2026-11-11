@@ -1,1 +1,7 @@
-providers: {}
+providers:
+  zero-g:
+    baseUrl: https://ai.delnegend.com/v1
+    apiKey: ZERO_G_TOKEN
+    api: openai-completions
+    discovery:
+      type: openai-models-list
