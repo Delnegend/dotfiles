@@ -3,7 +3,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 
 function settings() {
-  const config = JSON.parse(readFileSync(join(homedir(), ".config/opencode/opencode.json"), "utf8"));
+  const config = Bun.JSON5.parse(readFileSync(join(homedir(), ".config/opencode/opencode.json"), "utf8"));
   const server = config.mcp.servers.mempalace;
   const endpoint = server.url;
   const wing = server.headers["X-MemPalace-Wing"];
