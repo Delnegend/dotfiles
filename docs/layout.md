@@ -22,6 +22,7 @@ dot_config/
   systemd/user/*              # → ~/.config/systemd/user/ (Linux)
   opencode/opencode.json.tmpl # → ~/.config/opencode/opencode.json (providers, MCP servers + MemPalace)
   opencode/private_cli.json   # → ~/.config/opencode/cli.json (0600, TUI theme, diffs, sidebar, verbosity)
+  opencode/zero-g-discovery/  # → ~/.config/opencode/zero-g-discovery/ (discovers Zero G models at startup)
 dot_bashrc_custom.tmpl        # → ~/.bashrc_custom (sourced from ~/.bashrc, per-host template)
 dot_tmux.conf                 # → ~/.tmux.conf (Linux; tmux installed via brew bootstrap)
 dot_Brewfile                  # → ~/Brewfile (Linux)

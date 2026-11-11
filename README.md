@@ -28,6 +28,7 @@ chezmoi status    # what would change; expect clean
 - **One-shot setup, quiet maintenance**: `run_once_*` scripts set the machine up; `run_onchange_*` scripts re-run only when their inputs change.
 - **Machine-aware by default**: `wsl`, `homelab` (`core`), `bazzite` and new hosts each get their own branch instead of commented-out blocks.
 - **Steam downloads on Bazzite**: the Homebrew `dpi-proxy` service listens on `127.0.0.1:18118` for Steam's web and download connections.
+- **OpenCode model discovery**: the local Zero G plugin fetches model limits, supported input types and thinking levels at startup using `ZERO_G_TOKEN`. Where Zero G omits details, it assumes text input and output, tool support, a 200,000-token context window and up to 32,000 output tokens.
 
 ## Documentation
 

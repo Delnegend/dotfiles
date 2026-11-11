@@ -6,15 +6,7 @@
       "env": ["ZERO_G_TOKEN"],
       "package": "@opencode/ai/providers/openai-compatible",
       "settings": {
-        "baseURL": "https://ai.delnegend.com/v1",
-        "modelsDiscovery": {
-          "enabled": true,
-          "smartModelName": true,
-          "cache": {
-            "enabled": true,
-            "ttlSeconds": 86400
-          }
-        }
+        "baseURL": "https://ai.delnegend.com/v1"
       }
     },
     "bazzite": {
@@ -71,6 +63,6 @@
   },
   "plugins": [
     "{{ .chezmoi.homeDir }}/.config/opencode/mempalace",
-    "opencode-models-discovery@2.1.0"
+    "{{ .chezmoi.homeDir }}/.config/opencode/zero-g-discovery"
   ]
 }
