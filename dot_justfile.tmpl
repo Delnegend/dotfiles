@@ -20,6 +20,9 @@ _ensure_sunshine_cap:
 _start_sunshine:
 	brew services start sunshine
 
+_start_krdp:
+	systemctl --user start app-org.kde.krdpserver.service
+
 	# Ensure the HDMI dummy plug has the 1920x1200 mode registered in KWin.
 _ensure_dummy_mode:
 	#!/usr/bin/bash
@@ -142,14 +145,16 @@ _fix-local-dimming_gnome:
 
 # Switch to the physical monitor (DP-2 on, HDMI dummy off).
 [group("display")]
-dp: _ensure_sunshine_cap && _start_sunshine
+dp: _ensure_sunshine_cap && _start_sunshine _start_krdp
 	brew services stop sunshine
+	systemctl --user stop app-org.kde.krdpserver.service
 	just _kscreen output.DP-2.enable output.HDMI-A-1.disable
 
 # Switch to the HDMI dummy plug (for headless streaming).
 [group("display")]
-dummy: _ensure_sunshine_cap _ensure_dummy_mode && _start_sunshine
+dummy: _ensure_sunshine_cap _ensure_dummy_mode && _start_sunshine _start_krdp
 	brew services stop sunshine
+	systemctl --user stop app-org.kde.krdpserver.service
 	just _kscreen output.HDMI-A-1.enable output.HDMI-A-1.mode.1920x1200@60 output.DP-2.disable
 
 _dp_gnome:
@@ -218,9 +223,10 @@ _dummy_gnome res="1920x1200":
 
 # Flip the HDMI dummy plug between 1920x1080 and 1920x1200.
 [group("display")]
-toggle-hdmi-res: _ensure_dummy_mode && _start_sunshine
+toggle-hdmi-res: _ensure_dummy_mode && _start_sunshine _start_krdp
 	#!/bin/bash
 	brew services stop sunshine
+	systemctl --user stop app-org.kde.krdpserver.service
 	CURRENT=$(just _kscreen --outputs | grep -A 15 "HDMI-A-1" | grep -oP '\d+x\d+(?=@\d+\.\d+\*)' | head -1)
 	if [[ "$CURRENT" == "1920x1200" ]]; then
 		just _kscreen output.HDMI-A-1.mode.1920x1080@60

@@ -8,6 +8,8 @@ Sunshine game stream host configuration and recovery on Bazzite (KDE Plasma 6, W
 - **Capture backend:** `~/.config/sunshine/sunshine.conf` sets `capture = kms` for direct GPU framebuffer capture from `/dev/dri/card1`.
 - **Permissions:** Requires `cap_sys_admin+ep` on `/home/linuxbrew/.linuxbrew/Cellar/sunshine/<version>/bin/sunshine` so the DRM worker thread can read scanout buffers.
 
+The `dp`, `dummy`, and `toggle-hdmi-res` recipes stop Sunshine and the KDE remote desktop server (`app-org.kde.krdpserver.service`) before changing the display, then start both again. Stopping the remote desktop server disconnects its active sessions.
+
 ## Troubleshooting: Black Screen / Empty KMS Monitor List
 
 ### Symptoms
