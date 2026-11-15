@@ -5,3 +5,17 @@ providers:
     api: openai-completions
     discovery:
       type: openai-models-list
+  zero-g-responses:
+    baseUrl: https://ai.delnegend.com/v1
+    apiKey: ZERO_G_TOKEN
+    api: openai-responses
+    compat:
+      statefulResponses: false
+    discovery:
+      type: openai-models-list
+  # Claude subscription via zero-g's Anthropic pass-through (/v1/messages).
+  # The config key outranks stored Claude OAuth; delete this block to use it again.
+  anthropic:
+    baseUrl: https://ai.delnegend.com
+    apiKey: ZERO_G_TOKEN
+    auth: oauth

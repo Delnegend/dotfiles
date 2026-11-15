@@ -29,6 +29,7 @@ chezmoi status    # what would change; expect clean
 - **Machine-aware by default**: `wsl`, `homelab` (`core`), `bazzite` and new hosts each get their own branch instead of commented-out blocks.
 - **Steam downloads on Bazzite**: the Homebrew `dpi-proxy` service listens on `127.0.0.1:18118` for Steam's web and download connections.
 - **OpenCode model discovery**: the local `models-discovery` plugin discovers configured OpenAI-compatible providers at startup. Missing metadata uses placeholders: text input and output, tools disabled, an 8,192-token context and at most 1,024 output tokens. These are not provider facts. Restart OpenCode after configuration changes.
+- **OMP Zero G routes**: `zero-g` uses Chat Completions; `zero-g-responses` uses the Responses API with full conversation history. Use `zero-g` for ChatJimmy or other routes without Responses support. The Responses entry requires a compatible Zero G server deployment.
 
 ## Documentation
 
