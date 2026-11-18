@@ -6,8 +6,10 @@ README.md
 AGENTS.md
 LICENSE
 .gitignore
+docs/**
+scripts/zero-g-discovery.test.mjs
 
-# Desktop / Bazzite-only items (Flatpak apps, KDE theme, fontconfig)
+# Desktop / Bazzite-only items (Flatpak apps, KDE theme, fontconfig, scripts)
 {{- if ne .chezmoi.hostname "bazzite" }}
 .var/**
 .config/environment.d/kde-dark.conf
@@ -21,10 +23,8 @@ LICENSE
 .config/gtk-4.0/**
 .config/kglobalshortcutsrc
 .justfile
-.local/share/applications/mikrotik-winbox.desktop
-.local/share/applications/steam.desktop
-.local/share/pixmaps/mikrotik-winbox.png
-.Brewfile
+.local/**
+scripts/**
 {{- end }}
 
 # Linux-only items: excluded on non-Linux machines.
