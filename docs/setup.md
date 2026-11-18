@@ -56,9 +56,8 @@ For a new machine, add a branch in `dot_bashrc_custom.tmpl` matching
     ssh -T github.com         # should print "Hi Delnegend! ..."
     ```
 
-Linux-only files (systemd units, fontconfig, Flatpak `dot_var/`,
-`dot_Brewfile`, `dot_bashrc_custom`) also land on Windows; harmless by
-design.
+Linux-only and Bazzite-only files (systemd units, fontconfig, Flatpak `dot_var/`,
+`dot_bashrc_custom`, `dot_justfile.tmpl`) are excluded on Windows via `.chezmoiignore`.
 
 ## Daily use
 

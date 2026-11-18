@@ -6,7 +6,7 @@ Secrets never live in this repo; each machine carries its own secret files.
   `~/.omp/agent/.env`. `omp` reads it through `apiKey: ZERO_G_TOKEN` in
   `models.yml`; OpenCode gets it from `~/.bashrc_custom`, which exports the file.
   The provider talks to `https://ai.delnegend.com/v1` over Tailscale.
-- **MemPalace token (omp.sh and OpenCode):** set `MEMPALACE_MCP_HTTP_TOKEN=<token>`
+- **MemPalace token (omp and OpenCode):** set `MEMPALACE_MCP_HTTP_TOKEN=<token>`
   in `~/.omp/agent/.env` and restrict it with `chmod 600 ~/.omp/agent/.env`.
   Obtain the token securely from the homelab's SOPS-encrypted
   `layers/4-workloads/apps/mempalace/secrets.enc.yaml`; do not commit it.

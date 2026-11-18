@@ -6,37 +6,37 @@
 # Files (dot_ → ~/., private_ → 0600/0700, .tmpl → Go template)
 dot_gitconfig.tmpl            # → ~/.gitconfig (OS-conditional: Windows gh.exe vs Linux brew gh)
 private_dot_ssh/              # → ~/.ssh/ (0700)
-  private_config.tmpl         #   unified SSH config (core + github + git.delnegend)
-  core@homelab.pub, delnegend@*.pub  #   public keys
+  private_config.tmpl         #   unified SSH config (homelab + github + git.delnegend + bazzite)
+  core@homelab.pub, delnegend@*.pub, twin@github.pub  # public keys
 dot_config/
   private_git/allowed_signers # → ~/.config/git/allowed_signers
-  fontconfig/fonts.conf       # → ~/.config/fontconfig/fonts.conf (Linux)
-  kdeglobals                  # → ~/.config/kdeglobals (private 0600, bazzite-only)
-  kwinrc                      # → ~/.config/kwinrc (private 0600, bazzite-only)
-  plasma-org.kde.plasma.desktop-appletsrc  # → panel/widgets/wallpaper (private 0600, bazzite-only)
-  plasmashellrc               # → ~/.config/plasmashellrc (private 0600, bazzite-only)
-  konsolerc                   # → ~/.config/konsolerc (private 0600, bazzite-only)
-  gtk-3.0/settings.ini, gtk-4.0/settings.ini  # → GTK theme (private 0600, bazzite-only)
-  kglobalshortcutsrc          # → keyboard shortcuts (private 0600, bazzite-only)
-  environment.d/              # → ~/.config/environment.d/ (kde-dark.conf, ssh.conf.tmpl)
+  fontconfig/fonts.conf       # → ~/.config/fontconfig/fonts.conf (bazzite-only)
+  private_kdeglobals          # → ~/.config/kdeglobals (private 0600, bazzite-only)
+  private_kwinrc              # → ~/.config/kwinrc (private 0600, bazzite-only)
+  private_plasma-org.kde.plasma.desktop-appletsrc  # → panel/widgets/wallpaper (private 0600, bazzite-only)
+  private_plasmashellrc       # → ~/.config/plasmashellrc (private 0600, bazzite-only)
+  private_konsolerc           # → ~/.config/konsolerc (private 0600, bazzite-only)
+  private_gtk-3.0/private_settings.ini, private_gtk-4.0/private_settings.ini  # → GTK theme (private 0600, bazzite-only)
+  private_kglobalshortcutsrc  # → keyboard shortcuts (private 0600, bazzite-only)
+  environment.d/              # → ~/.config/environment.d/ (kde-dark.conf on bazzite, ssh.conf.tmpl on Linux)
   systemd/user/*              # → ~/.config/systemd/user/ (Linux)
   opencode/opencode.json.tmpl # → ~/.config/opencode/opencode.json (providers, MCP servers + MemPalace)
   opencode/private_cli.json   # → ~/.config/opencode/cli.json (0600, TUI theme, diffs, sidebar, verbosity)
+  opencode/mempalace/         # → ~/.config/opencode/mempalace/ (automatic MemPalace recall plugin)
   opencode/models-discovery/  # → ~/.config/opencode/models-discovery/ (discovers configured compatible providers)
 dot_bashrc_custom.tmpl        # → ~/.bashrc_custom (sourced from ~/.bashrc, per-host template)
 dot_tmux.conf                 # → ~/.tmux.conf (Linux; tmux installed via brew bootstrap)
-dot_Brewfile                  # → ~/Brewfile (Linux)
 dot_agents/                   # → ~/.agents (skills)
-dot_local/share/              # → ~/.local/share/ (bazzite-only WinBox launcher and official icon)
-scripts/executable_l4d2-download.py # → ~/scripts/l4d2-download.py (Steam Workshop maps into local L4D2 addons; accepts URLs or IDs)
+dot_local/share/              # → ~/.local/share/ (bazzite-only Steam proxy & WinBox launchers + icon)
+scripts/executable_l4d2-download.py # → ~/scripts/l4d2-download.py (bazzite-only; Steam Workshop maps into local L4D2 addons)
 dot_omp/private_agent/        # → ~/.omp/agent/ (0700)
   private_config.yml          #   oh-my-pi config (secrets via ${ENV} indirection)
-  models.yml                  #   custom OpenAI-compatible provider (Zero G, token from ZERO_G_TOKEN)
+  models.yml                  #   custom OpenAI-compatible providers (Zero G, Anthropic pass-through)
   APPEND_SYSTEM.md             #   standing reply rules (plain language, conclusion first); appends to the built-in prompt
-  mcp.json.tmpl               #   MCP servers (playwright, mikrotik, MemPalace)
-dot_justfile.tmpl             # → ~/.justfile (bazzite recipes, including l4d2-download)
-dot_var/app/...               # → ~/.var/app/... (Flatpak mpv/easyeffects, Linux)
-
+  mcp.json.tmpl               #   MCP servers (integrated-browser-mcp, playwright, mikrotik, MemPalace)
+  extensions/mempalace.ts     #   automatic MemPalace recall extension
+dot_justfile.tmpl             # → ~/.justfile (bazzite-only recipes, including l4d2-download)
+dot_var/app/...               # → ~/.var/app/... (Flatpak mpv/easyeffects, bazzite-only)
 # Setup scripts (Linux-gated via {{ if eq .chezmoi.os "linux" }})
 run_once_10-bootstrap.sh.tmpl # Homebrew + base packages + ~/.bashrc wiring
 run_onchange_20-fonts.sh.tmpl # Iosevka + JetBrains Mono Nerd Fonts + Noto Color Emoji + fc-cache
@@ -46,5 +46,5 @@ run_onchange_50-udev.sh.tmpl  # 99-disable-ncq-s4510.rules → /etc/udev (sudo)
 run_onchange_60-modprobe.sh.tmpl # hid_apple.conf → /etc/modprobe.d (sudo)
 
 # Repo-only (ignored via .chezmoiignore, never applied)
-README.md  AGENTS.md  LICENSE
+README.md  AGENTS.md  LICENSE  .gitignore  docs/  scripts/zero-g-discovery.test.mjs
 ```
