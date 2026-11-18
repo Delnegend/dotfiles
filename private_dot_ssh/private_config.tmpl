@@ -51,4 +51,8 @@ Host bazzite
 	HostName bazzite
 	User lava
 	IdentityFile ~/.ssh/lava.pub
+{{- if eq .chezmoi.os "windows" }}
 	IdentityAgent //./pipe/openssh-ssh-agent
+{{- else }}
+	IdentityAgent ${SSH_AUTH_SOCK}
+{{- end }}
