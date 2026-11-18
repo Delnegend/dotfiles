@@ -4,7 +4,7 @@
     "integrated-browser-mcp": {
       "command": "node",
       "args": [{{ printf "%s/.integrated-browser-mcp/mcp-server.mjs" .chezmoi.homeDir | toJson }}],
-      "enabled": true
+      "enabled": {{ if stat (joinPath .chezmoi.homeDir ".integrated-browser-mcp/mcp-server.mjs") }}true{{ else }}false{{ end }}
     },
     "playwright": {
       "command": "bunx",
