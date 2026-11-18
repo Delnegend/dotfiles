@@ -98,6 +98,23 @@ unlock:
 
 	CONF_DIR="/etc/plasmalogin.conf.d"
 	PAM_DIR="/etc/pam.d"
+	FILES=(
+		"$CONF_DIR/99-autologin.conf"
+		"$PAM_DIR/plasmalogin"
+		"$PAM_DIR/plasmalogin-autologin"
+		"$PAM_DIR/plasmalogin-greeter"
+	)
+
+	cleanup() {
+		for f in "${FILES[@]}"; do
+			if [[ -e "$f" ]]; then
+				echo "Cleaning up temporary autologin/PAM overrides..."
+				sudo rm -f "${FILES[@]}"
+				break
+			fi
+		done
+	}
+	trap cleanup EXIT
 
 	sudo bash -c "
 		rm -f '$CONF_DIR/99-plasma-setup.conf'
@@ -113,25 +130,12 @@ unlock:
 		if loginctl list-sessions 2>/dev/null | grep -q 'lava.*seat0'; then
 			echo "Session found, waiting 10s for services to settle..."
 			sleep 10
-			sudo bash -c "
-				rm -f '$CONF_DIR/99-autologin.conf' \
-				      '$PAM_DIR/plasmalogin' \
-				      '$PAM_DIR/plasmalogin-autologin' \
-				      '$PAM_DIR/plasmalogin-greeter'
-			"
-			echo "Session started. Cleaned up."
+			echo "Session started."
 			exit 0
-	fi
-
+		fi
 		sleep 1
 	done
-	sudo bash -c "
-		rm -f '$CONF_DIR/99-autologin.conf' \
-		      '$PAM_DIR/plasmalogin' \
-		      '$PAM_DIR/plasmalogin-autologin' \
-		      '$PAM_DIR/plasmalogin-greeter'
-	"
-	echo "Timed out waiting for session. Cleaned up." >&2
+	echo "Timed out waiting for session." >&2
 	exit 1
 
 fix-local-dimming:
