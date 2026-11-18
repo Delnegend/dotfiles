@@ -2,13 +2,14 @@
 #!/bin/bash
 set -e
 # devcontainers and other containers may lack systemd entirely.
-if ! systemctl --user is-system-running >/dev/null 2>&1; then
+if [ ! -d /run/systemd/system ] || ! systemctl --user show-environment >/dev/null 2>&1; then
     exit 0
 fi
 # Enable chezmoi-managed user units; conditions in unit files scope execution.
 # openrgb-off hash: {{ include "dot_config/systemd/user/openrgb-off.service" | sha256sum }}
 # npiperelay hash: {{ include "dot_config/systemd/user/npiperelay.service" | sha256sum }}
 # dotfiles-pull hash: {{ include "dot_config/systemd/user/dotfiles-pull.service" | sha256sum }}
+# dotfiles-pull.timer hash: {{ include "dot_config/systemd/user/dotfiles-pull.timer" | sha256sum }}
 
 systemctl --user daemon-reload
 systemctl --user enable --now openrgb-off.service
