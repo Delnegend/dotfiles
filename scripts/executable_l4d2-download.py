@@ -4,6 +4,7 @@ Download a Left 4 Dead 2 custom map/campaign from Steam Workshop,
 save it to the local game addons directory.
 """
 
+from concurrent.futures import ThreadPoolExecutor
 from html.parser import HTMLParser
 import json
 import os
@@ -30,8 +31,8 @@ def fetch_bytes(url, data=None, headers=None, timeout=10):
             return resp.read(), dict(resp.headers)
     except Exception as direct_err:
         cmd = [
-            "curl", "-sS", "--fail-with-body", "--noproxy", "", "--proxy", PROXY_URL,
-            "--suppress-connect-headers", "--max-time", str(timeout), "-D", "-", "-o", "-",
+            "curl", "-sSL", "--fail-with-body", "--noproxy", "", "--proxy", PROXY_URL,
+            "--max-time", str(timeout), "-o", "-",
         ]
         for k, v in (headers or {}).items():
             cmd += ["-H", f"{k}: {v}"]
@@ -44,14 +45,7 @@ def fetch_bytes(url, data=None, headers=None, timeout=10):
             raise direct_err from e
         if proc.returncode != 0:
             raise direct_err
-        head, _, body = proc.stdout.partition(b"\r\n\r\n")
-        hdrs = {}
-        for line in head.decode("latin-1").splitlines()[1:]:
-            if ":" in line:
-                k, v = line.split(":", 1)
-                hdrs[k] = v.strip()
-        return body, hdrs
-
+        return proc.stdout, {}
 
 def fetch_json(url, data=None, headers=None, timeout=10):
     """fetch_bytes + JSON decode."""
@@ -105,8 +99,12 @@ def expand_items(ids, depth=0, seen=None):
     if seen is None:
         seen = set(ids)
     out = []
-    for wid in ids:
-        children = check_collection(wid)
+    if len(ids) > 1:
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            children_list = list(pool.map(check_collection, ids))
+    else:
+        children_list = [check_collection(wid) for wid in ids]
+    for wid, children in zip(ids, children_list):
         if not children:
             out.append(wid)
             continue
@@ -159,26 +157,42 @@ class RequiredItemsParser(HTMLParser):
             self.depth -= 1
 
 
+def _fetch_linked_ids(details):
+    """Fetch a workshop item's page and extract required/linked workshop IDs."""
+    wid = str(details["publishedfileid"])
+    page, _ = fetch_bytes(
+        f"https://steamcommunity.com/sharedfiles/filedetails/?id={wid}",
+        headers={"User-Agent": "L4D2-Downloader/1.0"},
+        timeout=15,
+    )
+    parser = RequiredItemsParser()
+    parser.feed(page.decode("utf-8", "replace"))
+    linked = parser.ids
+    if re.search(r"part\s*\d+\s*/\s*\d+", str(details.get("title") or ""), re.IGNORECASE):
+        text = f"{details.get('short_description') or ''}\n{details.get('description') or ''}"
+        linked += extract_linked_workshop_ids(text)
+    return linked
+
+
 def expand_required_items(details_list):
     """Include required items recursively, along with linked multipart descriptions."""
     seen = {str(d["publishedfileid"]) for d in details_list}
     index = 0
     while index < len(details_list):
-        details = details_list[index]
-        index += 1
-        wid = str(details["publishedfileid"])
-        page, _ = fetch_bytes(
-            f"https://steamcommunity.com/sharedfiles/filedetails/?id={wid}",
-            headers={"User-Agent": "L4D2-Downloader/1.0"},
-            timeout=15,
-        )
-        parser = RequiredItemsParser()
-        parser.feed(page.decode("utf-8", "replace"))
-        linked = parser.ids
-        if re.search(r"part\s*\d+\s*/\s*\d+", str(details.get("title") or ""), re.IGNORECASE):
-            text = f"{details.get('short_description') or ''}\n{details.get('description') or ''}"
-            linked += extract_linked_workshop_ids(text)
-        new_ids = [item for item in expand_items(list(dict.fromkeys(linked))) if item not in seen]
+        batch = details_list[index:]
+        index = len(details_list)
+        if len(batch) > 1:
+            with ThreadPoolExecutor(max_workers=4) as pool:
+                linked_batches = list(pool.map(_fetch_linked_ids, batch))
+        else:
+            linked_batches = [_fetch_linked_ids(batch[0])]
+        candidates = [
+            item
+            for linked in linked_batches
+            for item in dict.fromkeys(linked)
+            if item not in seen
+        ]
+        new_ids = [item for item in expand_items(list(dict.fromkeys(candidates))) if item not in seen]
         if new_ids:
             print(f"🔗 Found {len(new_ids)} required or linked item(s): {', '.join(new_ids)}")
             extra = get_published_file_details(new_ids)
@@ -274,7 +288,7 @@ def stream_response(resp, tmp_path, total_size):
 def download_via_proxy(url, tmp_path, expected_size, timeout=600):
     """Stream the URL through the HTTP proxy with curl; returns bytes or raises."""
     proc = subprocess.Popen(
-        ["curl", "-sS", "--fail-with-body", "--noproxy", "", "--proxy", PROXY_URL,
+        ["curl", "-sSL", "--fail-with-body", "--noproxy", "", "--proxy", PROXY_URL,
          "--max-time", str(timeout), "-H", "User-Agent: Valve/Steam", url],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
     )
@@ -282,20 +296,24 @@ def download_via_proxy(url, tmp_path, expected_size, timeout=600):
     downloaded = 0
     start_time = time.time()
     last_print = 0
-    with open(tmp_path, "wb") as f:
-        while True:
-            chunk = proc.stdout.read(64 * 1024)
-            if not chunk:
-                break
-            f.write(chunk)
-            downloaded += len(chunk)
-            last_print = report_progress(downloaded, total_size, start_time, last_print)
-    _, err = proc.communicate(timeout=30)
-    print()
-    if proc.returncode != 0:
-        raise RuntimeError(err.decode("utf-8", "replace").strip() or f"curl exit {proc.returncode}")
-    return downloaded
-
+    try:
+        with open(tmp_path, "wb") as f:
+            while True:
+                chunk = proc.stdout.read(64 * 1024)
+                if not chunk:
+                    break
+                f.write(chunk)
+                downloaded += len(chunk)
+                last_print = report_progress(downloaded, total_size, start_time, last_print)
+        _, err = proc.communicate(timeout=30)
+        print()
+        if proc.returncode != 0:
+            raise RuntimeError(err.decode("utf-8", "replace").strip() or f"curl exit {proc.returncode}")
+        return downloaded
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+            proc.wait()
 
 def download_file(url, target_path, expected_size=0):
     """Download a file with a progress bar, writing to .tmp before renaming."""
