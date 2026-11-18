@@ -23,7 +23,7 @@ if [ -f "$HOME/.omp/agent/.env" ]; then
     set +a
 fi
 
-if [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
+if [ -z "${HOMEBREW_PREFIX:-}" ] && [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
     if ! grep -qs 'brew shellenv' "$HOME/.profile" 2>/dev/null; then
         echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> "$HOME/.profile"
     fi
@@ -46,7 +46,7 @@ if [ -f /run/.containerenv ]; then
     export PATH=$PATH:/usr/local/go/bin
 fi
 
-eval "$(starship init bash)"
-eval "$(zoxide init bash --cmd cd)"
+command -v starship >/dev/null 2>&1 && eval "$(starship init bash)"
+command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init bash --cmd cd)"
 
 [ -f /usr/share/bash-completion/bash_completion ] && source /usr/share/bash-completion/bash_completion
