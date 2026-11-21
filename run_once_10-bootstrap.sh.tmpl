@@ -96,11 +96,6 @@ for entry in "${pkgs[@]}"; do
     fi
 done
 
-if command -v bun &>/dev/null; then
-    echo "Installing openwiki globally..."
-    bun add -g openwiki
-fi
-
 echo "Wiring bash..."
 # chezmoi manages ~/.bashrc_custom (dot_bashrc_custom.tmpl); ensure ~/.bashrc sources it.
 # Migrates the old cfg-system path if present.
