@@ -1,0 +1,9 @@
+[Unit]
+Description=Weekly disk cleanup (build output, container images, caches, old trash)
+ConditionPathExists=%h/scripts/disk-cleanup.sh
+
+[Service]
+Type=oneshot
+ExecStart=%h/scripts/disk-cleanup.sh
+Nice=19
+IOSchedulingClass=idle

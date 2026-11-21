@@ -29,6 +29,7 @@ dot_tmux.conf                 # → ~/.tmux.conf (Linux; tmux installed via brew
 dot_agents/                   # → ~/.agents (skills)
 dot_local/share/              # → ~/.local/share/ (bazzite-only Steam proxy & WinBox launchers + icon)
 scripts/executable_l4d2-download.py # → ~/scripts/l4d2-download.py (bazzite-only; Steam Workshop maps into local L4D2 addons)
+scripts/executable_disk-cleanup.sh # → ~/scripts/disk-cleanup.sh (bazzite-only; weekly cleanup run by systemd/user/disk-cleanup.timer)
 dot_omp/private_agent/        # → ~/.omp/agent/ (0700)
   private_config.yml          #   oh-my-pi config (secrets via ${ENV} indirection)
   models.yml                  #   custom OpenAI-compatible providers (Zero G, Anthropic pass-through)
@@ -44,6 +45,7 @@ run_onchange_30-systemd.sh.tmpl # daemon-reload + enable units (scoped by Condit
 run_onchange_40-kde.sh.tmpl   # flatpak overrides for BreezeDark
 run_onchange_50-udev.sh.tmpl  # 99-disable-ncq-s4510.rules → /etc/udev (sudo)
 run_onchange_60-modprobe.sh.tmpl # hid_apple.conf → /etc/modprobe.d (sudo)
+run_onchange_70-journald.sh.tmpl # 50-retention.conf (7-day journal) → /etc/systemd/journald.conf.d (sudo)
 
 # Repo-only (ignored via .chezmoiignore, never applied)
 README.md  AGENTS.md  LICENSE  .gitignore  docs/  scripts/zero-g-discovery.test.mjs

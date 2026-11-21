@@ -1,0 +1,13 @@
+{{- if eq .chezmoi.hostname "bazzite" -}}
+#!/bin/bash
+set -e
+# Keep only 7 days of system logs (journal).
+
+sudo mkdir -p /etc/systemd/journald.conf.d
+sudo tee /etc/systemd/journald.conf.d/50-retention.conf > /dev/null <<'EOF'
+[Journal]
+MaxRetentionSec=7day
+EOF
+sudo systemctl restart systemd-journald
+sudo journalctl --vacuum-time=7d
+{{- end -}}
