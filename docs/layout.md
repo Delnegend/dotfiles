@@ -34,6 +34,8 @@ dot_tmux.conf                 # → ~/.tmux.conf (Linux; tmux installed via brew
 dot_claude/                   # → ~/.claude/ (shared guidance, MemPalace and Zero G key helper)
 dot_agents/                   # → ~/.agents (skills)
 dot_gemini/AGENTS.md.tmpl     # → ~/.gemini/AGENTS.md (shared agent reply guidance)
+dot_gemini/antigravity-cli/   # → ~/.gemini/antigravity-cli/
+  modify_private_settings.json #   → ~/.gemini/antigravity-cli/settings.json (0600; ensures mcp(mempalace/*) allow rule, preserves local settings)
 dot_gemini/config/            # → ~/.gemini/config/ (Antigravity CLI Zero G observation and MemPalace session recall hooks)
   mempalace-bridge.ts         #   Bun MCP bridge using the token from the environment
   mempalace-recall.ts         #   Bun generic coding-wing recall and explicit-save guidance at session start

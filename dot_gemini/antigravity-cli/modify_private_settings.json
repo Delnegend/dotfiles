@@ -1,0 +1,22 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- $rule := "mcp(mempalace/*)" -}}
+{{- $data := dict -}}
+{{- if trim .chezmoi.stdin -}}
+{{-   $data = fromJson .chezmoi.stdin -}}
+{{- end -}}
+{{- $perms := dict -}}
+{{- if and (hasKey $data "permissions") (kindIs "map" (get $data "permissions")) -}}
+{{-   $perms = get $data "permissions" -}}
+{{- end -}}
+{{- $allow := list -}}
+{{- if and (hasKey $perms "allow") (kindIs "slice" (get $perms "allow")) -}}
+{{-   $allow = get $perms "allow" -}}
+{{- end -}}
+{{- if has $rule $allow -}}
+{{-   .chezmoi.stdin -}}
+{{- else -}}
+{{-   $allow = append $allow $rule -}}
+{{-   $_ := set $perms "allow" $allow -}}
+{{-   $_ = set $data "permissions" $perms -}}
+{{-   $data | toPrettyJson -}}
+{{- end -}}
