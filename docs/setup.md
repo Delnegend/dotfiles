@@ -35,29 +35,40 @@ chezmoi init --apply Delnegend
 ```
 
 For a new machine, add a branch in `dot_bashrc_custom.tmpl` matching
-`{{ .chezmoi.hostname }}` *or* extend `dot_config/environment.d/ssh.conf.tmpl`.
+`{{ .chezmoi.hostname }}` _or_ extend `dot_config/environment.d/ssh.conf.tmpl`.
 
 ## Windows
 
 1. Install:
-    ```powershell
-    winget install Git.Git twpayne.chezmoi -e
-    ```
+
+   ```powershell
+   winget install Git.Git twpayne.chezmoi -e
+   ```
 
 2. Clone and apply:
-    ```powershell
-    chezmoi init --apply Delnegend
-    ```
+
+   ```powershell
+   chezmoi init --apply Delnegend
+   ```
 
 3. Verify:
-    ```powershell
-    chezmoi status            # should be clean
-    chezmoi diff              # should be empty
-    ssh -T github.com         # should print "Hi Delnegend! ..."
-    ```
+   ```powershell
+   chezmoi status            # should be clean
+   chezmoi diff              # should be empty
+   ssh -T github.com         # should print "Hi Delnegend! ..."
+   ```
 
 Linux-only and Bazzite-only files (systemd units, fontconfig, Flatpak `dot_var/`,
 `dot_bashrc_custom`, `dot_justfile.tmpl`) are excluded on Windows via `.chezmoiignore`.
+
+## TypeScript development
+
+In the dotfiles source directory, run `bun install` and then `bun run typecheck`.
+The project files and dependencies are for development only; chezmoi does not
+copy them into the home directory.
+The agent integrations use Bun file and stream APIs where suitable. Bun's
+`node:fs` remains necessary for synchronous modification-time checks and safe
+transcript file handling; `node:path` and `node:os` preserve portable paths.
 
 ## Daily use
 
