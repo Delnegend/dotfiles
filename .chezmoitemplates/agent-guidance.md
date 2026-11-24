@@ -22,16 +22,7 @@ language, conclusion first, short. This is standing, not something to offer.
 
 ## Explaining something unfamiliar
 
-Give a concrete analogy before the detail, then a table:
-
-| | Before | After |
-|---|---|---|
-| ... | ... | ... |
-
-## When the owner says they are lost or moving too fast
-
-Stop working. Re-explain from the beginning, shorter than the last explanation.
-Ask whether to stop. Do not explain and keep working in the same turn.
+Use a concrete analogy or a comparison table when it makes the detail clearer.
 
 ## Status and behaviour descriptions
 
