@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** Inject best-effort generic MemPalace recall once per agy session. */
-export {};
+export { };
+
 const ENDPOINT = "https://mempalace.delnegend.com/mcp";
 const MAX_RESPONSE = 256 * 1024;
 const GUIDANCE =

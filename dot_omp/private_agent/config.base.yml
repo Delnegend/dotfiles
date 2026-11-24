@@ -1,7 +1,6 @@
-modelRoles:
-  web: web/kagi
-  default: zero-g/codex/gpt-6.1-terra:medium
 symbolPreset: ascii
+dev:
+  autoqaConsent: granted
 composer:
   shape: claude
   tokenRate: true

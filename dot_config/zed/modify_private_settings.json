@@ -1,0 +1,15 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- $base := fromJsonc (include "dot_config/zed/settings.base.json") -}}
+{{- if .chezmoi.stdin -}}
+{{- $live := fromJsonc .chezmoi.stdin -}}
+{{- range $name, $server := $live.agent_servers -}}
+{{- if hasKey $base.agent_servers $name -}}
+{{- with get $server "default_config_options" -}}
+{{- range $key, $value := . -}}
+{{- $base = $base | setValueAtPath (printf "agent_servers.%s.default_config_options.%s" $name $key) $value -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- $base | toPrettyJson -}}

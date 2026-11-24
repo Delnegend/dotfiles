@@ -10,7 +10,10 @@ private_dot_ssh/              # → ~/.ssh/ (0700)
   core@homelab.pub, delnegend@*.pub, twin@github.pub  # public keys
 dot_config/
   private_git/allowed_signers # → ~/.config/git/allowed_signers
-  zed/settings.json + themes/ # → ~/.config/zed/
+  zed/
+    settings.base.json        # static settings (ignored as a home target)
+    modify_private_settings.json # → ~/.config/zed/settings.json (0600; keeps ACP model/effort/mode from the live file)
+    themes/                   # → ~/.config/zed/themes/
   fontconfig/fonts.conf       # → ~/.config/fontconfig/fonts.conf (bazzite-only)
   private_kdeglobals          # → ~/.config/kdeglobals (private 0600, bazzite-only)
   private_kwinrc              # → ~/.config/kwinrc (private 0600, bazzite-only)
@@ -39,7 +42,8 @@ dot_local/share/              # → ~/.local/share/ (bazzite-only Steam proxy & 
 scripts/executable_l4d2-download.py # → ~/scripts/l4d2-download.py (bazzite-only; Steam Workshop maps into local L4D2 addons)
 scripts/executable_disk-cleanup.sh # → ~/scripts/disk-cleanup.sh (bazzite-only; weekly cleanup run by systemd/user/disk-cleanup.timer)
 dot_omp/private_agent/        # → ~/.omp/agent/ (0700)
-  private_config.yml          #   oh-my-pi config (secrets via ${ENV} indirection)
+  config.base.yml             #   static oh-my-pi config; modelRoles come from the live file
+  modify_private_config.yml   #   → ~/.omp/agent/config.yml (0600; preserves modelRoles from the live file)
   models.yml                  #   custom OpenAI-compatible providers (Zero G, Anthropic pass-through)
   APPEND_SYSTEM.md.tmpl       #   shared reply guidance appended to the built-in prompt
   mcp.json.tmpl               #   MCP servers (integrated-browser-mcp, playwright, mikrotik, MemPalace)

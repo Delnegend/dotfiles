@@ -14,53 +14,32 @@
     },
   },
   "agent_servers": {
+    "claude-acp": {
+      "type": "registry"
+    },
     "antigravity-acp": {
-      "default_config_options": {
-        "mode": "yolo",
-        "model": "gemini-3.7-flash-medium"
-      },
       "type": "registry"
     },
     "opencode": {
-      "default_config_options": {
-        "effort": "xhigh",
-        "model": "opencode/muse-spark-1.2-contributor-free",
-        "mode": "build"
-      },
       "type": "registry"
     },
     "github-copilot-cli": {
       "type": "registry"
+    },
+    "omp": {
+      "type": "custom",
+      "command": "omp",
+      "args": ["acp"]
     }
   },
-  "diff_view_style": "split",
   "soft_wrap": "editor_width",
-  "buffer_font_weight": 200.0,
-  "ssh_connections": [
-    {
-      "host": "core",
-      "args": [],
-      "projects": [
-        {
-          "paths": ["/var/home/core/homelab"],
-        },
-      ],
-    },
-  ],
-  "proxy": "",
+  "buffer_font_weight": 300.0,
   "cli_default_open_behavior": "new_window",
-  "format_on_save": "off",
   "indent_guides": {
-    "enabled": true,
     "coloring": "indent_aware",
-    "background_coloring": "disabled",
   },
-  "hard_tabs": false,
-  "ui_font_family": ".ZedSans",
   "buffer_line_height": "standard",
   "base_keymap": "VSCode",
-  "ui_font_size": 16,
-  "buffer_font_size": 16.0,
   "icon_theme": {
     "mode": "dark",
     "light": "Zed (Default)",
@@ -81,7 +60,6 @@
   },
   "autosave": "on_focus_change",
   "terminal": {
-    "font_size": 18.0,
     "font_weight": 300.0,
     "shell": {
       "program": "bash",
@@ -92,20 +70,16 @@
     },
   },
   "edit_predictions": {
-    "open_ai_compatible_api": {
-      "max_output_tokens": 128,
-      "model": "zeta2.1",
-      "api_url": "http://localhost:8080/v1/completions",
-      "prompt_format": "zeta2_1",
-    },
     "allow_data_collection": "yes",
-    "mode": "eager",
-    "ollama": {
-      "prompt_format": "infer",
-    },
-    "provider": "zed",
+    "provider": "copilot",
   },
   "agent": {
+    "expand_terminal_card": false,
+    "expand_edit_card": false,
+    "play_sound_when_agent_done": "always",
+    "threads_sidebar": {
+      "position": "right"
+    },
     "tool_permissions": {
       "tools": {
         "mcp:browser:browser_snapshot": {
@@ -246,14 +220,6 @@
       "model": "go/deepseek-v4-flash",
       "enable_thinking": true,
     },
-    "favorite_models": [
-      {
-        "provider": "copilot_chat",
-        "model": "",
-        "enable_thinking": false,
-      },
-    ],
-    "model_parameters": [],
   },
   "buffer_font_family": "Iosevka Nerd Font",
   "theme": {

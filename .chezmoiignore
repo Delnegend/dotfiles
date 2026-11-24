@@ -1,6 +1,10 @@
 # Local secrets consumed via environment indirection; chezmoi must never overwrite them
 .omp/agent/.env
 
+# Static inputs for modify templates; not home targets
+.config/zed/settings.base.json
+.omp/agent/config.base.yml
+
 # Non-chezmoi repo files (helpers; not home targets)
 README.md
 AGENTS.md

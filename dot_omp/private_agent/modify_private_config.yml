@@ -1,0 +1,11 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- $base := fromYaml (include "dot_omp/private_agent/config.base.yml") -}}
+{{- if .chezmoi.stdin -}}
+{{- $live := fromYaml .chezmoi.stdin -}}
+{{- with get $live "modelRoles" -}}
+{{- range $key, $value := . -}}
+{{- $base = $base | setValueAtPath (printf "modelRoles.%s" $key) $value -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- $base | toYaml -}}
