@@ -7,26 +7,26 @@ uncovered.
 
 ## At a glance
 
-| Ecosystem | Upgrade command | Where the cooldown lives |
-|---|---|---|
-| **Bun** | `bun update` | `bunfig.toml` → `[install] minimumReleaseAge = 1209600` (seconds) |
-| **Cargo** ≥1.100 | `cargo update` | `.cargo/config.toml` → `[registry] global-min-publish-age = "14 days"` |
-| **npm** | `npx npm-check-updates -u -t minor` | no config file; pass `--cooldown 14d` on the command line |
-| **pnpm** | `pnpm update` | `pnpm-workspace.yaml` → `minimumReleaseAge: 20160` (**minutes**) |
-| **Go** | `go get -u ./...` | **no native gate**: skip autonomous bumps |
-| **uv / pip** | `uv lock --upgrade` | **no native gate**: skip autonomous bumps |
+| Ecosystem        | Upgrade command                     | Where the cooldown lives                                               |
+| ---------------- | ----------------------------------- | ---------------------------------------------------------------------- |
+| **Bun**          | `bun update`                        | `bunfig.toml` → `[install] minimumReleaseAge = 1209600` (seconds)      |
+| **Cargo** ≥1.100 | `cargo update`                      | `.cargo/config.toml` → `[registry] global-min-publish-age = "14 days"` |
+| **npm**          | `npx npm-check-updates -u -t minor` | no config file; pass `--cooldown 14d` on the command line              |
+| **pnpm**         | `pnpm update`                       | `pnpm-workspace.yaml` → `minimumReleaseAge: 20160` (**minutes**)       |
+| **Go**           | `go get -u ./...`                   | **no native gate**: skip autonomous bumps                              |
+| **uv / pip**     | `uv lock --upgrade`                 | **no native gate**: skip autonomous bumps                              |
 
 ## The units trap
 
 Getting the unit wrong **silently disables the cooldown**; no error, just an
 unquarantined supply chain.
 
-| Tool | Unit | 14 days |
-|---|---|---|
-| Bun | seconds | `1209600` |
-| pnpm | minutes | `20160` |
-| Cargo | duration string | `"14 days"` |
-| npm-check-updates | unit-suffixed string | `14d` |
+| Tool              | Unit                 | 14 days     |
+| ----------------- | -------------------- | ----------- |
+| Bun               | seconds              | `1209600`   |
+| pnpm              | minutes              | `20160`     |
+| Cargo             | duration string      | `"14 days"` |
+| npm-check-updates | unit-suffixed string | `14d`       |
 
 Verify the resolved value after writing it.
 
@@ -79,7 +79,7 @@ version requirements and is **not** covered by the gate.
 
 Cargo warns on older toolchains (`warning: ignoring
 registry.global-min-publish-age without -Zmin-publish-age`), which means the
-cooldown is *not* applying; a runner below 1.100 upgrades unprotected.
+cooldown is _not_ applying; a runner below 1.100 upgrades unprotected.
 
 ## npm
 
@@ -97,7 +97,7 @@ it upgrades to the highest minor/patch version that has passed quarantine.
 
 ```yaml
 # pnpm-workspace.yaml
-minimumReleaseAge: 20160   # minutes: 14 days
+minimumReleaseAge: 20160 # minutes: 14 days
 ```
 
 ## Ecosystems with no native gate
@@ -125,16 +125,17 @@ just version set <version> # rewrites manifest(s) to X.Y.Z, no commit/tag
 
 The workflow executes `just version set "$NEXT_STRICT"`, then stages all modified
 tracked files (`git add -u`). It doesn't need to know which files were edited.
+
 ### Recipes per ecosystem
 
-| Ecosystem | Manifest file(s) | `version set` recipe implementation |
-|---|---|---|
-| **Bun / Node** | `package.json`, lockfile | `npm version --no-git-tag-version {{ver}}` |
-| **Cargo (single crate)** | `Cargo.toml`, `Cargo.lock` | `sed -i -E '0,/^version = ".*"/s//version = "{{ver}}"/' Cargo.toml && cargo check` |
-| **Cargo (workspace)** | `Cargo.toml`, `Cargo.lock` | `sed -i -E '0,/^version = ".*"/s//version = "{{ver}}"/' Cargo.toml && cargo update -w` |
-| **Python (uv)** | `pyproject.toml` | `uv version {{ver}}` |
-| **Python (poetry)** | `pyproject.toml` | `poetry version {{ver}}` |
-| **Go / Tag-only** | Git tags only (or `VERSION`) | `printf '%s\n' "{{ver}}" > VERSION` |
+| Ecosystem                | Manifest file(s)             | `version set` recipe implementation                                                    |
+| ------------------------ | ---------------------------- | -------------------------------------------------------------------------------------- |
+| **Bun / Node**           | `package.json`, lockfile     | `npm version --no-git-tag-version {{ver}}`                                             |
+| **Cargo (single crate)** | `Cargo.toml`, `Cargo.lock`   | `sed -i -E '0,/^version = ".*"/s//version = "{{ver}}"/' Cargo.toml && cargo check`     |
+| **Cargo (workspace)**    | `Cargo.toml`, `Cargo.lock`   | `sed -i -E '0,/^version = ".*"/s//version = "{{ver}}"/' Cargo.toml && cargo update -w` |
+| **Python (uv)**          | `pyproject.toml`             | `uv version {{ver}}`                                                                   |
+| **Python (poetry)**      | `pyproject.toml`             | `poetry version {{ver}}`                                                               |
+| **Go / Tag-only**        | Git tags only (or `VERSION`) | `printf '%s\n' "{{ver}}" > VERSION`                                                    |
 
 The workflow runs `git diff --staged --quiet` immediately after the recipe. If
 `just version set` failed to modify any file, the workflow halts with an error rather

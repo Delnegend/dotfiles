@@ -40,9 +40,9 @@ flowchart TD
 
 Read the relevant file for the active task; do not load both:
 
-| File | Purpose |
-|---|---|
-| `references/template.md` | The universal golden template for root `README.md` files (covers 99% of use cases), including the install ladder. |
+| File                        | Purpose                                                                                                                                                                         |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `references/template.md`    | The universal golden template for root `README.md` files (covers 99% of use cases), including the install ladder.                                                               |
 | `references/docs-layout.md` | Directory layout, per-file constraints and skeletons (`configuration.md`, `architecture.md`, `deployment.md`, `development.md`), the variation test, and the quality checklist. |
 
 ## Hard Rules

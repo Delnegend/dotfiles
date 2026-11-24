@@ -36,4 +36,4 @@ Terminate the user session to release orphaned processes and let logind allocate
 loginctl terminate-user lava
 ```
 
-*(Alternatively, reboot the machine: `sudo reboot`).*
+_(Alternatively, reboot the machine: `sudo reboot`)._

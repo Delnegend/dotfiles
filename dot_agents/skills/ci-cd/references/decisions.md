@@ -7,15 +7,15 @@ agreed choices and any deviations in the PR description or conversation.
 ## Checklist
 
 1. **Host**: github.com, self-hosted Forgejo, or Forgejo + a GitHub twin.
-   *Default:* whatever `git remote -v` says. Determines workflow directory,
+   _Default:_ whatever `git remote -v` says. Determines workflow directory,
    runner labels, and PR creation (`gh` vs native AGit).
 2. **Project mode**: maintenance or active development.
-   *Default:* active development. Determinates whether the release workflow gets
+   _Default:_ active development. Determinates whether the release workflow gets
    an `on.schedule` cron at all.
 3. **Release model**: weekly batch (maintenance mode: scheduled cron) plus
    manual dispatch; manual dispatch only (active). The `release.yml` workflow
    is one run: gate on all of CI, then bump → commit + tag → push → build →
-   publish. A `ref` input rebuilds an old tag. *Alternatives:* release on
+   publish. A `ref` input rebuilds an old tag. _Alternatives:_ release on
    every merge, label-gated releases.
 4. **Version source of truth and manifest bump**: git tags, with
    [`ietf-tools/semver-action`](https://github.com/ietf-tools/semver-action)
@@ -23,13 +23,13 @@ agreed choices and any deviations in the PR description or conversation.
    **Never** a hand-rolled calculation or a manually typed version. `release.yml`
    updates the package manager's config file via the package-agnostic
    `just version set <version>` recipe, commits and tags on `main` directly.
-   *Alternatives:* `release-plz`, `release-please`.
+   _Alternatives:_ `release-plz`, `release-please`.
    **Before the first release run, the repo needs one existing `v*` tag.** Draft
    it at the root commit so the first release covers the whole history:
    `git tag -a v0.0.0 "$(git rev-list --max-parents=0 HEAD)"`. Anchor it at the
    root, not at `HEAD`; at `HEAD` the tag and branch point at the same commit,
    so the compare range is empty and that run releases nothing.
-   `fallbackTag: v0.0.0` does not cover this gap: it supplies only a *name*, and
+   `fallbackTag: v0.0.0` does not cover this gap: it supplies only a _name_, and
    the action then asks the API to compare `v0.0.0...main`, which 404s while no
    such tag exists on the server. Without a tag the run fails at the compare call.
 5. **Release artifacts**: prebuilt binaries for linux x64 only; every other
@@ -41,7 +41,7 @@ agreed choices and any deviations in the PR description or conversation.
    [scan workflow](https://github.com/Delnegend/actions) (Gitleaks, actionlint,
    Semgrep, Trivy, OSV-Scanner) called as a job. Take the scans from there
    rather than writing `docker run` jobs per project: they drift, and a shared
-   gate is the only thing that keeps ten projects in agreement. *Default:* add
+   gate is the only thing that keeps ten projects in agreement. _Default:_ add
    only the runtimes/services the check needs.
 7. **Dependencies**: daily at 02:00 for code dependencies (via native package
    managers with native cooldown). On GitHub-hosted repos, Dependabot runs
@@ -51,7 +51,7 @@ agreed choices and any deviations in the PR description or conversation.
    fine-grained PAT or GitHub App only for cross-repo dispatch to a twin. Avoid
    polling loops.
 9. **Downstream sync**: event-driven when a token is acceptable, otherwise a
-   short-interval poll that pushes directly. *Confirm the acceptable latency.*
+   short-interval poll that pushes directly. _Confirm the acceptable latency._
 10. **Runner budget**: cheapest single-core label for orchestration, platform
     runners only for artifact builds.
 
@@ -60,18 +60,18 @@ agreed choices and any deviations in the PR description or conversation.
 The single most consequential choice here, because it is the only thing that
 changes the shape of `release.yml`.
 
-| | **Maintenance mode** | **Active development** |
-|---|---|---|
-| What's happening | Bug fixes and dependency bumps only; no feature work planned | Features in flight; a release means more than "latest build" |
-| Weekly cron | **Include** `on.schedule` | **Omit `on.schedule` entirely** |
-| Trigger | `schedule` + `workflow_dispatch` | `workflow_dispatch` only |
-| Why | An unattended weekly tag is pure upside when nobody is mid-feature | A version cut mid-feature implies a shippable state that does not exist, and tags a commit the owner is still rebasing onto |
+|                  | **Maintenance mode**                                               | **Active development**                                                                                                      |
+| ---------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| What's happening | Bug fixes and dependency bumps only; no feature work planned       | Features in flight; a release means more than "latest build"                                                                |
+| Weekly cron      | **Include** `on.schedule`                                          | **Omit `on.schedule` entirely**                                                                                             |
+| Trigger          | `schedule` + `workflow_dispatch`                                   | `workflow_dispatch` only                                                                                                    |
+| Why              | An unattended weekly tag is pure upside when nobody is mid-feature | A version cut mid-feature implies a shippable state that does not exist, and tags a commit the owner is still rebasing onto |
 
 **The only difference in `release.yml` is the `on:` block.** The semver
 derivation, the `release-main` lock, and the artifact build stay byte-identical.
 Do not fork the release workflow into two variants.
 
-Heuristic: *would a tag cut on Sunday surprise anyone?* No → maintenance mode.
+Heuristic: _would a tag cut on Sunday surprise anyone?_ No → maintenance mode.
 Yes → active development. Revisit when the roadmap changes; this is a
 per-application choice, not a permanent property.
 

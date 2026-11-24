@@ -11,10 +11,10 @@ ls -d .github/workflows .forgejo/workflows 2>/dev/null   # existing CI location
 
 ## Classify
 
-| Signal | Host | Action location |
-|---|---|---|
-| `origin` is `github.com` | GitHub | `.github/workflows/` |
-| `origin` is self-hosted (e.g. `git.<domain>`) | Forgejo | `.forgejo/workflows/` |
+| Signal                                                     | Host                           | Action location                                                    |
+| ---------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------ |
+| `origin` is `github.com`                                   | GitHub                         | `.github/workflows/`                                               |
+| `origin` is self-hosted (e.g. `git.<domain>`)              | Forgejo                        | `.forgejo/workflows/`                                              |
 | Self-hosted origin **and** a GitHub mirror the owner names | Forgejo is the source of truth | `.forgejo/workflows/`; artifact builds dispatch to the GitHub twin |
 
 State the finding to the owner before proceeding: which host, where workflows
@@ -25,15 +25,15 @@ go, and whether a twin is involved.
 Forgejo Actions is Actions-compatible: same `on:` / `jobs:` / `steps:` syntax.
 The differences that actually bite:
 
-| | GitHub | Forgejo (self-hosted) |
-|---|---|---|
-| Workflow dir | `.github/workflows/` | `.forgejo/workflows/` |
-| Slim runner | `ubuntu-slim` | whatever self-hosted label exists (e.g. `alpine`) |
-| Full runner | `ubuntu-latest` | owner's equivalent |
-| PR creation | `gh pr create` | Native AGit (`git push origin HEAD:refs/for/<branch>`) |
-| Settings UI | Settings → Actions | Settings → Actions (different labels) |
-| PR/secret permission | "Allow GitHub Actions to create and approve pull requests" | "Allow pull requests and security alerts" |
-| Dependabot | `.github/dependabot.yml` (`github-actions` only) | none (not supported) |
+|                      | GitHub                                                     | Forgejo (self-hosted)                                  |
+| -------------------- | ---------------------------------------------------------- | ------------------------------------------------------ |
+| Workflow dir         | `.github/workflows/`                                       | `.forgejo/workflows/`                                  |
+| Slim runner          | `ubuntu-slim`                                              | whatever self-hosted label exists (e.g. `alpine`)      |
+| Full runner          | `ubuntu-latest`                                            | owner's equivalent                                     |
+| PR creation          | `gh pr create`                                             | Native AGit (`git push origin HEAD:refs/for/<branch>`) |
+| Settings UI          | Settings → Actions                                         | Settings → Actions (different labels)                  |
+| PR/secret permission | "Allow GitHub Actions to create and approve pull requests" | "Allow pull requests and security alerts"              |
+| Dependabot           | `.github/dependabot.yml` (`github-actions` only)           | none (not supported)                                   |
 
 Never write `ubuntu-slim` into a Forgejo workflow unless that label is actually
 registered on the instance; the job will sit queued forever.
@@ -71,12 +71,12 @@ checkout. Without it the token is stripped after checkout and the push fails
 with an authentication error that looks like a permissions problem.
 
 ```yaml
-      - name: Checkout source
-        uses: <host>/actions/checkout@v2
-        with:
-          token: ${{ github.token }}
-          persist_credentials: true
-          fetch-depth: 0        # semver-action needs full history
+- name: Checkout source
+  uses: <host>/actions/checkout@v2
+  with:
+    token: ${{ github.token }}
+    persist_credentials: true
+    fetch-depth: 0 # semver-action needs full history
 ```
 
 ### PR creation on Forgejo: Native AGit (`refs/for/<branch>`)
@@ -95,6 +95,7 @@ git push origin HEAD:refs/for/main \
 ```
 
 Why AGit is the standard for Forgejo:
+
 1. **Zero runner dependencies:** Plain `git` is the only tool needed. Works on
    any minimal container image (Alpine, scratch-based) with no extra packages.
 2. **Zero token / permission bugs:** Runs over the standard Git credentials already
@@ -107,6 +108,7 @@ Why AGit is the standard for Forgejo:
 
 `fj` (`forgejo-contrib/forgejo-cli`) is only needed if a workflow explicitly
 requires CLI operations (like querying status or manual reviews):
+
 - Credentials must be seeded first via `fj auth add-token "${{ github.token }}" -H <host>`.
 - `fj pr merge` has no `--auto` flag (use native auto-merge settings in the Forgejo UI, or gate with `fj pr status --wait`).
 
@@ -128,6 +130,7 @@ Nothing else is ever done on GitHub: no file edits, no branches, no tags, and
 no manual pushes. `git.delnegend.com/Delnegend/actions/dispatch-github` automatically
 synchronizes `.github/` from the Forgejo source repo on every dispatch. A wrong-looking
 twin is fixed with a source-repo change plus a dispatch.
+
 - The source repo carries `.forgejo/workflows/` (triggers) and
   `.github/workflows/` (the twin's workflows, authored here; only `.github/`
   is synced, `LICENSE`/`README` are kept; repos without `.github/` skip).
@@ -137,17 +140,18 @@ twin is fixed with a source-repo change plus a dispatch.
   twin's workflows never run there.
 - Dispatch via `repository_dispatch` (PAT stored as above). Ask the owner
   which side owns which step; a mirror existing does not mean it builds.
+
 ### `repository_dispatch`, not `workflow_dispatch`
 
 Dispatch across repos with a `repository_dispatch` event whose
 `event_type` is the twin's **workflow name**. Two traps:
 
 - **Set `event:` explicitly.** `GITHUB_WORKFLOW` is a read-only default
- variable and a step-level `env:` cannot override it. Pass the name as a
- workflow `input`.
+  variable and a step-level `env:` cannot override it. Pass the name as a
+  workflow `input`.
 - **`workflow_dispatch` cannot target another repository.** Use
- `repository_dispatch` for the twin, and reserve `workflow_dispatch` for
- humans triggering a workflow on its own repo.
+  `repository_dispatch` for the twin, and reserve `workflow_dispatch` for
+  humans triggering a workflow on its own repo.
 
 Always pass `ref:` for a release dispatch so the twin builds the tag it was
 asked to, not whatever `main` happens to be. Also pass `target:` explicitly
@@ -284,7 +288,7 @@ POST /api/v1/repos/{owner}/{repo}/branch_protections
 ```
 
 **Settings check.** On GitHub, Settings → Actions → General → Workflow
-permissions must have *"Allow GitHub Actions to create and approve pull
-requests"* checked. On Forgejo, Settings → Actions → General → *"Allow pull
-requests and security alerts"* must be enabled, or the `fj pr create` in the
+permissions must have _"Allow GitHub Actions to create and approve pull
+requests"_ checked. On Forgejo, Settings → Actions → General → _"Allow pull
+requests and security alerts"_ must be enabled, or the `fj pr create` in the
 upgrade job fails.

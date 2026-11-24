@@ -44,6 +44,7 @@ config wifi-iface
 ```
 
 Consequences of skipping any one of these (observed):
+
 - no `ieee80211w` → BTM unprotected → iOS ignores steering → DAWN deauth-kicks.
 - no `max_inactivity` → iOS standby devices deauthed after 5 min.
 - no `ieee80211r` → no fast roaming (full 4-way handshake per handoff).
@@ -144,4 +145,3 @@ bring-up order). Do not re-run `wifi reload`.
 
 Windows shell gotcha: do not put pipes inside quoted SSH grep patterns
 (PowerShell→ssh mangles them); use `grep -e a -e b` or `grep -c pattern file`.
-

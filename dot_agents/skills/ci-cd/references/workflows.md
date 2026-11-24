@@ -16,7 +16,7 @@ name: Dependency updates
 
 on:
   schedule:
-    - cron: '0 2 * * *' # Daily 02:00 UTC
+    - cron: "0 2 * * *" # Daily 02:00 UTC
   workflow_dispatch:
 
 permissions:
@@ -45,7 +45,7 @@ name: Dependency updates
 
 on:
   schedule:
-    - cron: '0 2 * * *'
+    - cron: "0 2 * * *"
   workflow_dispatch:
 
 jobs:
@@ -67,9 +67,9 @@ jobs:
             -o topic="deps/automatic" \
             -o force-push=true
 ```
+
 Keep the `chore(deps):` commit prefix so the release workflow's Conventional
 Commits scan reads a patch bump.
-
 
 ### Dependabot for GitHub Actions (`github.com` repos only)
 
@@ -95,6 +95,7 @@ updates:
 
 Because it uses the `dependencies` label and `chore(deps):` commit prefix,
 these PRs are automatically verified by `ci.yml` and merged by `auto-merge.yml`.
+
 ## B. CI gate
 
 One `just check`, no build matrix. Runner label follows the host
@@ -273,7 +274,7 @@ jobs:
   prepare:
     name: Prepare (bump, tag, push)
     needs: gate
-    runs-on: ubuntu-latest   # Full runner for compiler/toolchain headroom
+    runs-on: ubuntu-latest # Full runner for compiler/toolchain headroom
     timeout-minutes: 30
     outputs:
       ref: ${{ steps.resolve.outputs.ref }}
@@ -285,7 +286,7 @@ jobs:
         with:
           token: ${{ github.token }}
           persist_credentials: true
-          fetch-depth: 0   # Full git history for tags, commits, and semver-action
+          fetch-depth: 0 # Full git history for tags, commits, and semver-action
       - uses: extractions/setup-just@v4
       # Insert any language setup needed by `just version set` (e.g. setup-go, setup-node)
 
@@ -319,7 +320,7 @@ jobs:
     name: Build & Release Artifacts
     needs: prepare
     if: needs.prepare.outputs.skip != 'true'
-    runs-on: ubuntu-slim   # or matrix runners for multi-platform binaries
+    runs-on: ubuntu-slim # or matrix runners for multi-platform binaries
     steps:
       - uses: actions/checkout@v7
         with:
@@ -468,59 +469,59 @@ output in its own job so they run in parallel; both `needs: prepare`, never
 chained through each other:
 
 ```yaml
-  build-binaries:
-    name: Build Release Binaries
-    needs: prepare
-    if: needs.prepare.outputs.skip != 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-          fetch-depth: 0
+build-binaries:
+  name: Build Release Binaries
+  needs: prepare
+  if: needs.prepare.outputs.skip != 'true'
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v7
+      with:
+        ref: ${{ needs.prepare.outputs.ref }}
+        fetch-depth: 0
 
-      # ... compile, then one package-artifact step per binary ...
+    # ... compile, then one package-artifact step per binary ...
 
-      - name: Package artifact
-        uses: Delnegend/actions/package-artifact@<pin-sha> # v1
-        with:
-          name: <project>
-          version: ${{ needs.prepare.outputs.version }}
-          target: <target-triple>
-          source: <path-to-binary>
+    - name: Package artifact
+      uses: Delnegend/actions/package-artifact@<pin-sha> # v1
+      with:
+        name: <project>
+        version: ${{ needs.prepare.outputs.version }}
+        target: <target-triple>
+        source: <path-to-binary>
 
-  build-container:
-    name: Build Container Image
-    needs: prepare
-    if: needs.prepare.outputs.skip != 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
+build-container:
+  name: Build Container Image
+  needs: prepare
+  if: needs.prepare.outputs.skip != 'true'
+  runs-on: ubuntu-latest
+  permissions:
+    packages: write
+  steps:
+    - uses: actions/checkout@v7
+      with:
+        ref: ${{ needs.prepare.outputs.ref }}
 
-      - name: Build and push image
-        uses: Delnegend/actions/docker-build-push@<pin-sha> # v1
-        with:
-          version: ${{ needs.prepare.outputs.version }}
-          publish: ${{ needs.prepare.outputs.publish }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build and push image
+      uses: Delnegend/actions/docker-build-push@<pin-sha> # v1
+      with:
+        version: ${{ needs.prepare.outputs.version }}
+        publish: ${{ needs.prepare.outputs.publish }}
+        token: ${{ secrets.GITHUB_TOKEN }}
 
-  publish:
-    name: Publish Consolidated Release
-    needs: [prepare, build-binaries, build-container]
-    if: needs.prepare.outputs.skip != 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: Delnegend/actions/publish-release@<pin-sha> # v1
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-          publish: ${{ needs.prepare.outputs.publish }}
-          container: true
-          download: true
-          version: ${{ needs.prepare.outputs.version }}
+publish:
+  name: Publish Consolidated Release
+  needs: [prepare, build-binaries, build-container]
+  if: needs.prepare.outputs.skip != 'true'
+  runs-on: ubuntu-latest
+  steps:
+    - uses: Delnegend/actions/publish-release@<pin-sha> # v1
+      with:
+        ref: ${{ needs.prepare.outputs.ref }}
+        publish: ${{ needs.prepare.outputs.publish }}
+        container: true
+        download: true
+        version: ${{ needs.prepare.outputs.version }}
 ```
 
 ### Artifact build (project-specific)

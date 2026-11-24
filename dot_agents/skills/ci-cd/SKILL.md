@@ -9,11 +9,11 @@ Pipeline: **native upgrade (daily + 14d cooldown) → CI gate → auto-rebase �
 
 Host model:
 
-| Setup | Source of truth | Twin | Workflows live in |
-|---|---|---|---|
-| GitHub-hosted repo | `origin` on github.com | none | `.github/workflows/` |
-| Self-hosted Forgejo, no twin | Forgejo origin | none | `.forgejo/workflows/` |
-| Self-hosted Forgejo + GitHub twin | Forgejo origin | Throwaway public mirror, free runners only | `.forgejo/` + `.github/` (both authored here; see `hosts.md`) |
+| Setup                             | Source of truth        | Twin                                       | Workflows live in                                             |
+| --------------------------------- | ---------------------- | ------------------------------------------ | ------------------------------------------------------------- |
+| GitHub-hosted repo                | `origin` on github.com | none                                       | `.github/workflows/`                                          |
+| Self-hosted Forgejo, no twin      | Forgejo origin         | none                                       | `.forgejo/workflows/`                                         |
+| Self-hosted Forgejo + GitHub twin | Forgejo origin         | Throwaway public mirror, free runners only | `.forgejo/` + `.github/` (both authored here; see `hosts.md`) |
 
 **FORBIDDEN: Never commit or push directly to the twin GitHub repository.** All
 updates to the twin `.github/` workflows are automatically synchronized from
@@ -23,11 +23,11 @@ on each Forgejo run. All changes belong strictly in the Forgejo source repositor
 
 ## Do these three things first, in order
 
-| # | Gate | Why it blocks everything after |
-|---|---|---|
-| 1 | **Locate the host**: `git remote -v` | Decides `.github/` vs `.forgejo/`, runner labels, `gh` vs native AGit, and whether a GitHub twin exists |
-| 2 | **Ask the project mode**: maintenance or active | Decides whether `release.yml` gets `on.schedule` (active projects track milestones in an optional roadmap) |
-| 3 | **Consult the owner** on the checklist in `references/decisions.md` | The rest are baselines to adapt, not mandates |
+| #   | Gate                                                                | Why it blocks everything after                                                                             |
+| --- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| 1   | **Locate the host**: `git remote -v`                                | Decides `.github/` vs `.forgejo/`, runner labels, `gh` vs native AGit, and whether a GitHub twin exists    |
+| 2   | **Ask the project mode**: maintenance or active                     | Decides whether `release.yml` gets `on.schedule` (active projects track milestones in an optional roadmap) |
+| 3   | **Consult the owner** on the checklist in `references/decisions.md` | The rest are baselines to adapt, not mandates                                                              |
 
 Never assume github.com. Never write a weekly cron for a project under active
 development.
@@ -55,12 +55,12 @@ flowchart TD
 
 Read the file for the task at hand; do not read all four.
 
-| File | Read when |
-|---|---|
-| `references/decisions.md` | The customization checklist: host, release model, artifacts, runner budget |
-| `references/hosts.md` | Writing any workflow: GitHub vs Forgejo differences, the twin-repository pattern, branch protection |
-| `references/ecosystems.md` | Setting the 14-day cooldown, or choosing whether an ecosystem qualifies at all |
-| `references/workflows.md` | The four YAML templates: deps, CI, auto-merge, release |
+| File                       | Read when                                                                                           |
+| -------------------------- | --------------------------------------------------------------------------------------------------- |
+| `references/decisions.md`  | The customization checklist: host, release model, artifacts, runner budget                          |
+| `references/hosts.md`      | Writing any workflow: GitHub vs Forgejo differences, the twin-repository pattern, branch protection |
+| `references/ecosystems.md` | Setting the 14-day cooldown, or choosing whether an ecosystem qualifies at all                      |
+| `references/workflows.md`  | The four YAML templates: deps, CI, auto-merge, release                                              |
 
 ## Hard rules
 
@@ -105,34 +105,34 @@ These are not negotiable. Rationale is in `references/decisions.md`.
    artifact builds.
 10. **Rebase-only, linear history.** No squash, no merge commits.
 11. **Concurrency locks:** `release-main` (`cancel-in-progress: false`) for
-   releases; dynamic per-branch `${{ github.workflow }}-${{ github.ref }}`
-   (`cancel-in-progress: true`) for CI to safely cancel stale runs.
+    releases; dynamic per-branch `${{ github.workflow }}-${{ github.ref }}`
+    (`cancel-in-progress: true`) for CI to safely cancel stale runs.
 12. **Verify action runtimes match the runner.** `using: node24` actions fail on
-   lean images like Alpine. Prefer shell-only composites on self-hosted runners.
+    lean images like Alpine. Prefer shell-only composites on self-hosted runners.
 13. **The release pushes straight to `main`; branch protection keeps safety
-   rails only.** No required status checks (the release's own gate job calls
-   all of CI, which is stronger than any single PR rule). Protection keeps:
-   no force-push, no deletion, linear history. Push the bump commit first,
-   then the tag; if the tag push fails, the next run recovers by tagging
-   the existing commit. Never tag a commit whose manifest still carries the
-   old version. Never ship a version that is not ahead of the latest tag.
+    rails only.** No required status checks (the release's own gate job calls
+    all of CI, which is stronger than any single PR rule). Protection keeps:
+    no force-push, no deletion, linear history. Push the bump commit first,
+    then the tag; if the tag push fails, the next run recovers by tagging
+    the existing commit. Never tag a commit whose manifest still carries the
+    old version. Never ship a version that is not ahead of the latest tag.
 14. **All GitHub Actions refs are pinned by immutable SHA (`@<sha> # v1`).**
     Never use mutable tags on GitHub; SHA pins require no `# nosemgrep` comments.
     On self-hosted Forgejo runners where internal actions use version tags (e.g.
     `https://git.delnegend.com/Delnegend/actions/...@v6`), suppress Semgrep's
     mutable-tag rule with a trailing `# nosemgrep`.
 15. **No `${{ }}` interpolation inside `run:` blocks.** Move every workflow
-   context value (`inputs.*`, `steps.*.outputs.*`, `needs.*.outputs.*`,
-   `secrets.*`) into the step's `env:` block and reference `$VAR` in shell.
-   `if:`/`with:`/`env:` interpolation is fine; the injection sink is the shell.
-   Verified clean by scanning `run: |` blocks for `${{` before committing.
+    context value (`inputs.*`, `steps.*.outputs.*`, `needs.*.outputs.*`,
+    `secrets.*`) into the step's `env:` block and reference `$VAR` in shell.
+    `if:`/`with:`/`env:` interpolation is fine; the injection sink is the shell.
+    Verified clean by scanning `run: |` blocks for `${{` before committing.
 16. **Every `run:` step that uses `$VAR` declares `shell: bash`.** GitHub
-   defaults `run:` to PowerShell/cmd on `windows-latest`, where `$VAR` expands
-   to empty (verified: artefact shipped `error: target was empty` on the
-   Windows matrix leg). `${{ }}` interpolation used to mask this because
-   GitHub expands it pre-execution on every shell; rule 13 removes the mask,
-   so the shell must be explicit. Single-platform Linux repos are unaffected
-   but declare it anyway for copy-paste safety.
+    defaults `run:` to PowerShell/cmd on `windows-latest`, where `$VAR` expands
+    to empty (verified: artefact shipped `error: target was empty` on the
+    Windows matrix leg). `${{ }}` interpolation used to mask this because
+    GitHub expands it pre-execution on every shell; rule 13 removes the mask,
+    so the shell must be explicit. Single-platform Linux repos are unaffected
+    but declare it anyway for copy-paste safety.
 17. **Never commit or push directly to the twin repository.** All commits and pushes
     go strictly to the Forgejo source repository. The twin mirror on GitHub is
     automatically updated by `git.delnegend.com/Delnegend/actions/dispatch-github`.

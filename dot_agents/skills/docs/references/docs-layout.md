@@ -4,12 +4,12 @@ Offload anything beyond the 60-second landing page to dedicated files inside `do
 
 ## File Map
 
-| File | Read/Write when |
-|---|---|
+| File                    | Read/Write when                                                                   |
+| ----------------------- | --------------------------------------------------------------------------------- |
 | `docs/configuration.md` | Configuration flags, environment variables, full YAML/JSON/TOML schema, defaults. |
-| `docs/architecture.md` | Module boundaries, state machines, networking protocols, design tradeoffs. |
-| `docs/deployment.md` | Installation via the tap, services, logs, upgrades. |
-| `docs/development.md` | Prerequisites, toolchains, building from source, running tests, linters. |
+| `docs/architecture.md`  | Module boundaries, state machines, networking protocols, design tradeoffs.        |
+| `docs/deployment.md`    | Installation via the tap, services, logs, upgrades.                               |
+| `docs/development.md`   | Prerequisites, toolchains, building from source, running tests, linters.          |
 
 Release dispatch modes, version calculation and archive naming are **not**
 documented here beyond one link: they are defined once in
@@ -42,9 +42,9 @@ Tick every box before the docs ship. An unticked box is a defect, not a note.
 
 - [ ] Root `README.md` under 100 lines; each guide under 120 lines.
 - [ ] Quick Start follows the install ladder (brew tap primary), runs in under
-  60 seconds, and every command was executed fresh during this pass.
+      60 seconds, and every command was executed fresh during this pass.
 - [ ] `development.md` opens with Prerequisites: exact toolchain and versions,
-  `just`, and any OS-specific notes. No hidden prerequisites anywhere else.
+      `just`, and any OS-specific notes. No hidden prerequisites anywhere else.
 - [ ] No pinned versions in install commands; no `TODO`/`WIP`/empty sections.
 - [ ] Shared-workflow semantics appear exactly once per repo, as a link.
 - [ ] Every non-template section passes the variation test above.
@@ -61,11 +61,11 @@ Use when the project has more than 5 configuration options, environment variable
 
 ## Environment Variables
 
-| Variable | Default | Required | Description |
-|---|---|---|---|
-| `PORT` | `8080` | No | Port for the HTTP service |
-| `DATABASE_URL` | None | Yes | PostgreSQL connection string |
-| `LOG_LEVEL` | `info` | No | Logging level: `debug`, `info`, `warn`, `error` |
+| Variable       | Default | Required | Description                                     |
+| -------------- | ------- | -------- | ----------------------------------------------- |
+| `PORT`         | `8080`  | No       | Port for the HTTP service                       |
+| `DATABASE_URL` | None    | Yes      | PostgreSQL connection string                    |
+| `LOG_LEVEL`    | `info`  | No       | Logging level: `debug`, `info`, `warn`, `error` |
 
 ## Configuration File
 
@@ -83,10 +83,10 @@ storage:
 
 ## Options Matrix
 
-| Key | Type | Default | Description |
-|---|---|---|---|
-| `server.host` | string | `0.0.0.0` | Bind IP address |
-| `server.port` | integer | `8080` | Bind TCP port |
+| Key           | Type    | Default   | Description     |
+| ------------- | ------- | --------- | --------------- |
+| `server.host` | string  | `0.0.0.0` | Bind IP address |
+| `server.port` | integer | `8080`    | Bind TCP port   |
 ````
 
 ---

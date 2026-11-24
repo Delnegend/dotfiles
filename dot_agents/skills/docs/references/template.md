@@ -60,11 +60,11 @@ for the sake of variety:
 <project> run --config config.yaml
 ```
 
-| Option | Default | Description |
-|---|---|---|
-| `-c, --config <file>` | `config.yaml` | Path to configuration file |
-| `-p, --port <port>` | `8080` | Port to bind server |
-| `-v, --verbose` | `false` | Enable verbose diagnostic logging |
+| Option                | Default       | Description                       |
+| --------------------- | ------------- | --------------------------------- |
+| `-c, --config <file>` | `config.yaml` | Path to configuration file        |
+| `-p, --port <port>`   | `8080`        | Port to bind server               |
+| `-v, --verbose`       | `false`       | Enable verbose diagnostic logging |
 
 For all environment variables, full YAML schema, and advanced flags, see **[Configuration Reference](docs/configuration.md)**.
 
@@ -81,6 +81,7 @@ For component boundaries, internal pipelines, and design decisions, see **[Archi
 ## Roadmap
 
 <!-- Optional: for active projects. Omit once in maintenance mode. -->
+
 - [x] **<Shipped milestone>**: <Brief description of what landed.>
 - [ ] **<In-flight milestone>**: <Current focus before next tag.>
 - [ ] **<Final milestone>**: <Feature-freeze criteria to cut over to maintenance mode.>
