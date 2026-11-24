@@ -17,8 +17,10 @@
     "claude-acp": {
       "type": "registry"
     },
-    "antigravity-acp": {
-      "type": "registry"
+    "Antigravity": {
+      "type": "custom",
+      "command": "agy",
+      "args": ["acp"]
     },
     "opencode": {
       "type": "registry"
