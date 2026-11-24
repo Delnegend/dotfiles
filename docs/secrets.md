@@ -2,10 +2,10 @@
 
 Secrets never live in this repo; each machine carries its own secret files.
 
-- **Zero G token (omp and OpenCode):** set `ZERO_G_TOKEN=<token>` in
-  `~/.omp/agent/.env`. `omp` reads it through `apiKey: ZERO_G_TOKEN` in
-  `models.yml`; OpenCode gets it from `~/.bashrc_custom`, which exports the file.
-  The provider talks to `https://ai.delnegend.com/v1` over Tailscale.
+- **Zero G token (omp, OpenCode and Claude Code):** set `ZERO_G_TOKEN=<token>`
+  in `~/.omp/agent/.env`. `omp` reads it through `apiKey: ZERO_G_TOKEN` in
+  `models.yml`; OpenCode gets it from `~/.bashrc_custom`. Claude Code reads it
+  directly from that file through `apiKeyHelper` and uses `https://ai.delnegend.com`.
   The Antigravity CLI hook also uses this token and sends transcript content to
   `https://ai.delnegend.com`. It needs a Zero G server with the observation endpoint;
   collection is best effort and may skip records without notice.

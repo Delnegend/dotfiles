@@ -27,7 +27,7 @@ dot_config/
   opencode/models-discovery/index.ts # → ~/.config/opencode/models-discovery/ (discovers compatible providers)
 dot_bashrc_custom.tmpl        # → ~/.bashrc_custom (sourced from ~/.bashrc, per-host template)
 dot_tmux.conf                 # → ~/.tmux.conf (Linux; tmux installed via brew bootstrap)
-dot_claude/                   # → ~/.claude/ (shared guidance, MemPalace hook and MCP definition)
+dot_claude/                   # → ~/.claude/ (shared guidance, MemPalace and Zero G key helper)
 dot_agents/                   # → ~/.agents (skills)
 dot_gemini/AGENTS.md.tmpl     # → ~/.gemini/AGENTS.md (shared agent reply guidance)
 dot_gemini/config/            # → ~/.gemini/config/ (Antigravity CLI Zero G observation and MemPalace session recall hooks)

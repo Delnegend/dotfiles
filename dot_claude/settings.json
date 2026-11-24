@@ -1,4 +1,9 @@
 {
+  "apiKeyHelper": "bun \"$HOME/.claude/zero-g-key.ts\"",
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://ai.delnegend.com"
+  },
+  "model": "sonnet",
   "hooks": {
     "SessionStart": [
       {
@@ -11,5 +16,11 @@
         ]
       }
     ]
+  },
+  "theme": "dark",
+  "modelSettings": {
+    "claude-sonnet-5-5": {
+      "effortLevel": "high"
+    }
   }
 }
