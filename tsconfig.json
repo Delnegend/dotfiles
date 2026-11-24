@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "types": ["bun"],
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": [
+    "dot_config/opencode/**/*.ts",
+    "dot_gemini/**/*.ts",
+    "dot_omp/**/*.ts",
+    "scripts/**/*.test.ts"
+  ]
+}

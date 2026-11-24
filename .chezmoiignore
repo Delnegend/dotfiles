@@ -7,7 +7,12 @@ AGENTS.md
 LICENSE
 .gitignore
 docs/**
-scripts/zero-g-discovery.test.mjs
+scripts/zero-g-discovery.test.ts
+package.json
+bun.lock
+tsconfig.json
+node_modules/**
+*.tsbuildinfo
 
 # Desktop / Bazzite-only items (Flatpak apps, KDE theme, fontconfig, scripts)
 {{- if ne .chezmoi.hostname "bazzite" }}
