@@ -1,0 +1,20 @@
+{
+  "mempalace-recall": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "bun \"$HOME/.gemini/config/mempalace-recall.ts\"",
+        "timeout": 5
+      }
+    ]
+  },
+  "zero-g-observations": {
+    "PostInvocation": [
+      {
+        "type": "command",
+        "command": "ZERO_G_URL=https://ai.delnegend.com ZERO_G_VIRTUAL_KEY=\"${ZERO_G_TOKEN:-}\" bun \"$HOME/.gemini/config/zero-g-observe.ts\"",
+        "timeout": 5
+      }
+    ]
+  }
+}
