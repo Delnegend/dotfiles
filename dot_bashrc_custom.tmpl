@@ -38,7 +38,13 @@ alias lg='lazygit'
 alias up='podman compose up'
 alias down='podman compose down'
 alias oc='opencode'
-alias brewup='brew update && brew upgrade'
+brewup() {
+    if ! command -v brew >/dev/null 2>&1; then
+        echo "Homebrew is not installed or not on PATH." >&2
+        return 1
+    fi
+    brew update && brew upgrade
+}
 
 if [ -f /run/.containerenv ]; then
     alias pm="flatpak-spawn --host podman"
