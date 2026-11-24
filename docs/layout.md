@@ -10,6 +10,7 @@ private_dot_ssh/              # → ~/.ssh/ (0700)
   core@homelab.pub, delnegend@*.pub, twin@github.pub  # public keys
 dot_config/
   private_git/allowed_signers # → ~/.config/git/allowed_signers
+  zed/settings.json + themes/ # → ~/.config/zed/
   fontconfig/fonts.conf       # → ~/.config/fontconfig/fonts.conf (bazzite-only)
   private_kdeglobals          # → ~/.config/kdeglobals (private 0600, bazzite-only)
   private_kwinrc              # → ~/.config/kwinrc (private 0600, bazzite-only)
@@ -43,10 +44,11 @@ dot_omp/private_agent/        # → ~/.omp/agent/ (0700)
   APPEND_SYSTEM.md.tmpl       #   shared reply guidance appended to the built-in prompt
   mcp.json.tmpl               #   MCP servers (integrated-browser-mcp, playwright, mikrotik, MemPalace)
   extensions/mempalace.ts     #   automatic MemPalace recall extension
-dot_justfile.tmpl             # → ~/.justfile (bazzite-only recipes, including l4d2-download)
+dot_justfile.tmpl             # → ~/.justfile (bazzite-only recipes + zed-theme-*)
 dot_var/app/...               # → ~/.var/app/... (Flatpak mpv/easyeffects, bazzite-only)
 # Setup scripts (Linux-gated via {{ if eq .chezmoi.os "linux" }})
 run_once_10-bootstrap.sh.tmpl # Homebrew + base packages + ~/.bashrc wiring
+run_once_20-zed-symlink.ps1.tmpl # Windows: junction %APPDATA%/Zed → ~/.config/zed
 run_onchange_20-fonts.sh.tmpl # Iosevka + JetBrains Mono Nerd Fonts + Noto Color Emoji + fc-cache
 run_onchange_30-systemd.sh.tmpl # daemon-reload + enable units (scoped by ConditionPathExists/ConditionHost in units)
 run_onchange_40-kde.sh.tmpl   # flatpak overrides for BreezeDark
@@ -56,5 +58,5 @@ run_onchange_70-journald.sh.tmpl # 50-retention.conf (7-day journal) → /etc/sy
 .chezmoitemplates/agent-guidance.md # shared source for omp, OpenCode, agy and Claude Code guidance
 
 # Repo-only (ignored via .chezmoiignore, never applied)
-README.md  AGENTS.md  LICENSE  .gitignore  docs/  scripts/zero-g-discovery.test.ts
+README.md  AGENTS.md  LICENSE  .gitignore  docs/  scripts/zero-g-discovery.test.ts  sync-zed-vscode-theme.py
 ```

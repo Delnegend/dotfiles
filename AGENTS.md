@@ -24,5 +24,6 @@ just --list       # recipes in ~/.justfile (bazzite)
 
 ## Workflows
 
+- Zed themes: plain `.json` in `dot_config/zed/themes/`, regenerated from upstream `microsoft/vscode` via `just zed-theme-sync`. Recipes call `python3`, which is broken on Windows — run them on Linux.
 - Systemd: units live in `dot_config/systemd/user/`; when adding one, also add a hash `include` line in `run_onchange_30-systemd.sh.tmpl` or it won't auto-enable. Use `ConditionPathExists=` for optional binaries.
 - Shell: `dot_bashrc_custom.tmpl` (`~/.bashrc_custom`) is the entry point; `run_once_10-bootstrap.sh.tmpl` appends the `source` line to `~/.bashrc` once.

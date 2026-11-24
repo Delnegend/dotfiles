@@ -104,7 +104,7 @@ plugin=org.kde.plasma.dwellclicker
 
 [Containments][32][Applets][33][Applets][41]
 immutability=1
-plugin=org.kde.plasma.keyboardlayout
+plugin=org.kde.plasma.keyboardindicator
 
 [Containments][32][Applets][33][Applets][42]
 immutability=1

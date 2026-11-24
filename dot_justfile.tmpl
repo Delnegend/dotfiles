@@ -240,3 +240,10 @@ toggle-hdmi-res: _ensure_dummy_mode && _start_sunshine _start_krdp
 
 _restart_plasma_shell:
 	systemctl --user restart plasma-plasmashell.service
+
+# Zed theme — keep pixel-perfect with microsoft/vscode Dark Modern
+zed-theme-check:
+	python3 ~/.local/share/chezmoi/sync-zed-vscode-theme.py --check
+
+zed-theme-sync:
+	python3 ~/.local/share/chezmoi/sync-zed-vscode-theme.py --write

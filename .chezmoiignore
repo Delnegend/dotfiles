@@ -6,6 +6,7 @@ README.md
 AGENTS.md
 LICENSE
 .gitignore
+sync-zed-vscode-theme.py
 docs/**
 scripts/zero-g-discovery.test.ts
 package.json
