@@ -26,7 +26,7 @@
     "github-copilot-cli": {
       "type": "registry"
     },
-    "omp": {
+    "⌥ Oh My Pi": {
       "type": "custom",
       "command": "omp",
       "args": ["acp"]
@@ -91,13 +91,6 @@
         "mcp:browser:browser_navigate": {
           "default": "allow"
         },
-        "terminal": {
-          "always_allow": [
-            {
-              "pattern": "^kubectl\\s+get(\\s|$)"
-            }
-          ]
-        }
       }
     },
     "inline_assistant_model": {
