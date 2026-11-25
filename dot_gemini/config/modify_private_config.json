@@ -1,0 +1,27 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- $rule := "mcp(mempalace/*)" -}}
+{{- $data := dict -}}
+{{- if trim .chezmoi.stdin -}}
+{{-   $data = fromJson .chezmoi.stdin -}}
+{{- end -}}
+{{- $userSettings := dict -}}
+{{- if and (hasKey $data "userSettings") (kindIs "map" (get $data "userSettings")) -}}
+{{-   $userSettings = get $data "userSettings" -}}
+{{- end -}}
+{{- $grants := dict -}}
+{{- if and (hasKey $userSettings "globalPermissionGrants") (kindIs "map" (get $userSettings "globalPermissionGrants")) -}}
+{{-   $grants = get $userSettings "globalPermissionGrants" -}}
+{{- end -}}
+{{- $allow := list -}}
+{{- if and (hasKey $grants "allow") (kindIs "slice" (get $grants "allow")) -}}
+{{-   $allow = get $grants "allow" -}}
+{{- end -}}
+{{- if has $rule $allow -}}
+{{-   .chezmoi.stdin -}}
+{{- else -}}
+{{-   $allow = append $allow $rule -}}
+{{-   $_ := set $grants "allow" $allow -}}
+{{-   $_ := set $userSettings "globalPermissionGrants" $grants -}}
+{{-   $_ := set $data "userSettings" $userSettings -}}
+{{-   $data | toPrettyJson -}}
+{{- end -}}

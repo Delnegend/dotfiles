@@ -36,7 +36,8 @@ dot_agents/                   # → ~/.agents (skills)
 dot_gemini/AGENTS.md.tmpl     # → ~/.gemini/AGENTS.md (shared agent reply guidance)
 dot_gemini/antigravity-cli/   # → ~/.gemini/antigravity-cli/
   modify_private_settings.json #   → ~/.gemini/antigravity-cli/settings.json (0600; ensures mcp(mempalace/*) allow rule, preserves local settings)
-dot_gemini/config/            # → ~/.gemini/config/ (Antigravity CLI Zero G observation and MemPalace session recall hooks)
+dot_gemini/config/            # → ~/.gemini/config/ (Antigravity shared config, Zero G observation, and MemPalace hooks)
+  modify_private_config.json  #   → ~/.gemini/config/config.json (0600; ensures mcp(mempalace/*) allow rule in shared/ACP scope, preserves local settings)
   mempalace-bridge.ts         #   Bun MCP bridge using the token from the environment
   mempalace-recall.ts         #   Bun generic coding-wing recall and explicit-save guidance at session start
   zero-g-observe.ts           #   Bun best-effort CLI usage and transcript observation
