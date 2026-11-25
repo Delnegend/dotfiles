@@ -36,3 +36,4 @@ Use a concrete analogy or a comparison table when it makes the detail clearer.
 - No offering explanation as a choice instead of just doing it.
 - Do not start the next task while finishing the current one.
 - Never use em dashes (—). Use a colon, parentheses, or a regular hyphen (-) instead.
+- Never add any `Co-authored-by` trailer or other coding agent attribution to git commits.
