@@ -6,9 +6,10 @@ Secrets never live in this repo; each machine carries its own secret files.
   in `~/.omp/agent/.env`. `omp` reads it through `apiKey: ZERO_G_TOKEN` in
   `models.yml`; OpenCode gets it from `~/.bashrc_custom`. Claude Code reads it
   directly from that file through `apiKeyHelper` and uses `https://ai.delnegend.com`.
-  The Antigravity CLI hook also uses this token and sends transcript content to
-  `https://ai.delnegend.com`. It needs a Zero G server with the observation endpoint;
-  collection is best effort and may skip records without notice.
+  The Antigravity CLI hook (`zero-g-agy-integration observe`, installed from the
+  Delnegend Homebrew tap by the bootstrap script) also uses this token and sends
+  transcript content to `https://ai.delnegend.com`. It needs a Zero G server with the
+  observation endpoint; collection is best effort and may skip records without notice.
 - **MemPalace token (omp, OpenCode, Antigravity CLI and Claude Code):** set `MEMPALACE_MCP_HTTP_TOKEN=<token>`
   in `~/.omp/agent/.env` and restrict it with `chmod 600 ~/.omp/agent/.env`.
   Obtain the token securely from the homelab's SOPS-encrypted

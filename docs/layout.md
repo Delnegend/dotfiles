@@ -36,11 +36,10 @@ dot_agents/                   # → ~/.agents (skills)
 dot_gemini/AGENTS.md.tmpl     # → ~/.gemini/AGENTS.md (shared agent reply guidance)
 dot_gemini/antigravity-cli/   # → ~/.gemini/antigravity-cli/
   modify_private_settings.json #   → ~/.gemini/antigravity-cli/settings.json (0600; ensures mcp(mempalace/*) allow rule, preserves local settings)
-dot_gemini/config/            # → ~/.gemini/config/ (Antigravity shared config, Zero G observation, and MemPalace hooks)
+dot_gemini/config/            # → ~/.gemini/config/ (Antigravity shared config and hooks: Zero G observation via zero-g-agy-integration, and MemPalace)
   modify_private_config.json  #   → ~/.gemini/config/config.json (0600; ensures mcp(mempalace/*) allow rule in shared/ACP scope, preserves local settings)
   mempalace-bridge.ts         #   Bun MCP bridge using the token from the environment
   mempalace-recall.ts         #   Bun generic coding-wing recall and explicit-save guidance at session start
-  zero-g-observe.ts           #   Bun best-effort CLI usage and transcript observation
 dot_local/share/              # → ~/.local/share/ (bazzite-only Steam proxy & WinBox launchers + icon)
 scripts/executable_l4d2-download.py # → ~/scripts/l4d2-download.py (bazzite-only; Steam Workshop maps into local L4D2 addons)
 scripts/executable_disk-cleanup.sh # → ~/scripts/disk-cleanup.sh (bazzite-only; weekly cleanup run by systemd/user/disk-cleanup.timer)

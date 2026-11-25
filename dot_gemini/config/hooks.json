@@ -12,7 +12,7 @@
     "PostInvocation": [
       {
         "type": "command",
-        "command": "ZERO_G_URL=https://ai.delnegend.com ZERO_G_VIRTUAL_KEY=\"${ZERO_G_TOKEN:-}\" bun \"$HOME/.gemini/config/zero-g-observe.ts\"",
+        "command": "ZERO_G_URL=https://ai.delnegend.com ZERO_G_VIRTUAL_KEY=\"${ZERO_G_TOKEN:-}\" zero-g-agy-integration observe",
         "timeout": 5
       }
     ]
