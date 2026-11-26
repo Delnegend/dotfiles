@@ -23,11 +23,11 @@ on each Forgejo run. All changes belong strictly in the Forgejo source repositor
 
 ## Do these three things first, in order
 
-| #   | Gate                                                                | Why it blocks everything after                                                                             |
-| --- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| 1   | **Locate the host**: `git remote -v`                                | Decides `.github/` vs `.forgejo/`, runner labels, `gh` vs native AGit, and whether a GitHub twin exists    |
-| 2   | **Ask the project mode**: maintenance or active                     | Decides whether `release.yml` gets `on.schedule` (active projects track milestones in an optional roadmap) |
-| 3   | **Consult the owner** on the checklist in `references/decisions.md` | The rest are baselines to adapt, not mandates                                                              |
+| #   | Gate                                                                | Why it blocks everything after                                                                                                |
+| --- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Locate the host**: `git remote -v`                                | Decides `.github/` vs `.forgejo/`, runner labels, `gh` vs native AGit, and whether a GitHub twin exists                       |
+| 2   | **Ask the project mode**: maintenance or active                     | Decides whether `release.yml` gets `on.schedule` (active projects release manually; maintenance projects add the weekly cron) |
+| 3   | **Consult the owner** on the checklist in `references/decisions.md` | The rest are baselines to adapt, not mandates                                                                                 |
 
 Never assume github.com. Never write a weekly cron for a project under active
 development.
@@ -75,26 +75,33 @@ These are not negotiable. Rationale is in `references/decisions.md`.
    the twin, never on self-hosted Forgejo (no Docker images, no registry
    egress, no runner minutes there). Building artifacts is always the release
    workflow's job.
-3. **Prefer shared actions over caller knobs.** Build, packaging, and publishing
-   live in [Delnegend/actions](https://github.com/Delnegend/actions) pinned by SHA:
+3. **Prefer shared actions over caller knobs.** Build, packaging, policy checks,
+   and publishing live in [Delnegend/actions](https://github.com/Delnegend/actions)
+   referenced at `@main  # nosemgrep`:
    `resolve-release` decides and performs the release, `package-artifact` names
    and uploads one archive (`<name>-<version>-<target>.<ext>`, always `dist/`),
    `publish-release` owns the release body, `docker-build-push` owns the image
-   build. A per-repo `with:` input needs a recorded reason; the second caller
-   needing the same input means it belongs in the shared default instead.
-   Same for scans (rule 4): one shared configuration, `exclude` is the only knob.
+   build, `common-configs` enforces shared Rust/Bun settings. A per-repo `with:`
+   input needs a recorded reason; the second caller needing the same input means
+   it belongs in the shared default instead. Same for scans (rule 4): one shared
+   configuration, `exclude` is the only knob (and only skips security scans or
+   `config-policy`).
 4. **Scans come from the shared bundle, never hand-rolled.** Call
-   `.github/workflows/scan.yml` pinned by SHA as a job. Do not write `docker run`
-   scan jobs per project: they drift, and a shared gate is the only thing that
-   keeps ten projects in agreement.
+   `.github/workflows/scan.yml@main  # nosemgrep` as a job. It runs security
+   scans (`gitleaks`, `actionlint`, `semgrep`, `trivy`, `osv`), `config-policy`
+   (`common-configs`), plus three mandatory checks (`emdash`, `facade` via
+   `common-facade`, and `docs-references`). Do not write `docker run` scan jobs
+   per project: they drift, and a shared gate keeps the fleet in agreement.
 5. **14-day cooldown, enforced by the package manager itself.** Never re-implement
    the age filter as a shell script; the tool's own gate also covers transitive
    dependencies. If an ecosystem has no native gate, that project does not get
    autonomous bumps.
-6. **Dependabot for GitHub Actions only.** On GitHub-hosted repos, Dependabot is
-   used exclusively for `package-ecosystem: "github-actions"` to keep workflow
-   actions up to date, and nothing else. Code dependencies are upgraded through
-   native package managers (`bun update`, `cargo update`, `ncu`).
+6. **Dependabot for GitHub Actions only (with 14-day cooldown).** On
+   GitHub-hosted repos, Dependabot is used exclusively for
+   `package-ecosystem: "github-actions"` with `cooldown: { default-days: 14 }`
+   to keep third-party workflow actions up to date, and nothing else. Code
+   dependencies are upgraded through native package managers (`bun update`,
+   `cargo update`, `ncu`).
 7. **Split patch/minor from major**, so a breaking major cannot block routine merges.
 8. **Weekly releases only in maintenance mode.** Active development gets
    `workflow_dispatch` alone. The unified `release.yml` is one run: gate on
@@ -116,11 +123,14 @@ These are not negotiable. Rationale is in `references/decisions.md`.
     then the tag; if the tag push fails, the next run recovers by tagging
     the existing commit. Never tag a commit whose manifest still carries the
     old version. Never ship a version that is not ahead of the latest tag.
-14. **All GitHub Actions refs are pinned by immutable SHA (`@<sha> # v1`).**
-    Never use mutable tags on GitHub; SHA pins require no `# nosemgrep` comments.
-    On self-hosted Forgejo runners where internal actions use version tags (e.g.
-    `https://git.delnegend.com/Delnegend/actions/...@v6`), suppress Semgrep's
-    mutable-tag rule with a trailing `# nosemgrep`.
+14. **Pin third-party actions by immutable SHA; track `Delnegend/actions` at `@main  # nosemgrep`.**
+    Third-party GitHub Actions (`actions/checkout`, `extractions/setup-just`,
+    `ietf-tools/semver-action`, etc.) are always pinned by full commit SHA
+    (`@<sha> # vN`), which requires no `# nosemgrep` comment. First-party
+    `Delnegend/actions` workflows/composites (both on GitHub and on Forgejo at
+    `https://git.delnegend.com/Delnegend/actions/...@main`) track `@main` with
+    a trailing `# nosemgrep` so shared pipeline and policy fixes land once
+    without churning SHA pins across every repo.
 15. **No `${{ }}` interpolation inside `run:` blocks.** Move every workflow
     context value (`inputs.*`, `steps.*.outputs.*`, `needs.*.outputs.*`,
     `secrets.*`) into the step's `env:` block and reference `$VAR` in shell.
@@ -130,7 +140,7 @@ These are not negotiable. Rationale is in `references/decisions.md`.
     defaults `run:` to PowerShell/cmd on `windows-latest`, where `$VAR` expands
     to empty (verified: artefact shipped `error: target was empty` on the
     Windows matrix leg). `${{ }}` interpolation used to mask this because
-    GitHub expands it pre-execution on every shell; rule 13 removes the mask,
+    GitHub expands it pre-execution on every shell; rule 15 removes the mask,
     so the shell must be explicit. Single-platform Linux repos are unaffected
     but declare it anyway for copy-paste safety.
 17. **Never commit or push directly to the twin repository.** All commits and pushes
@@ -147,9 +157,14 @@ These are not negotiable. Rationale is in `references/decisions.md`.
 A repo qualifies only if all of these hold:
 
 1. A hidden root `.justfile` with:
-   - `check`: the single CI gate. Assert-only: format check, lint, vet, tests.
-     Never rewrites the tree (`cargo fmt --check` not `cargo fmt`, `gofmt -l`
-     not `go fmt`); a check that dirties the checkout is a bug.
+   - `check`: the single CI gate. Assert-only: format check, lint, vet,
+     modernization check (`go fix -diff ./...` on Go repos), tests. Never
+     rewrites the tree (`cargo fmt --check` not `cargo fmt`, `gofmt -l` not
+     `go fmt`); a check that dirties the checkout is a bug.
    - `version get` / `version set <ver>`: the release action's version contract.
      `get` prints `X.Y.Z`; `set` rewrites the manifests, no commit, no tag.
 2. Branch protection: safety rails only: no force-push, no deletion, linear history, and no required status checks (the release gates on all of CI itself).
+3. Shared `scan.yml` policy compliance:
+   - **Rust repos** (`common-configs`): tracked root `clippy.toml` and `.cargo/config.toml`, strict `Cargo.toml` clippy lints, and standard `[profile.release]` (see `references/ecosystems.md`).
+   - **Bun repos** (`common-configs`): tracked `bunfig.toml` beside every `bun.lock`/`bun.lockb` with `[install] minimumReleaseAge >= 1209600`.
+   - **All repos**: `README.yml` validated by `common-facade`, every `docs/**/*.md` file linked in `README.md`, and zero em dashes in tracked files.

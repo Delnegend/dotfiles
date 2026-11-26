@@ -29,7 +29,7 @@ concurrency:
 
 jobs:
   update:
-    uses: Delnegend/actions/.github/workflows/reusable-deps-update.yml@<pin-sha> # v1
+    uses: Delnegend/actions/.github/workflows/reusable-deps-update.yml@main # nosemgrep
     with:
       cargo: true # opt in: cargo, bun, bun-dir
 ```
@@ -91,6 +91,9 @@ updates:
       - "dependencies"
     commit-message:
       prefix: "chore(deps)"
+    # Supply chain security: quarantine newly published versions for 14 days
+    cooldown:
+      default-days: 14
 ```
 
 Because it uses the `dependencies` label and `chore(deps):` commit prefix,
@@ -99,7 +102,10 @@ these PRs are automatically verified by `ci.yml` and merged by `auto-merge.yml`.
 ## B. CI gate
 
 One `just check`, no build matrix. Runner label follows the host
-(`ubuntu-latest` on GitHub, a self-hosted equivalent on Forgejo).
+(`ubuntu-latest` on GitHub, a self-hosted equivalent on Forgejo). Third-party
+actions (`actions/checkout`, `extractions/setup-just`, etc.) are pinned by full
+commit SHA (`@<sha> # vN`); first-party `Delnegend/actions` workflows track
+`@main  # nosemgrep`.
 
 ```yaml
 name: CI
@@ -110,6 +116,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  workflow_call:
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -122,33 +130,37 @@ jobs:
     name: Check (just check)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: extractions/setup-just@v4
+      - uses: actions/checkout@<sha> # v7
+      - uses: extractions/setup-just@<sha> # v4
       # Insert any language setup needed by `just check` here (e.g. setup-go, setup-node)
       - name: Run verification
         run: just check
 
   scan:
     name: Scan
-    uses: Delnegend/actions/.github/workflows/scan.yml@<pin-sha> # v1
+    uses: Delnegend/actions/.github/workflows/scan.yml@main # nosemgrep
     permissions:
       contents: read
 ```
 
-Replace `<pin-sha>` with the full commit SHA that the scan workflow's `v1`
-resolves to, so the pin is immutable like every other action here.
+The shared `scan.yml` workflow runs 9 parallel jobs rather than inline `docker run`
+commands:
 
-The scans come from the shared workflow rather than inline `docker run` jobs:
-Gitleaks, actionlint, Semgrep, Trivy and OSV-Scanner, each its own job so they
-run in parallel. Hand-rolling them per project is what let them drift apart.
-Every scan runs with one shared configuration: Trivy always uses the full
-`vuln,misconfig,secret` set, and a root `osv-scanner.toml` is picked up
-automatically as the OSV quarantine; no inputs needed. The only input is
-`exclude`, a space-separated opt-out (e.g. `exclude: osv`) for the rare case
-a scan genuinely does not apply. Repos without a lockfile need nothing: the
-OSV job detects that and skips with a notice.
+- **Security scans** (`gitleaks`, `actionlint`, `semgrep`, `trivy`, `osv`): Trivy
+  always runs the full `vuln,misconfig,secret` set; a root `osv-scanner.toml` is
+  picked up automatically as the OSV quarantine, and repos without a lockfile skip
+  OSV with a notice.
+- **Configuration policy** (`config-policy` via `common-configs`): enforces shared
+  Rust (`clippy.toml`, `.cargo/config.toml`, `Cargo.toml` lints and release profile)
+  and Bun (`bunfig.toml` 14-day cooldown beside every lockfile) settings.
+- **Mandatory repo checks** (`emdash`, `facade` via `common-facade`,
+  `docs-references`): fail CI on any em dash in tracked files, any drift between
+  `README.yml` and generated `README.md`/`LICENSE*`, or any `docs/**/*.md` file
+  missing a link in `README.md`.
 
-The job `name:` on `check` must match the branch protection context exactly.
+The only opt-out input is `exclude` (space-separated, e.g. `exclude: osv` or
+`exclude: config-policy`), which applies only to the security scans and
+`config-policy`; `emdash`, `facade`, and `docs-references` always run.
 
 ### B2. CI gate for Forgejo+twin repos (checks + security scans in parallel)
 
@@ -164,7 +176,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Fetch source from Forgejo
-        uses: Delnegend/actions/twin-checkout@<pin-sha> # v1
+        uses: Delnegend/actions/twin-checkout@main # nosemgrep
         with:
           token: ${{ secrets.FORGEJO }}
           ref: ${{ inputs.ref || 'main' }}
@@ -176,7 +188,7 @@ jobs:
 
   scan:
     name: Scan
-    uses: Delnegend/actions/.github/workflows/scan.yml@<pin-sha> # v1
+    uses: Delnegend/actions/.github/workflows/scan.yml@main # nosemgrep
     with:
       ref: ${{ inputs.ref || 'main' }}
       forgejo: true
@@ -203,7 +215,7 @@ permissions:
 
 jobs:
   automerge:
-    uses: Delnegend/actions/.github/workflows/reusable-auto-merge.yml@<pin-sha> # v1
+    uses: Delnegend/actions/.github/workflows/reusable-auto-merge.yml@main # nosemgrep
 ```
 
 ### Forgejo
@@ -282,12 +294,12 @@ jobs:
       publish: ${{ steps.resolve.outputs.publish }}
       skip: ${{ steps.resolve.outputs.skip }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@<sha> # v7
         with:
           token: ${{ github.token }}
-          persist_credentials: true
+          persist-credentials: true
           fetch-depth: 0 # Full git history for tags, commits, and semver-action
-      - uses: extractions/setup-just@v4
+      - uses: extractions/setup-just@<sha> # v4
       # Insert any language setup needed by `just version set` (e.g. setup-go, setup-node)
 
       # The repo needs one existing `v*` tag before this workflow can run: see
@@ -295,7 +307,7 @@ jobs:
 
       - name: Calculate Next SemVer
         id: semver
-        uses: ietf-tools/semver-action@v1
+        uses: ietf-tools/semver-action@<sha> # v1
         with:
           token: ${{ github.token }}
           fallbackTag: v0.0.0
@@ -304,9 +316,7 @@ jobs:
 
       - name: Bump, tag, and push
         id: resolve
-        # Replace <pin-sha> with the full commit SHA that `v1` resolves to, so
-        # the workflow pins an immutable ref like every other action here.
-        uses: Delnegend/actions/resolve-release@<pin-sha> # v1
+        uses: Delnegend/actions/resolve-release@main # nosemgrep
         with:
           ref: ${{ inputs.ref }}
           dry-run: ${{ inputs.dry-run }}
@@ -322,7 +332,7 @@ jobs:
     if: needs.prepare.outputs.skip != 'true'
     runs-on: ubuntu-slim # or matrix runners for multi-platform binaries
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@<sha> # v7
         with:
           ref: ${{ needs.prepare.outputs.ref }}
           fetch-depth: 0
@@ -335,7 +345,7 @@ jobs:
       # -----------------------------------------------------------------------
 
       - name: Package artifact
-        uses: Delnegend/actions/package-artifact@<pin-sha> # v1
+        uses: Delnegend/actions/package-artifact@main # nosemgrep
         with:
           name: <project>
           version: ${{ needs.prepare.outputs.version }}
@@ -349,7 +359,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Publish release
-        uses: Delnegend/actions/publish-release@<pin-sha> # v1
+        uses: Delnegend/actions/publish-release@main # nosemgrep
         with:
           ref: ${{ needs.prepare.outputs.ref }}
           publish: ${{ needs.prepare.outputs.publish }}
@@ -401,16 +411,16 @@ jobs:
       publish: ${{ steps.resolve.outputs.publish }}
       skip: ${{ steps.resolve.outputs.skip }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@<sha> # v7
         with:
           token: ${{ github.token }}
-          persist_credentials: true
+          persist-credentials: true
           fetch-depth: 0
-      - uses: extractions/setup-just@v4
+      - uses: extractions/setup-just@<sha> # v4
 
       - name: Calculate Next SemVer
         id: semver
-        uses: ietf-tools/semver-action@v1
+        uses: ietf-tools/semver-action@<sha> # v1
         with:
           token: ${{ github.token }}
           fallbackTag: v0.0.0
@@ -419,7 +429,7 @@ jobs:
 
       - name: Bump, tag, and push
         id: resolve
-        uses: Delnegend/actions/resolve-release@<pin-sha> # v1
+        uses: Delnegend/actions/resolve-release@main # nosemgrep
         with:
           ref: ${{ inputs.ref }}
           dry-run: ${{ inputs.dry-run }}
@@ -437,15 +447,16 @@ jobs:
     permissions:
       packages: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@<sha> # v7
         with:
           ref: ${{ needs.prepare.outputs.ref }}
 
       - name: Build and push image
-        uses: Delnegend/actions/docker-build-push@<pin-sha> # v1
+        uses: Delnegend/actions/docker-build-push@main # nosemgrep
         with:
           version: ${{ needs.prepare.outputs.version }}
           publish: ${{ needs.prepare.outputs.publish }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   publish:
     name: Publish Consolidated Release
@@ -454,7 +465,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Publish release
-        uses: Delnegend/actions/publish-release@<pin-sha> # v1
+        uses: Delnegend/actions/publish-release@main # nosemgrep
         with:
           ref: ${{ needs.prepare.outputs.ref }}
           publish: ${{ needs.prepare.outputs.publish }}
@@ -475,7 +486,7 @@ build-binaries:
   if: needs.prepare.outputs.skip != 'true'
   runs-on: ubuntu-latest
   steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@<sha> # v7
       with:
         ref: ${{ needs.prepare.outputs.ref }}
         fetch-depth: 0
@@ -483,7 +494,7 @@ build-binaries:
     # ... compile, then one package-artifact step per binary ...
 
     - name: Package artifact
-      uses: Delnegend/actions/package-artifact@<pin-sha> # v1
+      uses: Delnegend/actions/package-artifact@main # nosemgrep
       with:
         name: <project>
         version: ${{ needs.prepare.outputs.version }}
@@ -498,12 +509,12 @@ build-container:
   permissions:
     packages: write
   steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@<sha> # v7
       with:
         ref: ${{ needs.prepare.outputs.ref }}
 
     - name: Build and push image
-      uses: Delnegend/actions/docker-build-push@<pin-sha> # v1
+      uses: Delnegend/actions/docker-build-push@main # nosemgrep
       with:
         version: ${{ needs.prepare.outputs.version }}
         publish: ${{ needs.prepare.outputs.publish }}
@@ -515,7 +526,7 @@ publish:
   if: needs.prepare.outputs.skip != 'true'
   runs-on: ubuntu-latest
   steps:
-    - uses: Delnegend/actions/publish-release@<pin-sha> # v1
+    - uses: Delnegend/actions/publish-release@main # nosemgrep
       with:
         ref: ${{ needs.prepare.outputs.ref }}
         publish: ${{ needs.prepare.outputs.publish }}

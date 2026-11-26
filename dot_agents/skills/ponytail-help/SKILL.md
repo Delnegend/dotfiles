@@ -23,12 +23,14 @@ Level sticks until changed or session end.
 
 ## Skills
 
-| Skill               | Trigger            | What it does                                                         |
-| ------------------- | ------------------ | -------------------------------------------------------------------- |
-| **ponytail**        | `/ponytail`        | Lazy mode itself. Simplest solution that works.                      |
-| **ponytail-review** | `/ponytail-review` | Over-engineering review: `L42: yagni: factory, one product. Inline.` |
-| **ponytail-gain**   | `/ponytail-gain`   | Measured-impact scoreboard: less code, less cost, more speed.        |
-| **ponytail-help**   | `/ponytail-help`   | This card.                                                           |
+| Skill               | Trigger            | What it does                                                                      |
+| ------------------- | ------------------ | --------------------------------------------------------------------------------- |
+| **ponytail**        | `/ponytail`        | Lazy mode itself. Simplest solution that works.                                   |
+| **ponytail-review** | `/ponytail-review` | Over-engineering review: `L42: yagni: factory, one product. Inline.`              |
+| **ponytail-audit**  | `/ponytail-audit`  | Whole-repo audit for over-engineering: ranked list of what to delete or simplify. |
+| **ponytail-debt**   | `/ponytail-debt`   | Harvest every `ponytail:` comment into a tracked debt ledger.                     |
+| **ponytail-gain**   | `/ponytail-gain`   | Measured-impact scoreboard: less code, less cost, more speed.                     |
+| **ponytail-help**   | `/ponytail-help`   | This card.                                                                        |
 
 Codex uses `@ponytail`, `@ponytail-review`, and `@ponytail-help`; Claude Code
 and OpenCode use the slash-command forms above (OpenCode ships `/ponytail` and

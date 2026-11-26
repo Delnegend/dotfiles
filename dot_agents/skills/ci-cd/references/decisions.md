@@ -38,18 +38,21 @@ agreed choices and any deviations in the PR description or conversation.
    explicit recorded exception. On a Forgejo+twin project, artifacts publish
    from the twin.
 6. **CI gate**: one `just check` gate, no build matrix, plus the shared
-   [scan workflow](https://github.com/Delnegend/actions) (Gitleaks, actionlint,
-   Semgrep, Trivy, OSV-Scanner) called as a job. Take the scans from there
-   rather than writing `docker run` jobs per project: they drift, and a shared
-   gate is the only thing that keeps ten projects in agreement. _Default:_ add
-   only the runtimes/services the check needs.
+   [scan workflow](https://github.com/Delnegend/actions) called as a job
+   (`@main  # nosemgrep`): security scans (Gitleaks, actionlint, Semgrep, Trivy,
+   OSV-Scanner), `config-policy` (`common-configs` for Rust/Bun), and mandatory
+   `emdash`, `facade` (`common-facade`), and `docs-references` checks. Take the
+   scans from there rather than writing `docker run` jobs per project: they
+   drift, and a shared gate keeps the fleet in agreement. _Default:_ add only
+   the runtimes/services the check needs.
 7. **Dependencies**: daily at 02:00 for code dependencies (via native package
    managers with native cooldown). On GitHub-hosted repos, Dependabot runs
-   weekly for `package-ecosystem: "github-actions"` only.
-8. **Security & config**: rebase-only, linear history, required
-   `Check (just check)`. Prefer the built-in token for same-repo automation; a
-   fine-grained PAT or GitHub App only for cross-repo dispatch to a twin. Avoid
-   polling loops.
+   weekly for `package-ecosystem: "github-actions"` only, with a 14-day
+   `cooldown: { default-days: 14 }`.
+8. **Security & config**: rebase-only, linear history, no required status
+   checks (the release gates on all of CI via `workflow_call`). Prefer the
+   built-in token for same-repo automation; a fine-grained PAT or GitHub App
+   only for cross-repo dispatch to a twin. Avoid polling loops.
 9. **Downstream sync**: event-driven when a token is acceptable, otherwise a
    short-interval poll that pushes directly. _Confirm the acceptable latency._
 10. **Runner budget**: cheapest single-core label for orchestration, platform
@@ -75,12 +78,12 @@ Heuristic: _would a tag cut on Sunday surprise anyone?_ No → maintenance mode.
 Yes → active development. Revisit when the roadmap changes; this is a
 per-application choice, not a permanent property.
 
-### Transitioning to maintenance mode via `README.md` roadmap
+### Transitioning to maintenance mode
 
-Active development projects track in-flight milestones in an optional `## Roadmap`
-section in the root `README.md` (structured per the `docs` skill). When all
-milestones are checked `[x]` and feature work freezes, the project flips to
-**maintenance mode** (enabling the `on.schedule` weekly cron in `release.yml`).
+When feature work freezes and an unattended Sunday tag would no longer surprise
+anyone, flip the project to **maintenance mode** by adding the `on.schedule`
+weekly cron (`0 0 * * 0`) to `release.yml`. Do not add a `## Roadmap` section to
+root `README.md` (`common-facade`'s schema does not support extra root sections).
 
 ## Why the hard rules exist
 

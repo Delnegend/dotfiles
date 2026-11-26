@@ -90,7 +90,7 @@ npx npm-check-updates -u -t minor --cooldown 14d
 ```
 
 `-t minor` restricts updates to patch and minor versions, keeping breaking
-major upgrades out of autonomous daily PRs (Rule 5). When used with `--cooldown`,
+major upgrades out of autonomous daily PRs (Rule 7). When used with `--cooldown`,
 it upgrades to the highest minor/patch version that has passed quarantine.
 
 ## pnpm
@@ -111,6 +111,35 @@ Go and uv/pip have no built-in age filter. Options, in order of preference:
 
 Do not quietly ship a no-op cooldown. If an ecosystem has no native gate, say
 so and let the owner choose.
+
+## Shared configuration policy (`common-configs`)
+
+`scan.yml` runs `Delnegend/actions/common-configs` on every repo (opt out via
+`exclude: config-policy` only with a recorded reason):
+
+- **Rust repos** (any tracked `Cargo.toml` or `.rs` file):
+  - Root `clippy.toml` (tracked) must set `allow-unwrap-in-tests`,
+    `allow-expect-in-tests`, `allow-panic-in-tests`, and
+    `allow-indexing-slicing-in-tests` to `true`.
+  - Root `.cargo/config.toml` (tracked) must set
+    `registry.global-min-publish-age = "14 days"` and
+    `resolver.incompatible-publish-age = "deny"`.
+  - Every crate (directly or via `[lints] workspace = true`) must set Clippy
+    groups `pedantic` and `nursery` to `deny` with `priority <= -1`, and set
+    `unwrap_used`, `expect_used`, `indexing_slicing`, `arithmetic_side_effects`,
+    `unreachable`, `unimplemented`, `unchecked_time_subtraction`, `todo`,
+    `string_slice`, `panic_in_result_fn`, `panic`, `exit`, and `as_conversions`
+    to `deny` or `forbid` at a higher priority.
+  - Every workspace root (including standalone libraries) must set
+    `[profile.release]` `lto = "thin"`, `codegen-units = 1`, `strip = true` or
+    `"symbols"`, and `opt-level = 3` (or omitted).
+- **Bun repos** (any tracked `bun.lock` or `bun.lockb`):
+  - A sibling tracked `bunfig.toml` must set `[install] minimumReleaseAge` to an
+    integer `>= 1209600` (14 days in seconds). Entries in
+    `minimumReleaseAgeExcludes` emit CI notices.
+- **Go repos (`just check` convention)**:
+  - Include `go fix -diff ./...` alongside `[ -z "$(gofmt -l .)" ]`, `go vet ./...`,
+    and `go test ./...` so CI asserts Go modernization without rewriting the tree.
 
 ## Package-manager-agnostic version contract (`just version get/set`)
 

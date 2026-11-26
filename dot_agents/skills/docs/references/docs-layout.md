@@ -40,15 +40,20 @@ template or the shared action's docs, not in both projects.
 
 Tick every box before the docs ship. An unticked box is a defect, not a note.
 
+- [ ] `common-facade check` passes cleanly (for `README.yml` repos); `README.md`
+      and `LICENSE*` were generated, not hand-edited.
 - [ ] Root `README.md` under 100 lines; each guide under 120 lines.
 - [ ] Quick Start follows the install ladder (brew tap primary), runs in under
       60 seconds, and every command was executed fresh during this pass.
 - [ ] `development.md` opens with Prerequisites: exact toolchain and versions,
       `just`, and any OS-specific notes. No hidden prerequisites anywhere else.
+- [ ] Every `docs/**/*.md` file is linked from `README.md` (`scan.yml`
+      `docs-references` gate).
+- [ ] Zero em dashes in any tracked file (`scan.yml` `emdash` gate).
 - [ ] No pinned versions in install commands; no `TODO`/`WIP`/empty sections.
 - [ ] Shared-workflow semantics appear exactly once per repo, as a link.
 - [ ] Every non-template section passes the variation test above.
-- [ ] Every link resolves; every badge renders.
+- [ ] Every link resolves; every `badgers.space` badge renders.
 
 ---
 
@@ -173,8 +178,9 @@ Use when describing contributor prerequisites, build steps, test suites, and lin
 Constraints: under 120 lines. Opens with Prerequisites (exact toolchain and
 versions, `just`, OS notes); a build that needs something unlisted is a doc
 bug. Build & test through the repo's gate command (`just check` or
-equivalent). Release procedure is one link to Delnegend/actions plus the
-repo's bump command, never a restated pipeline.
+equivalent). Release procedure is one link to `Delnegend/actions` plus the
+repo's `just version get` / `just version set <ver>` contract, never a restated
+pipeline.
 
 ````markdown
 # Development Guide

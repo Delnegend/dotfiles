@@ -237,8 +237,8 @@ directly.
 
 > Reference: `Delnegend/actions/twin-checkout` handles Forgejo source checkouts on the twin.
 > Workflows on the twin are authored in the Forgejo source's `.github/workflows/` and synced
-> automatically by `dispatch-github` on every Forgejo run. All action refs on the twin are
-> pinned by full commit SHA with `# v1`.
+> automatically by `dispatch-github` on every Forgejo run. Third-party action refs on the twin
+> are pinned by full commit SHA with `# vN`; first-party `Delnegend/actions` refs use `@main  # nosemgrep`.
 
 **Name no specific account in generated output.** The GitHub account hosting a twin is the owner's
 private arrangement and must never appear in committed workflow files, generated
@@ -290,5 +290,5 @@ POST /api/v1/repos/{owner}/{repo}/branch_protections
 **Settings check.** On GitHub, Settings → Actions → General → Workflow
 permissions must have _"Allow GitHub Actions to create and approve pull
 requests"_ checked. On Forgejo, Settings → Actions → General → _"Allow pull
-requests and security alerts"_ must be enabled, or the `fj pr create` in the
+requests and security alerts"_ must be enabled, or the AGit push in the
 upgrade job fails.
