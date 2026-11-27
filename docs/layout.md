@@ -10,7 +10,7 @@ private_dot_ssh/              # → ~/.ssh/ (0700)
   core@homelab.pub, delnegend@*.pub, twin@github.pub  # public keys
 dot_config/
   private_git/allowed_signers # → ~/.config/git/allowed_signers
-  zed/
+  zed/                      # → ~/.config/zed/ (bazzite + Windows only)
     settings.base.json        # static settings (ignored as a home target)
     modify_private_settings.json # → ~/.config/zed/settings.json (0600; keeps ACP model/effort/mode from the live file)
     themes/                   # → ~/.config/zed/themes/

@@ -38,6 +38,12 @@ node_modules/**
 scripts/**
 {{- end }}
 
+# Zed config: bazzite (native) and Windows (via the junction script) only.
+# Excluded on other Linux hosts (wsl, homelab).
+{{- if and (ne .chezmoi.hostname "bazzite") (ne .chezmoi.os "windows") }}
+.config/zed/**
+{{- end }}
+
 # Linux-only items: excluded on non-Linux machines.
 # Per-host scoping of systemd units lives in the units themselves
 # (ConditionPathExists=/ConditionHost=), not here.
