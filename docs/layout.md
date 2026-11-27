@@ -42,6 +42,7 @@ dot_gemini/config/            # → ~/.gemini/config/ (Antigravity shared config
   mempalace-recall.ts         #   Bun generic coding-wing recall and explicit-save guidance at session start
 dot_local/share/              # → ~/.local/share/ (bazzite-only Steam proxy & WinBox launchers + icon)
 scripts/executable_l4d2-download.py # → ~/scripts/l4d2-download.py (bazzite-only; Steam Workshop maps into local L4D2 addons)
+scripts/executable_ssd-health.py # → ~/scripts/ssd-health.py (bazzite-only; SMART health report, run by `just ssd-health`)
 scripts/executable_disk-cleanup.sh # → ~/scripts/disk-cleanup.sh (bazzite-only; weekly cleanup run by systemd/user/disk-cleanup.timer)
 dot_omp/private_agent/        # → ~/.omp/agent/ (0700)
   config.base.yml             #   static oh-my-pi config; modelRoles come from the live file

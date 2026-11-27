@@ -241,6 +241,11 @@ toggle-hdmi-res: _ensure_dummy_mode && _start_sunshine _start_krdp
 _restart_plasma_shell:
 	systemctl --user restart plasma-plasmashell.service
 
+# Health report for every SSD (SATA + NVMe): life left, TBW, read/written, power-on time, errors.
+[group("disk")]
+ssd-health:
+	@python3 ~/scripts/ssd-health.py || [ $? -le 2 ]
+
 # Zed theme — keep pixel-perfect with microsoft/vscode Dark Modern
 zed-theme-check:
 	python3 ~/.local/share/chezmoi/sync-zed-vscode-theme.py --check
