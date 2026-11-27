@@ -5,9 +5,12 @@ follow the host (see `hosts.md`); the substance does not change.
 
 ## A. Dependency upgrade job (`deps.yml`)
 
-Runs daily via the shared `reusable-deps-update.yml` workflow, opening one PR
-with the upgraded manifest and lockfile behind the 14-day publish quarantine.
-Toolchains are opt-in (`cargo`, `bun`, `bun-dir`).
+Runs daily via the shared `reusable-deps-update.yml` workflow behind the 14-day
+publish quarantine. Changes are pushed to `deps/automatic`, verified by
+dispatching `ci.yml` via `workflow_dispatch` (which bypasses GitHub's permanent
+approval gate on `GITHUB_TOKEN`-created pull requests), and fast-forwarded onto
+`main` once CI passes. A PR is opened only when CI fails. Toolchains are opt-in
+(`cargo`, `bun`, `bun-dir`).
 
 ### GitHub Actions (reusable workflow)
 
@@ -20,6 +23,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: write
   pull-requests: write
 
@@ -202,12 +206,16 @@ jobs:
 
 ### GitHub Actions (reusable workflow)
 
+Triggers on `workflow_run` after `CI` succeeds so bot PRs (such as Dependabot)
+always wait for all of CI to pass and avoid the Dependabot label race:
+
 ```yaml
 name: Auto-merge dependencies
 
 on:
-  pull_request:
-    branches: [main]
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
 
 permissions:
   contents: write
