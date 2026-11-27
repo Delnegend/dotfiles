@@ -2,10 +2,15 @@
 #!/bin/bash
 set -eu
 # Register only when absent; preserve Claude's other state and existing servers.
-if ! command -v claude >/dev/null 2>&1 || ! command -v bun >/dev/null 2>&1; then
-    exit 0
+# Bootstrap installs Claude Code with Homebrew, whose bin may not be on PATH yet.
+PATH="$PATH:/home/linuxbrew/.linuxbrew/bin:/var/home/linuxbrew/.linuxbrew/bin"
+if ! command -v claude >/dev/null 2>&1; then
+    # Fail instead of skipping: chezmoi records a successful run as done and
+    # would never retry, leaving Claude Code without MemPalace.
+    echo "claude not found: MemPalace not registered; rerun chezmoi apply once Claude Code is installed" >&2
+    exit 1
 fi
-if bun -e 'const f = Bun.file(`${process.env.HOME}/.claude.json`); const c = await f.exists() ? await f.json() : {}; process.exit(c.mcpServers?.mempalace ? 0 : 1)'; then
+if claude mcp get mempalace >/dev/null 2>&1; then
     exit 0
 fi
 claude mcp add-json --scope user mempalace "$(cat "$HOME/.claude/mempalace-mcp.json")"

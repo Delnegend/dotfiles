@@ -4,6 +4,8 @@
     "ANTHROPIC_BASE_URL": "https://ai.delnegend.com"
   },
   "model": "sonnet",
+  "autoMemoryEnabled": false,
+  "autoDreamEnabled": false,
   "hooks": {
     "SessionStart": [
       {
