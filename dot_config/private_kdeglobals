@@ -140,7 +140,7 @@ XftSubPixel=none
 fixed=Iosevka Nerd Font,12,-1,5,400,0,0,0,0,0,0,0,0,0,0,1,,0,0
 
 [KDE]
-AnimationDurationFactor=1
+AnimationDurationFactor=0
 LookAndFeelPackage=com.valve.vapor.desktop
 contrast=4
 frameContrast=0.2
