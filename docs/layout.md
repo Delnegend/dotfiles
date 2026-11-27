@@ -29,6 +29,7 @@ dot_config/
   opencode/private_cli.json   # → ~/.config/opencode/cli.json (0600, TUI theme, diffs, sidebar, verbosity)
   opencode/mempalace/index.ts # → ~/.config/opencode/mempalace/ (automatic MemPalace recall plugin)
   opencode/models-discovery/index.ts # → ~/.config/opencode/models-discovery/ (discovers compatible providers)
+  mempalace/mempalace-recall.ts # → ~/.config/mempalace/ (shared coding-wing recall hook for Claude Code and agy)
 dot_bashrc_custom.tmpl        # → ~/.bashrc_custom (sourced from ~/.bashrc, per-host template)
 dot_tmux.conf                 # → ~/.tmux.conf (Linux; tmux installed via brew bootstrap)
 dot_claude/                   # → ~/.claude/ (shared guidance, MemPalace and Zero G key helper)
@@ -39,7 +40,7 @@ dot_gemini/antigravity-cli/   # → ~/.gemini/antigravity-cli/
 dot_gemini/config/            # → ~/.gemini/config/ (Antigravity shared config and hooks: Zero G observation via zero-g-agy-integration, and MemPalace)
   modify_private_config.json  #   → ~/.gemini/config/config.json (0600; ensures mcp(mempalace/*) allow rule in shared/ACP scope, preserves local settings)
   mempalace-bridge.ts         #   Bun MCP bridge using the token from the environment
-  mempalace-recall.ts         #   Bun generic coding-wing recall and explicit-save guidance at session start
+                              #   recall hook lives in ~/.config/mempalace/, shared with Claude Code
 dot_local/share/              # → ~/.local/share/ (bazzite-only Steam proxy & WinBox launchers + icon)
 scripts/executable_l4d2-download.py # → ~/scripts/l4d2-download.py (bazzite-only; Steam Workshop maps into local L4D2 addons)
 scripts/executable_ssd-health.py # → ~/scripts/ssd-health.py (bazzite-only; SMART health report, run by `just ssd-health`)

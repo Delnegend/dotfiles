@@ -3,7 +3,7 @@
     "SessionStart": [
       {
         "type": "command",
-        "command": "bun \"$HOME/.gemini/config/mempalace-recall.ts\"",
+        "command": "bun \"$HOME/.config/mempalace/mempalace-recall.ts\"",
         "timeout": 5
       }
     ]

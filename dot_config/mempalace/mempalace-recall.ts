@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** Inject best-effort generic MemPalace recall once per agy session. */
+/** Inject best-effort generic MemPalace recall once per coding-agent session. */
 export { };
 
 const ENDPOINT = "https://mempalace.delnegend.com/mcp";

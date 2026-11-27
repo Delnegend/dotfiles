@@ -12,7 +12,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun \"$HOME/.gemini/config/mempalace-recall.ts\" --claude",
+            "command": "bun \"$HOME/.config/mempalace/mempalace-recall.ts\" --claude",
             "timeout": 5
           }
         ]
