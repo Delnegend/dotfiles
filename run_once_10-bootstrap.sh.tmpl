@@ -36,8 +36,19 @@ if ! command -v git &>/dev/null; then
 fi
 
 if [ ! -x "$BREW" ]; then
-    echo "Installing Homebrew..."
-    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" < /dev/null
+    # Shallow clone of the latest release instead of Homebrew's install.sh, which fetches
+    # the full git history and runs an extra `brew update` (~20s vs ~7s). `brew update`
+    # still works on a shallow clone. Mirrors what install.sh sets up on Linux.
+    echo "Installing Homebrew (shallow clone)..."
+    prefix=/home/linuxbrew/.linuxbrew
+    sudo install -d -o "$(id -un)" -g "$(id -gn)" -m 0755 "$prefix"
+    mkdir -p "$prefix"/{bin,etc,include,lib,sbin,share,opt,var/homebrew/linked,Cellar,Caskroom,Frontend}
+    tag="$(git ls-remote --tags --refs --sort=-v:refname https://github.com/Homebrew/brew 'refs/tags/[0-9]*' \
+        | sed 's#.*refs/tags/##' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)"
+    [ -n "$tag" ] || { echo "Cannot find the latest Homebrew release tag" >&2; exit 1; }
+    git -c advice.detachedHead=false clone --quiet --depth 1 --branch "$tag" \
+        https://github.com/Homebrew/brew "$prefix/Homebrew"
+    ln -sf ../Homebrew/bin/brew "$prefix/bin/brew"
 fi
 
 if [ ! -x "$BREW" ]; then
@@ -70,39 +81,57 @@ fi
 "$BREW" trust --formula anomalyco/tap/opencode-v2
 "$BREW" trust --formula Delnegend/tap/zero-g-agy-integration
 
-pkgs=(
-    "just:just"
-    "zoxide:zoxide"
-    "starship:starship"
-    "fzf:fzf"
-    "ssh:openssh"
-    "tmux:tmux"
-    "bun:bun"
-    "node:node"
-    "opencode:anomalyco/tap/opencode-v2"
-    "omp:can1357/tap/omp"
-    "zero-g-agy-integration:Delnegend/tap/zero-g-agy-integration"
-    "agy:--cask antigravity-cli"
-    "claude:--cask claude-code"
-)
+# Skip optional per-install work (cleanup, dependents scan, hints).
+export HOMEBREW_NO_INSTALL_CLEANUP=1
+export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
+export HOMEBREW_NO_ENV_HINTS=1
 
-for entry in "${pkgs[@]}"; do
-    cmd="${entry%%:*}"
-    args="${entry#*:}"
-    if ! command -v "$cmd" &>/dev/null; then
-        echo "Installing $cmd..."
-        attempt=0
-        until "$BREW" install $args; do
-            attempt=$((attempt + 1))
-            if [ "$attempt" -ge 3 ]; then
-                echo "Failed to install $cmd after 3 attempts" >&2
-                exit 1
-            fi
-            echo "Retrying $cmd (attempt $((attempt + 1))/3) after transient failure..."
-            sleep $((attempt * 5))
-        done
-    fi
+retry() {
+    local attempt=0
+    until "$@"; do
+        attempt=$((attempt + 1))
+        if [ "$attempt" -ge 3 ]; then
+            echo "Failed after 3 attempts: $*" >&2
+            return 1
+        fi
+        echo "Retrying (attempt $((attempt + 1))/3) after transient failure..."
+        sleep $((attempt * 5))
+    done
+}
+
+# Download the formula index once, before two brew processes start.
+"$BREW" info --formula just >/dev/null 2>&1 || true
+
+# Casks install in a second brew process while the formulas install. They share no
+# dependencies with the formulas. Do NOT run more brew processes alongside: formulas
+# that share dependencies collide on Homebrew's per-package locks.
+casks=()
+for entry in agy:antigravity-cli claude:claude-code; do
+    command -v "${entry%%:*}" &>/dev/null || casks+=("${entry#*:}")
 done
+if [ "${#casks[@]}" -gt 0 ]; then
+    echo "Installing casks ${casks[*]} (in parallel)..."
+    retry "$BREW" install --cask "${casks[@]}" &
+    cask_pid=$!
+fi
+
+# One brew call for all formulas, so every download runs in parallel.
+formulas=()
+for entry in \
+    just:just zoxide:zoxide starship:starship fzf:fzf ssh:openssh tmux:tmux bun:bun node:node \
+    opencode:anomalyco/tap/opencode-v2 omp:can1357/tap/omp \
+    zero-g-agy-integration:Delnegend/tap/zero-g-agy-integration; do
+    command -v "${entry%%:*}" &>/dev/null || formulas+=("${entry#*:}")
+done
+if [ "${#formulas[@]}" -gt 0 ]; then
+    echo "Installing ${formulas[*]}..."
+    retry "$BREW" install --formula "${formulas[@]}"
+fi
+
+# Wait for the casks; set -e fails the script if they failed.
+if [ -n "${cask_pid:-}" ]; then
+    wait "$cask_pid"
+fi
 
 echo "Wiring bash..."
 # chezmoi manages ~/.bashrc_custom (dot_bashrc_custom.tmpl); ensure ~/.bashrc sources it.
