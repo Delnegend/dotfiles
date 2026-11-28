@@ -35,9 +35,10 @@ Secrets never live in this repo; each machine carries its own secret files.
 - Guards: `.gitignore` excludes `secrets.env` and `private_secrets.env`;
   `.chezmoiignore` prevents `chezmoi apply` from overwriting the local secret file.
 - Existing hosts: move `~/.omp/agent/.env` to `~/.config/ai-agents/secrets.env`
-  without overwriting an existing file, restrict it to mode 600, and apply the
-  updated shell and Claude configuration. Restart shells and agent processes so
-  they inherit the new environment. Tailscale must be connected.
-- New hosts: after `chezmoi apply`, create the local secret file with mode 600 and
-  start a new shell before starting the agents. Restart any existing OpenCode
-  background service from that shell so it inherits the tokens.
+  before applying the updated bootstrap, without overwriting an existing file.
+  Restrict it to mode 600, apply the updated shell and Claude configuration, and
+  restart shells and agent processes so they inherit the new environment. Tailscale
+  must be connected.
+- New Linux hosts: bootstrap creates an empty local secret file with mode 600.
+  Add the tokens and start a new shell before starting the agents. Restart any
+  existing OpenCode background service from that shell so it inherits the tokens.

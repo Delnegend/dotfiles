@@ -4,6 +4,10 @@ set -e
 # run_once: base packages + Homebrew + shell wiring (ex-scripts/bootstrap.sh).
 # Re-runs only when this file's hash changes.
 
+# Create the shared agent secrets file without exposing new credentials.
+mkdir -p "$HOME/.config/ai-agents"
+(umask 077; touch "$HOME/.config/ai-agents/secrets.env")
+
 # Resolve brew across standard Linux Homebrew layouts (Bazzite uses /var/home).
 BREW=""
 for c in /home/linuxbrew/.linuxbrew/bin/brew /var/home/linuxbrew/.linuxbrew/bin/brew; do
