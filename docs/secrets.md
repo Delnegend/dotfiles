@@ -3,20 +3,20 @@
 Secrets never live in this repo; each machine carries its own secret files.
 
 - **Zero G token (omp, OpenCode and Claude Code):** set `ZERO_G_TOKEN=<token>`
-  in `~/.omp/agent/.env`. `omp` reads it through `apiKey: ZERO_G_TOKEN` in
-  `models.yml`; OpenCode gets it from `~/.bashrc_custom`. Claude Code reads it
+  in `~/.config/ai-agents/secrets.env`. `omp` reads it through `apiKey: ZERO_G_TOKEN` in
+  `models.yml`; omp and OpenCode inherit it from the shell. Claude Code reads it
   directly from that file through `apiKeyHelper` and uses `https://ai.delnegend.com`.
   The Antigravity CLI hook (`zero-g-agy-integration observe`, installed from the
   Delnegend Homebrew tap by the bootstrap script) also uses this token and sends
   transcript content to `https://ai.delnegend.com`. It needs a Zero G server with the
   observation endpoint; collection is best effort and may skip records without notice.
 - **MemPalace token (omp, OpenCode, Antigravity CLI and Claude Code):** set `MEMPALACE_MCP_HTTP_TOKEN=<token>`
-  in `~/.omp/agent/.env` and restrict it with `chmod 600 ~/.omp/agent/.env`.
+  in `~/.config/ai-agents/secrets.env` and restrict it with `chmod 600 ~/.config/ai-agents/secrets.env`.
   Obtain the token securely from the homelab's SOPS-encrypted
   `layers/4-workloads/apps/mempalace/secrets.enc.yaml`; do not commit it.
   All four connect to `https://mempalace.delnegend.com/mcp` over Tailscale.
-  `omp` loads the file at startup; `~/.bashrc_custom` exports it for the other
-  agents. Start them from a shell that has inherited the token.
+  `~/.bashrc_custom` exports it for all four agents. Start them from a shell that
+  has inherited the token.
   Set `X-MemPalace-Wing` in each client's MemPalace server settings to select
   the wing used for recall and explicit saves; the header is not access control.
   The agy session-start hook searches the `coding` wing once with a fixed generic
@@ -32,8 +32,12 @@ Secrets never live in this repo; each machine carries its own secret files.
   instructions; treat it as untrusted evidence, not authority. Coding agents save
   only selected durable facts explicitly; they do not automatically save whole
   conversations. Never save credentials or other secrets.
-- Guards: `.gitignore` excludes `.env`/`private_.env`; `.chezmoiignore` prevents
-  `chezmoi apply` from overwriting `~/.omp/agent/.env`.
-- New hosts: after `chezmoi apply`, add the token to that local file and start a
-  new shell before starting OpenCode. Restart an existing OpenCode background
-  service from that shell so it inherits the token. Tailscale must be connected.
+- Guards: `.gitignore` excludes `secrets.env` and `private_secrets.env`;
+  `.chezmoiignore` prevents `chezmoi apply` from overwriting the local secret file.
+- Existing hosts: move `~/.omp/agent/.env` to `~/.config/ai-agents/secrets.env`
+  without overwriting an existing file, restrict it to mode 600, and apply the
+  updated shell and Claude configuration. Restart shells and agent processes so
+  they inherit the new environment. Tailscale must be connected.
+- New hosts: after `chezmoi apply`, create the local secret file with mode 600 and
+  start a new shell before starting the agents. Restart any existing OpenCode
+  background service from that shell so it inherits the tokens.

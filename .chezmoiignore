@@ -1,5 +1,6 @@
 # Local secrets consumed via environment indirection; chezmoi must never overwrite them
 .omp/agent/.env
+.config/ai-agents/secrets.env
 
 # Static inputs for modify templates; not home targets
 .config/zed/settings.base.json

@@ -10,6 +10,8 @@ node_modules/
 # Local secrets for env indirection; never commit (chezmoi names 0600 files private_*)
 .env
 private_.env
+secrets.env
+private_secrets.env
 
 # Local hardware notes
 docs/tpm2-luks.md

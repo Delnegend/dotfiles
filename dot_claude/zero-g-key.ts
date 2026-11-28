@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** Read the Zero-G virtual key without printing any other local secrets. */
-const path = `${process.env.HOME}/.omp/agent/.env`;
+const path = `${process.env.HOME}/.config/ai-agents/secrets.env`;
 try {
   const child = Bun.spawnSync(["bash", "-c", 'source "$1" >/dev/null && printf "%s" "${ZERO_G_TOKEN:-}"', "zero-g-key", path], { stdout: "pipe", stderr: "ignore" });
   if (child.exitCode !== 0) throw new Error("Cannot load credentials");

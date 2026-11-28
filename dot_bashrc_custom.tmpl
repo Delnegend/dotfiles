@@ -17,9 +17,9 @@ export DOCKER_HOST="unix://$XDG_RUNTIME_DIR/podman/podman.sock"
 [ -d "$HOME/.local/bin" ] && export PATH="$HOME/.local/bin:$PATH"
 [ -d "$HOME/.local/share/bin" ] && export PATH="$HOME/.local/share/bin:$PATH"
 
-if [ -f "$HOME/.omp/agent/.env" ]; then
+if [ -f "$HOME/.config/ai-agents/secrets.env" ]; then
     set -a
-    . "$HOME/.omp/agent/.env"
+    . "$HOME/.config/ai-agents/secrets.env"
     set +a
 fi
 
