@@ -16,7 +16,10 @@ Secrets never live in this repo; each machine carries its own secret files.
   `layers/4-workloads/apps/mempalace/secrets.enc.yaml`; do not commit it.
   All four connect to `https://mempalace.delnegend.com/mcp` over Tailscale.
   `~/.bashrc_custom` exports it for all four agents. Start them from a shell that
-  has inherited the token.
+  has inherited the token. The Antigravity MCP bridge and shared MemPalace recall
+  hook also fall back to reading `~/.config/ai-agents/secrets.env` directly when
+  the variable is absent from the process environment (such as on Windows or GUI
+  launches).
   Set `X-MemPalace-Wing` in each client's MemPalace server settings to select
   the wing used for recall and explicit saves; the header is not access control.
   The agy session-start hook searches the `coding` wing once with a fixed generic

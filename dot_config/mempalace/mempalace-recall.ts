@@ -1,6 +1,41 @@
 #!/usr/bin/env bun
 /** Inject best-effort generic MemPalace recall once per coding-agent session. */
-export { };
+import { readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
+
+function loadToken(): string {
+  const envToken = process.env.MEMPALACE_MCP_HTTP_TOKEN?.trim();
+  if (envToken) return envToken;
+  let found = "";
+  try {
+    const file = readFileSync(
+      join(homedir(), ".config", "ai-agents", "secrets.env"),
+      "utf8",
+    );
+    for (const rawLine of file.split(/\r?\n/)) {
+      const line = rawLine.trim();
+      if (!line || line.startsWith("#")) continue;
+      const match = line.match(
+        /^(?:export\s+)?MEMPALACE_MCP_HTTP_TOKEN\s*=\s*(.*)$/,
+      );
+      if (!match) continue;
+      let value = (match[1] ?? "").trim();
+      if (
+        (value.startsWith('"') && value.endsWith('"') && value.length >= 2) ||
+        (value.startsWith("'") && value.endsWith("'") && value.length >= 2)
+      ) {
+        value = value.slice(1, -1);
+      } else {
+        value = value.replace(/\s+#.*$/, "").trim();
+      }
+      if (value && !/[\r\n]/.test(value)) found = value;
+    }
+  } catch {
+    // Missing or unreadable secrets file; recall stays optional.
+  }
+  return found;
+}
 
 const ENDPOINT = "https://mempalace.delnegend.com/mcp";
 const MAX_RESPONSE = 256 * 1024;
@@ -168,7 +203,7 @@ async function recall(token: string, signal: AbortSignal): Promise<string[]> {
 
 let message = GUIDANCE;
 try {
-  const token = process.env.MEMPALACE_MCP_HTTP_TOKEN ?? "";
+  const token = loadToken();
   if (token) {
     const memories = await recall(token, AbortSignal.timeout(4000));
     if (memories.length) {

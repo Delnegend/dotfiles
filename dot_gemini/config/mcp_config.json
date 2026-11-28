@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "mempalace": {
-      "command": "sh",
-      "args": ["-c", "exec bun \"$HOME/.gemini/config/mempalace-bridge.ts\""]
-    }
-  }
-}

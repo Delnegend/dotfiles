@@ -3,11 +3,11 @@
     "SessionStart": [
       {
         "type": "command",
-        "command": "bun \"$HOME/.config/mempalace/mempalace-recall.ts\"",
+        "command": {{ printf "bun \"%s\"" (joinPath .chezmoi.homeDir ".config/mempalace/mempalace-recall.ts") | toJson }},
         "timeout": 5
       }
     ]
-  },
+  }{{ if eq .chezmoi.os "linux" }},
   "zero-g-observations": {
     "PostInvocation": [
       {
@@ -16,5 +16,5 @@
         "timeout": 5
       }
     ]
-  }
+  }{{ end }}
 }

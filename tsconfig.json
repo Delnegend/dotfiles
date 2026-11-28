@@ -11,6 +11,7 @@
   },
   "include": [
     "dot_claude/**/*.ts",
+    "dot_config/mempalace/**/*.ts",
     "dot_config/opencode/**/*.ts",
     "dot_gemini/**/*.ts",
     "dot_omp/**/*.ts",
